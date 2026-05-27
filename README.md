@@ -1,79 +1,79 @@
 # shengshengweb
 
-shengshengweb is a lightweight worksite for team collaboration. It includes media management, review workflow, todo tracking, team management, and device borrowing features. The backend is built with `Node.js + Express`, and data is stored locally in `SQLite`. Images and videos are saved directly on the server disk.
+这是一个面向工作室日常协作的轻量级站点，提供素材管理、审片、待办、团队和设备借出等能力。后端基于 `Node.js + Express`，数据使用 `SQLite` 本地落盘，图片和视频直接保存在服务器磁盘上。
 
-## Features
+## 功能
 
-- Media library: browse, filter, and search images and videos
-- Review center: approve, reject, and add notes
-- Todo list: add, complete, and delete tasks
-- Inbox sync: automatically scan `server/uploads/inbox`
-- Admin login: protects write operations
-- Runtime status: shows sync state, login state, and basic system info
+- 素材库：浏览、筛选和搜索图片与视频
+- 审片中心：通过、退回、备注
+- 待办事项：新增、完成、删除
+- 服务器照片同步：自动扫描 `server/uploads/inbox`
+- 管理员登录：保护写操作
+- 运行状态：展示同步状态、登录状态和基础运行信息
 
-## Local Setup
+## 本地运行
 
-1. Install dependencies
+1. 安装依赖
 
 ```bash
 npm install
 ```
 
-2. Configure environment variables
+2. 配置环境变量
 
 ```bash
 copy .env.example .env
 ```
 
-3. Start the app
+3. 启动项目
 
 ```bash
 npm run dev
 ```
 
-4. Open the site
+4. 打开站点
 
 ```text
 http://127.0.0.1:3002
 ```
 
-For phones or other computers on the same LAN, use:
+如果需要让同一局域网里的手机或电脑访问，请直接打开：
 
 ```text
-http://<your-local-ip>:3002
+http://<本机局域网IP>:3002
 ```
 
-The server listens on `0.0.0.0` by default. If external devices cannot connect, check whether your firewall allows port `3002`.
+默认服务监听 `0.0.0.0`。如果外部设备访问失败，优先检查系统防火墙是否放行 `3002` 端口。
 
-## Deployment
+## 部署
 
 - Node.js 18+
-- Install production dependencies: `npm install --omit=dev`
-- Start the service: `npm run start`
-- Use PM2: `npm run pm2:start`
+- 安装生产依赖：`npm install --omit=dev`
+- 启动服务：`npm run start`
+- 使用 PM2：`npm run pm2:start`
 
-## Data Directories
+## 数据目录
 
-- Database: `server/data/studio.sqlite`
-- Uploaded images: `server/uploads/media`
-- Inbox directory: `server/uploads/inbox`
+- 数据库：`server/data/studio.sqlite`
+- 上传图片：`server/uploads/media`
+- 服务端收件箱：`server/uploads/inbox`
 
-## Default Admin Account
+## 默认账号
 
-The admin credentials are controlled by these `.env` variables:
+项目的管理员账号由 `.env` 里的这两个变量控制：
 
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
-Change the default password before going live.
+上线前请务必修改默认密码。
 
-## Troubleshooting
+## 排障提示
 
-If the site does not open correctly, check the following first:
+如果页面无法正常打开，可以优先检查下面几项：
 
-- The service is running
-- `PORT` in `.env` is still `3002`
-- `server/data/studio.sqlite` exists
-- `server/uploads/` has write permission
+- 服务是否已经启动
+- `.env` 里的 `PORT` 是否仍然是 `3002`
+- 数据库文件 `server/data/studio.sqlite` 是否存在
+- `server/uploads/` 目录是否有写入权限
 
-If GitHub still shows stale content, refresh the page or confirm that the latest commit has been pushed successfully.
+如果 GitHub 页面上还看到旧内容，刷新页面或确认最新提交已经推送成功即可。
