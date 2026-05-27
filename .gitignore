@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+server/data/*.sqlite
+server/data/*.sqlite-shm
+server/data/*.sqlite-wal
+server/data/*.db
+server/data/state.json
+server/uploads/media/*
+server/uploads/inbox/*
+!server/uploads/media/.gitkeep
+!server/uploads/inbox/.gitkeep
+
+# Local backups / temp files
+app.js.bak
+.tmp-motion-check.png
+c
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pm2-*.log
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
