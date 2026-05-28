@@ -101,14 +101,79 @@
     <!-- Toast 通知容器 -->
     <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- 浮动留言墙按钮 -->
+    <button class="wish-fab" id="wish-fab" type="button" aria-label="打开留言墙" hidden>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </button>
+
+    <!-- 留言墙侧边抽屉 -->
+    <div class="wish-drawer" id="wish-modal" hidden>
+      <div class="wish-drawer-overlay" id="wish-modal-overlay"></div>
+      <div class="wish-drawer-content">
+        <div class="wish-drawer-header">
+          <h2>💭 留言墙</h2>
+          <button class="wish-drawer-close" id="wish-modal-close" type="button" aria-label="关闭">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form class="wish-form" id="wish-form">
+          <label class="field">
+            <span>留言内容</span>
+            <textarea name="content" placeholder="写下你的想法..." maxlength="200" rows="3" required></textarea>
+            <small class="char-count"><span id="wish-char-count">0</span>/200</small>
+          </label>
+          
+          <div class="wish-form-row">
+            <label class="field">
+              <span>心情标签</span>
+              <input name="mood" type="text" placeholder="例如：开心、期待" maxlength="10" />
+            </label>
+            
+            <label class="wish-anonymous">
+              <input type="checkbox" name="anonymous" id="wish-anonymous" />
+              <span class="wish-checkbox-box"></span>
+              <span class="wish-checkbox-text">匿名发布</span>
+            </label>
+          </div>
+          
+          <button class="primary-btn" type="submit">
+            <span>发布留言</span>
+          </button>
+        </form>
+        
+        <div class="wish-list-section">
+          <h3>所有留言</h3>
+          <div class="wish-list" id="wish-list"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="workspace-shell hidden" id="workspace-shell">
       <header class="topbar">
         <div class="topbar-shell">
           <div class="topbar-brand">
-            <span class="brand-mark" aria-hidden="true"></span>
-            <div class="brand-copy-block">
-              <strong id="site-title">声声网络思政工作室</strong>
-              <span>创新媒体中心</span>
+            <div class="brand-icon" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <rect width="36" height="36" rx="10" fill="url(#brand-gradient)"/>
+                <path d="M18 12c-3.5 0-6 2.5-6 5.5 0 1.5.5 2.8 1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+                <path d="M18 12c3.5 0 6 2.5 6 5.5 0 1.5-.5 2.8-1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+                <circle cx="18" cy="17.5" r="1.5" fill="white"/>
+                <defs>
+                  <linearGradient id="brand-gradient" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#2d3137"/>
+                    <stop offset="100%" stop-color="#17181a"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <strong>声声网络思政工作室</strong>
+              <span>Voice Studio · 创新媒体中心</span>
             </div>
           </div>
 
@@ -630,6 +695,8 @@
 
     <!-- 集中配置（挂到 window.shengshengConfig） -->
     <script src="config.js"></script>
+    <!-- 留言墙功能 -->
+    <script src="wish-wall.js" defer></script>
     <!-- 主应用逻辑 -->
     <script src="app.js" defer></script>
   </body>

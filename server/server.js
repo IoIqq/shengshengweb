@@ -699,6 +699,17 @@ function teamRowToItem(row) {
   };
 }
 
+function wishRowToItem(row) {
+  return {
+    id: row.id,
+    content: row.content,
+    author: row.author,
+    mood: row.mood || "",
+    anonymous: Boolean(row.anonymous),
+    createdAt: row.created_at,
+  };
+}
+
 function normalizeSearchValue(value) {
   return String(value ?? "").trim();
 }
@@ -1389,6 +1400,15 @@ async function main() {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS wishes (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      author TEXT NOT NULL,
+      mood TEXT,
+      anonymous INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
   `);
 
   // 扩展 team 表字段
@@ -1418,6 +1438,7 @@ async function main() {
   app.disable("x-powered-by");
   
   // 安全头配置
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -1432,7 +1453,7 @@ async function main() {
         frameSrc: ["'none'"],
       },
     },
-    hsts: {
+    hsts: isDevelopment ? false : {
       maxAge: 31536000,
       includeSubDomains: true,
       preload: true
@@ -2125,6 +2146,86 @@ async function main() {
       runWrite("UPDATE team SET order_index = ?, updated_at = ? WHERE id = ?", [newOrder, nowIso(), id]);
     });
     res.json({ ok: true, items: getAllTeam() });
+  });
+
+  // ========== 留言墙 API（无需认证） ==========
+  app.get("/api/wishes", (req, res) => {
+    try {
+      const wishes = all("SELECT * FROM wishes ORDER BY datetime(created_at) DESC LIMIT 100");
+      res.json(wishes.map(wishRowToItem));
+    } catch (error) {
+      logServerEvent("error", "wish_list_failed", { error });
+      res.status(500).json({ error: "加载留言失败。" });
+    }
+  });
+
+  // 留言提交速率限制
+  const wishLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1分钟
+    max: 5, // 最多5条留言
+    message: { error: "留言过于频繁，请稍后再试。" },
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { trustProxy: false, xForwardedForHeader: false },
+  });
+
+  app.post("/api/wishes", wishLimiter, (req, res) => {
+    const body = req.body || {};
+    const content = String(body.content || "").trim();
+    const mood = String(body.mood || "").trim().slice(0, 10);
+    const anonymous = Boolean(body.anonymous);
+
+    if (!content) {
+      return res.status(400).json({ error: "留言内容不能为空。" });
+    }
+    if (content.length > 200) {
+      return res.status(400).json({ error: "留言内容不能超过 200 字。" });
+    }
+
+    // 获取当前用户（如果已登录）
+    const session = getSession(req);
+    const author = anonymous 
+      ? "匿名用户" 
+      : (session?.user?.username || "访客");
+
+    const item = {
+      id: randomId("wish"),
+      content,
+      author,
+      mood,
+      anonymous: anonymous ? 1 : 0,
+      created_at: nowIso(),
+    };
+
+    try {
+      runWrite(
+        `INSERT INTO wishes (id, content, author, mood, anonymous, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [item.id, item.content, item.author, item.mood, item.anonymous, item.created_at],
+      );
+      persistDb();
+      logServerEvent("info", "wish_created", { id: item.id, author: item.author });
+      res.json(wishRowToItem(item));
+    } catch (error) {
+      logServerEvent("error", "wish_create_failed", { error });
+      res.status(500).json({ error: "发布留言失败。" });
+    }
+  });
+
+  app.delete("/api/wishes/:id", requireAuth, requireAdmin, (req, res) => {
+    const id = String(req.params.id || "");
+    const existing = get("SELECT * FROM wishes WHERE id = ? LIMIT 1", [id]);
+    if (!existing) {
+      return res.status(404).json({ error: "留言不存在。" });
+    }
+    try {
+      runWrite("DELETE FROM wishes WHERE id = ?", [id]);
+      persistDb();
+      res.json({ ok: true });
+    } catch (error) {
+      logServerEvent("error", "wish_delete_failed", { error });
+      res.status(500).json({ error: "删除留言失败。" });
+    }
   });
 
   app.post("/api/client-log", (req, res) => {
