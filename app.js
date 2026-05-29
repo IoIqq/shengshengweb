@@ -635,11 +635,23 @@
     });
   }
 
+  function readCookie(name) {
+    const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
   async function request(path, options = {}) {
+    const method = (options.method || "GET").toUpperCase();
+    const csrfHeaders = {};
+    if (method !== "GET" && method !== "HEAD") {
+      const token = readCookie("ss_csrf");
+      if (token) csrfHeaders["X-CSRF-Token"] = token;
+    }
     const response = await fetch(path, {
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
+        ...csrfHeaders,
         ...(options.headers || {}),
       },
       ...options,
@@ -2550,9 +2562,11 @@
           setPending(true);
           const formData = new FormData();
           Array.from(input.files).forEach((file) => formData.append("files", file));
+          const csrfToken = readCookie("ss_csrf");
           const response = await fetch("/api/media/upload", {
             method: "POST",
             credentials: "same-origin",
+            headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
             body: formData,
           });
           const data = await response.json().catch(() => ({}));

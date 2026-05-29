@@ -96,10 +96,12 @@
     };
 
     try {
+      const csrfToken = readCsrfCookie();
       const response = await fetch('/api/wishes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
         },
         body: JSON.stringify(data)
       });
@@ -160,8 +162,10 @@
     if (!confirm('确定要删除这条留言吗？')) return;
 
     try {
+      const csrfToken = readCsrfCookie();
       const response = await fetch(`/api/wishes/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
       });
 
       if (response.ok) {
@@ -180,6 +184,11 @@
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  function readCsrfCookie() {
+    const match = document.cookie.match(/(?:^|; )ss_csrf=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
   }
 
   function isWishAdmin() {

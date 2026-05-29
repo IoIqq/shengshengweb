@@ -44,6 +44,9 @@ const PUBLIC_URL = process.env.PUBLIC_URL || "";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123456";
 const SESSION_COOKIE = "ss_sid";
+const CSRF_COOKIE = "ss_csrf";
+const CSRF_HEADER = "x-csrf-token";
+const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString("hex");
 let db = null;
 const apiRouteCatalog = [];
 
@@ -589,25 +592,69 @@ function shouldUseSecureCookie(req) {
 
 function setSessionCookie(req, res, token, expiresAt) {
   const maxAgeSeconds = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-  const parts = [
+  const secureFlag = shouldUseSecureCookie(req);
+  const sessionParts = [
     `${SESSION_COOKIE}=${encodeURIComponent(token)}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
     `Max-Age=${maxAgeSeconds}`,
   ];
-  if (shouldUseSecureCookie(req)) {
-    parts.push("Secure");
-  }
-  res.setHeader("Set-Cookie", parts.join("; "));
+  if (secureFlag) sessionParts.push("Secure");
+
+  // CSRF token 与 session 1:1 关联：用 session token 派生（HMAC 防伪）
+  const csrfToken = crypto
+    .createHmac("sha256", CSRF_SECRET)
+    .update(token)
+    .digest("hex");
+  const csrfParts = [
+    `${CSRF_COOKIE}=${csrfToken}`,
+    "Path=/",
+    "SameSite=Lax",
+    `Max-Age=${maxAgeSeconds}`,
+  ];
+  if (secureFlag) csrfParts.push("Secure");
+
+  res.setHeader("Set-Cookie", [sessionParts.join("; "), csrfParts.join("; ")]);
 }
 
 function clearSessionCookie(req, res) {
   const secureFlag = shouldUseSecureCookie(req) ? "; Secure" : "";
-  res.setHeader(
-    "Set-Cookie",
+  res.setHeader("Set-Cookie", [
     `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secureFlag}`,
-  );
+    `${CSRF_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secureFlag}`,
+  ]);
+}
+
+const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const CSRF_EXEMPT_PATHS = new Set([
+  "/api/login",
+  "/api/client-log",
+]);
+
+function csrfProtect(req, res, next) {
+  if (CSRF_SAFE_METHODS.has(req.method)) return next();
+  if (CSRF_EXEMPT_PATHS.has(req.path)) return next();
+  if (!req.path.startsWith("/api/")) return next();
+
+  const cookies = parseCookies(req.headers.cookie || "");
+  const sessionToken = cookies[SESSION_COOKIE];
+  const cookieCsrf = cookies[CSRF_COOKIE];
+  const headerCsrf = req.get(CSRF_HEADER);
+
+  if (!sessionToken || !cookieCsrf || !headerCsrf) {
+    return res.status(403).json({ error: "CSRF 校验失败：缺少 token。" });
+  }
+  // cookieCsrf 必须等于 HMAC(sessionToken)，防伪造
+  const expected = crypto.createHmac("sha256", CSRF_SECRET).update(sessionToken).digest("hex");
+  const cookieOk = cookieCsrf.length === expected.length
+    && crypto.timingSafeEqual(Buffer.from(cookieCsrf), Buffer.from(expected));
+  const headerOk = headerCsrf.length === cookieCsrf.length
+    && crypto.timingSafeEqual(Buffer.from(headerCsrf), Buffer.from(cookieCsrf));
+  if (!cookieOk || !headerOk) {
+    return res.status(403).json({ error: "CSRF 校验失败。" });
+  }
+  next();
 }
 
 function requireAuth(req, res, next) {
@@ -1649,6 +1696,9 @@ async function main() {
     validate: { trustProxy: false, xForwardedForHeader: false },
   });
   app.use(globalLimiter);
+
+  // CSRF 防护：对所有非 GET/HEAD 的 /api/* 请求校验
+  app.use(csrfProtect);
 
   // 登录接口严格限制
   const loginLimiter = rateLimit({
