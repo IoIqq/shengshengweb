@@ -233,6 +233,7 @@
     todoForm: document.getElementById("todo-form"),
     todoList: document.getElementById("todo-list"),
     todoOpenCount: document.getElementById("todo-open-count"),
+    todoAssigneeSelect: document.getElementById("todo-assignee-select"),
     deviceForm: document.getElementById("device-form"),
     deviceFormId: document.getElementById("device-form-id"),
     deviceFormSubmit: document.getElementById("device-form-submit"),
@@ -1198,32 +1199,157 @@
     };
   }
 
+  function todoDayKey(d) {
+    return new Date(d).setHours(0, 0, 0, 0);
+  }
+
+  function classifyTodoByDate(todo, todayKey) {
+    if (todo.done) return "done";
+    if (!todo.dueDate) return "later";
+    const due = todoDayKey(`${todo.dueDate}T00:00:00`);
+    const diffDays = Math.round((due - todayKey) / 86400000);
+    if (diffDays < 0) return "overdue";
+    if (diffDays === 0) return "today";
+    if (diffDays <= 6) return "this-week";
+    return "later";
+  }
+
+  function formatDueLabel(todo, todayKey) {
+    if (!todo.dueDate) return "未排期";
+    const due = todoDayKey(`${todo.dueDate}T00:00:00`);
+    const diffDays = Math.round((due - todayKey) / 86400000);
+    if (diffDays < 0) return `已逾期 ${-diffDays} 天`;
+    if (diffDays === 0) return "今日截止";
+    if (diffDays === 1) return "明天截止";
+    if (diffDays <= 6) return `${diffDays} 天后截止`;
+    const dt = new Date(`${todo.dueDate}T00:00:00`);
+    return `${dt.getMonth() + 1} 月 ${dt.getDate()} 日截止`;
+  }
+
+  function getAssigneeName(assigneeId) {
+    if (!assigneeId) return null;
+    const team = state.bootstrap?.team || [];
+    const member = team.find((m) => m.id === assigneeId);
+    return member ? member.name : null;
+  }
+
+  function syncTodoAssigneeOptions() {
+    if (!els.todoAssigneeSelect) return;
+    const team = state.bootstrap?.team || [];
+    const current = els.todoAssigneeSelect.value;
+    els.todoAssigneeSelect.innerHTML =
+      `<option value="">未分配</option>` +
+      team
+        .map(
+          (m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`,
+        )
+        .join("");
+    if (current && team.some((m) => m.id === current)) {
+      els.todoAssigneeSelect.value = current;
+    }
+  }
+
   function renderTodos() {
     const items = state.bootstrap?.todos || [];
+    syncTodoAssigneeOptions();
     const openCount = items.filter((item) => !item.done).length;
     if (els.todoOpenCount) els.todoOpenCount.textContent = `${openCount} 项未完成`;
     if (!els.todoList) return;
-    els.todoList.innerHTML = items.length
-      ? items
-          .map(
-            (item) => `
-              <article class="todo-item ${item.done ? "is-done" : ""}">
-                <label class="todo-check">
-                  <input type="checkbox" data-todo-toggle="${escapeHtml(item.id)}" ${item.done ? "checked" : ""} />
-                  <span></span>
-                </label>
-                <div class="todo-body">
-                  <strong>${escapeHtml(item.title)}</strong>
-                  <p>优先级：${escapeHtml(item.priority)}</p>
-                </div>
-                <div class="todo-actions">
-                  <button class="ghost-btn" data-todo-delete="${escapeHtml(item.id)}" type="button">删除</button>
-                </div>
-              </article>
-            `,
-          )
-          .join("")
-      : `<div class="empty-state">暂时没有待办事项</div>`;
+
+    if (!items.length) {
+      els.todoList.innerHTML = `<div class="empty-state">暂时没有待办事项</div>`;
+      return;
+    }
+
+    const todayKey = todoDayKey(new Date());
+    const groups = { overdue: [], today: [], "this-week": [], later: [], done: [] };
+    items.forEach((it) => {
+      groups[classifyTodoByDate(it, todayKey)].push(it);
+    });
+
+    // 组内排序
+    const byDueAsc = (a, b) => {
+      const ad = a.dueDate || "9999-12-31";
+      const bd = b.dueDate || "9999-12-31";
+      return ad.localeCompare(bd);
+    };
+    groups.overdue.sort(byDueAsc); // 最久逾期在前
+    groups.today.sort(byDueAsc);
+    groups["this-week"].sort(byDueAsc);
+    groups.later.sort((a, b) => {
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return (b.createdAt || "").localeCompare(a.createdAt || "");
+    });
+    groups.done.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
+
+    const groupMeta = [
+      { key: "overdue", label: "逾期", tone: "overdue" },
+      { key: "today", label: "今日截止", tone: "today" },
+      { key: "this-week", label: "本周内", tone: "" },
+      { key: "later", label: "以后 / 未排期", tone: "" },
+      { key: "done", label: "已完成", tone: "done" },
+    ];
+
+    const renderCard = (item) => {
+      const assignee = getAssigneeName(item.assigneeId);
+      const dueLabel = formatDueLabel(item, todayKey);
+      const dueState =
+        item.done ? "done" : !item.dueDate ? "none" : classifyTodoByDate(item, todayKey);
+      return `
+        <article class="todo-item ${item.done ? "is-done" : ""}" data-todo-id="${escapeHtml(item.id)}">
+          <label class="todo-check" data-todo-edit-skip>
+            <input type="checkbox" data-todo-toggle="${escapeHtml(item.id)}" ${item.done ? "checked" : ""} />
+            <span></span>
+          </label>
+          <div class="todo-body">
+            <strong>${escapeHtml(item.title)}</strong>
+            <div class="todo-meta">
+              <span class="todo-meta-priority" data-priority="${escapeHtml(item.priority)}">${escapeHtml(item.priority)}优先</span>
+              <span class="todo-meta-due" data-state="${escapeHtml(dueState)}">${escapeHtml(dueLabel)}</span>
+              ${assignee ? `<span class="todo-assignee-chip">${escapeHtml(assignee)}</span>` : ""}
+            </div>
+          </div>
+          <div class="todo-actions" data-todo-edit-skip>
+            <button class="ghost-btn" data-todo-delete="${escapeHtml(item.id)}" type="button">删除</button>
+          </div>
+        </article>
+      `;
+    };
+
+    const overdueCount = groups.overdue.length;
+    const alertBar = overdueCount
+      ? `<button class="todo-alert-bar" type="button" data-todo-alert>⚠ ${overdueCount} 项已逾期，点击查看</button>`
+      : "";
+
+    const sections = groupMeta
+      .filter((g) => groups[g.key].length || g.key === "today" || g.key === "overdue")
+      .map((g) => {
+        const list = groups[g.key];
+        if (!list.length && g.key !== "overdue" && g.key !== "today") return "";
+        const collapsed = g.key === "done" ? "data-collapsed" : "";
+        const tone = g.tone ? `data-tone="${g.tone}"` : "";
+        const headerCount = list.length;
+        return `
+          <section class="todo-group" data-group="${g.key}" ${tone} ${collapsed}>
+            <header class="todo-group-head">
+              <h3>${g.label} <span class="todo-group-count">${headerCount}</span></h3>
+            </header>
+            <div class="todo-group-list">
+              ${list.length ? list.map(renderCard).join("") : `<div class="todo-group-empty">无</div>`}
+            </div>
+          </section>
+        `;
+      })
+      .join("");
+
+    els.todoList.innerHTML = `
+      <div class="todo-board">
+        ${alertBar}
+        ${sections}
+      </div>
+    `;
   }
 
   function deviceStatusLabel(status) {
@@ -1621,9 +1747,11 @@
   async function createTodo(formData) {
     const title = String(formData.get("title") || "").trim();
     const priority = String(formData.get("priority") || "中");
+    const dueDate = String(formData.get("dueDate") || "").trim() || null;
+    const assigneeId = String(formData.get("assigneeId") || "").trim() || null;
     const item = await requestJSON("/api/todos", {
       method: "POST",
-      body: { title, priority },
+      body: { title, priority, dueDate, assigneeId },
     });
     state.bootstrap.todos = [item.item, ...(state.bootstrap.todos || [])];
     renderTodos();
@@ -2297,7 +2425,7 @@
       clearFieldErrors(els.todoForm);
       
       // 前端验证
-      const errors = validateForm(els.todoForm, VALIDATION_RULES.todo);
+      const errors = validateForm(els.todoForm, VALIDATION_RULES.todo || {});
       if (errors.length > 0) {
         errors.forEach(err => showFieldError(els.todoForm, err.field, err.message));
         showFeedback(errors[0].message, "error", "todo");
@@ -2331,6 +2459,12 @@
       }
     });
     els.todoList?.addEventListener("click", async (event) => {
+      const alertBtn = event.target.closest("[data-todo-alert]");
+      if (alertBtn) {
+        const overdueGroup = els.todoList.querySelector('[data-group="overdue"]');
+        if (overdueGroup) overdueGroup.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
       const button = event.target.closest("[data-todo-delete]");
       if (!button) return;
       try {

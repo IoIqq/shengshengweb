@@ -4409,3 +4409,196 @@ h6,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========== 待办看板 ========== */
+.todo-form {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.todo-form input[type="date"] {
+  font-family: inherit;
+}
+
+.todo-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.todo-alert-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(200, 57, 44, 0.95), rgba(168, 39, 28, 0.95));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(200, 57, 44, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.todo-alert-bar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(200, 57, 44, 0.35);
+}
+
+.todo-group {
+  background: var(--surface, rgba(255, 255, 255, 0.9));
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.todo-group[data-tone="overdue"] {
+  background: linear-gradient(180deg, rgba(200, 57, 44, 0.06), rgba(200, 57, 44, 0.02));
+  border-color: rgba(200, 57, 44, 0.22);
+}
+.todo-group[data-tone="today"] {
+  background: linear-gradient(180deg, rgba(200, 165, 90, 0.08), rgba(200, 165, 90, 0.02));
+  border-color: rgba(200, 165, 90, 0.28);
+}
+.todo-group[data-tone="done"] {
+  opacity: 0.85;
+}
+
+.todo-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.todo-group-head h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft, #555);
+  margin: 0;
+}
+.todo-group-count {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(23, 24, 26, 0.08);
+  font-size: 12px;
+  color: var(--text, #17181a);
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.todo-group[data-tone="overdue"] .todo-group-count {
+  background: rgba(200, 57, 44, 0.15);
+  color: #c8392c;
+}
+.todo-group[data-tone="today"] .todo-group-count {
+  background: rgba(200, 165, 90, 0.2);
+  color: #8a6d2d;
+}
+
+.todo-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.todo-group-empty {
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-soft, #888);
+}
+
+.todo-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 24, 26, 0.06);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.todo-item:hover {
+  border-color: rgba(23, 24, 26, 0.18);
+  box-shadow: 0 2px 8px rgba(23, 24, 26, 0.06);
+}
+.todo-item.is-done strong {
+  text-decoration: line-through;
+  color: var(--text-soft, #888);
+}
+.todo-group[data-tone="overdue"] .todo-item {
+  border-color: rgba(200, 57, 44, 0.25);
+}
+
+.todo-body strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.todo-meta-priority,
+.todo-meta-due,
+.todo-assignee-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(23, 24, 26, 0.06);
+  color: var(--text-soft, #555);
+}
+.todo-meta-priority[data-priority="高"] {
+  background: rgba(200, 57, 44, 0.12);
+  color: #c8392c;
+}
+.todo-meta-priority[data-priority="低"] {
+  background: rgba(23, 24, 26, 0.04);
+  color: var(--text-soft, #777);
+}
+.todo-meta-due[data-state="overdue"] {
+  background: rgba(200, 57, 44, 0.15);
+  color: #c8392c;
+  font-weight: 600;
+}
+.todo-meta-due[data-state="today"] {
+  background: rgba(200, 165, 90, 0.2);
+  color: #8a6d2d;
+  font-weight: 600;
+}
+.todo-meta-due[data-state="none"] {
+  opacity: 0.7;
+}
+.todo-assignee-chip {
+  background: rgba(47, 97, 255, 0.08);
+  color: #2f61ff;
+}
+
+.todo-group[data-collapsed] .todo-group-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .todo-form {
+    grid-template-columns: 1fr;
+  }
+  .todo-item {
+    grid-template-columns: auto 1fr;
+  }
+  .todo-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
