@@ -28,6 +28,9 @@
     MEDIA_UPLOAD:   "/api/media/upload",
     MEDIA_SYNC:     "/api/media/sync",
     MEDIA_REVIEW:   (id) => `/api/media/${encodeURIComponent(id)}/review`,
+    WISHES:         "/api/wishes",
+    WISH_BY_ID:     (id) => `/api/wishes/${encodeURIComponent(id)}`,
+    TEAM_ORDER:     (id) => `/api/team/${encodeURIComponent(id)}/order`,
     TODOS:          "/api/todos",
     TODO_BY_ID:     (id) => `/api/todos/${encodeURIComponent(id)}`,
     DEVICES:        "/api/devices",
@@ -166,21 +169,26 @@
         minLengthMessage: "借用目的至少需要4个字符",
       },
     },
-    todo: {
-      title: {
+    team: {
+      name: {
         required: true,
         minLength: 2,
-        maxLength: 200,
-        requiredMessage:  "请输入待办标题",
-        minLengthMessage: "待办标题至少需要2个字符",
+        maxLength: 50,
+        requiredMessage: "请输入成员姓名",
+      },
+      role: {
+        required: true,
+        minLength: 2,
+        maxLength: 50,
+        requiredMessage: "请输入成员角色",
       },
     },
   };
 
   // ─── 排序器（高阶函数） ──────────────────────────────────────────────────────
   const SORTERS = {
-    newest:   (arr) => [...arr].sort((a, b) => (b.uploadedAt || "").localeCompare(a.uploadedAt || "")),
-    oldest:   (arr) => [...arr].sort((a, b) => (a.uploadedAt || "").localeCompare(b.uploadedAt || "")),
+    newest:   (arr) => [...arr].sort((a, b) => (b.uploadedAt || b.createdAt || "").localeCompare(a.uploadedAt || a.createdAt || "")),
+    oldest:   (arr) => [...arr].sort((a, b) => (a.uploadedAt || a.createdAt || "").localeCompare(b.uploadedAt || b.createdAt || "")),
     title:    (arr) => [...arr].sort((a, b) => (a.title || "").localeCompare(b.title || "")),
     author:   (arr) => [...arr].sort((a, b) => (a.author || "").localeCompare(b.author || "")),
     priority: (arr) => {

@@ -144,8 +144,8 @@
           </div>
           <div class="wish-item-content">${escapeHtml(wish.content)}</div>
           <div class="wish-item-footer">
-            <span class="wish-item-time">${formatTime(wish.created_at)}</span>
-            <button class="wish-item-delete" onclick="deleteWish(${wish.id})">删除</button>
+            <span class="wish-item-time">${formatTime(wish.createdAt || wish.created_at)}</span>
+            ${isWishAdmin() ? `<button class="wish-item-delete" onclick="deleteWish(${wish.id})">删除</button>` : ""}
           </div>
         </div>
       `).join('');
@@ -181,6 +181,16 @@
     div.textContent = text;
     return div.innerHTML;
   }
+
+  function isWishAdmin() {
+    return window.shengshengSession?.role === "admin";
+  }
+
+  window.addEventListener("shengsheng:session", () => {
+    if (!document.getElementById("wish-modal")?.hasAttribute("hidden")) {
+      loadWishes();
+    }
+  });
 
   function formatTime(timestamp) {
     const date = new Date(timestamp);

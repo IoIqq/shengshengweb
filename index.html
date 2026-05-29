@@ -8,6 +8,7 @@
       content="声声网络思政工作室工作网站，聚焦素材库、审片中心、待办事项、团队协作与系统备份。"
     />
     <title>声声网络思政工作室 · 工作网站</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -316,6 +317,16 @@
                 <button class="filter-chip" data-filter="pending" type="button">待审</button>
                 <button class="filter-chip" data-filter="approved" type="button">已通过</button>
               </div>
+
+              <label class="field field-inline">
+                <span>排序</span>
+                <select id="media-sort">
+                  <option value="newest">最新上传</option>
+                  <option value="oldest">最早上传</option>
+                  <option value="title">按标题</option>
+                  <option value="author">按作者</option>
+                </select>
+              </label>
             </div>
 
             <div class="media-grid" id="media-grid"></div>
@@ -374,6 +385,7 @@
             </div>
 
             <form class="device-form" id="device-form">
+              <input type="hidden" name="id" id="device-form-id" value="" />
               <label class="field">
                 <span>设备名称</span>
                 <input name="name" type="text" placeholder="例如：摄像机 A1" required />
@@ -406,7 +418,10 @@
                 <span>备注</span>
                 <input name="note" type="text" placeholder="补充说明、附件、保养记录等" />
               </label>
-              <button class="primary-btn" type="submit">保存设备</button>
+              <div class="device-form-actions">
+                <button class="primary-btn" id="device-form-submit" type="submit">保存设备</button>
+                <button class="ghost-btn" id="device-form-cancel" type="button" hidden>取消编辑</button>
+              </div>
             </form>
 
             <div class="toolbar">
@@ -607,7 +622,8 @@
               </label>
               <div class="settings-actions">
                 <button class="primary-btn" type="submit">保存设置</button>
-                <a class="ghost-btn" href="/api/backup" target="_blank" rel="noreferrer">下载备份</a>
+                <a class="ghost-btn" href="/api/backup" target="_blank" rel="noreferrer">下载数据备份</a>
+                <a class="ghost-btn" href="/api/backup/database" target="_blank" rel="noreferrer">下载数据库</a>
               </div>
             </form>
 
@@ -616,82 +632,6 @@
         </section>
       </main>
     </div>
-
-    <template id="media-card-template">
-      <article class="media-card">
-        <img class="media-thumb" alt="" loading="lazy" />
-        <div class="media-body">
-          <div class="media-topline">
-            <h3></h3>
-            <span class="status-pill"></span>
-          </div>
-          <p class="media-meta"></p>
-          <p class="media-note"></p>
-          <div class="tag-row"></div>
-          <div class="media-actions"></div>
-        </div>
-      </article>
-    </template>
-
-    <template id="todo-item-template">
-      <article class="todo-item">
-        <label class="todo-check">
-          <input type="checkbox" />
-          <span></span>
-        </label>
-        <div class="todo-body">
-          <strong></strong>
-          <p></p>
-        </div>
-        <div class="todo-actions"></div>
-      </article>
-    </template>
-
-    <template id="device-item-template">
-      <article class="device-item">
-        <div class="device-head">
-          <div>
-            <h3></h3>
-            <p></p>
-          </div>
-          <span class="status-pill"></span>
-        </div>
-        <div class="device-meta"></div>
-        <small class="device-note"></small>
-        <div class="device-actions"></div>
-      </article>
-    </template>
-
-    <template id="borrow-item-template">
-      <article class="borrow-item">
-        <div class="borrow-head">
-          <div>
-            <h3></h3>
-            <p></p>
-          </div>
-          <span class="status-pill"></span>
-        </div>
-        <div class="borrow-meta"></div>
-        <small class="borrow-note"></small>
-        <div class="borrow-actions"></div>
-      </article>
-    </template>
-
-    <template id="team-card-template">
-      <article class="team-card">
-        <div class="team-head">
-          <span class="team-badge"></span>
-          <div>
-            <h3></h3>
-            <p></p>
-          </div>
-          <span class="team-status-dot"></span>
-        </div>
-        <small class="team-note"></small>
-        <div class="team-meta"></div>
-        <div class="team-actions"></div>
-      </article>
-    </template>
 
     <!-- 集中配置（挂到 window.shengshengConfig） -->
     <script src="config.js"></script>

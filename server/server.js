@@ -621,6 +621,7 @@ function mediaRowToItem(row) {
     thumb: row.thumb,
     url: row.url,
     reviewState: row.review_state,
+    uploadedAt: row.created_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -929,6 +930,24 @@ function buildBackupSummary() {
       media: mediaCount,
       todos: todoCount,
       activity: activityCount,
+    },
+  };
+}
+
+function buildFullBackup() {
+  const summary = buildBackupSummary();
+  return {
+    ...summary,
+    exportVersion: 2,
+    data: {
+      settings: getSettings(),
+      team: getAllTeam(),
+      media: getAllMedia(),
+      todos: getAllTodos(),
+      activity: getAllActivity(),
+      devices: getAllDevices(),
+      borrowRequests: getAllBorrowRequests(),
+      wishes: all("SELECT * FROM wishes ORDER BY datetime(created_at) DESC").map(wishRowToItem),
     },
   };
 }
@@ -1280,6 +1299,16 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function requireAuthForUploads(req, res, next) {
+  const session = getSession(req);
+  if (!session) {
+    return res.status(401).send("请先登录后访问素材文件。");
+  }
+  req.session = session;
+  req.user = session.user;
+  next();
+}
+
 function sessionToPayload(session) {
   if (!session) {
     return { authenticated: false, user: null };
@@ -1292,6 +1321,12 @@ function sessionToPayload(session) {
 }
 
 async function main() {
+  const WEAK_DEFAULT_PASSWORD = "admin123456";
+  if (process.env.NODE_ENV === "production" && ADMIN_PASSWORD === WEAK_DEFAULT_PASSWORD) {
+    console.error("生产环境禁止使用默认管理员密码，请通过 ADMIN_PASSWORD 环境变量设置强密码。");
+    process.exit(1);
+  }
+
   const sqlDir = path.dirname(require.resolve("sql.js/dist/sql-wasm.wasm"));
   const SQL = await initSqlJs({
     locateFile: (file) => path.join(sqlDir, file),
@@ -1430,6 +1465,15 @@ async function main() {
     logDbIssue("team_table_migration_failed", error);
   }
 
+  try {
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_media_created_at ON media(created_at);
+      CREATE INDEX IF NOT EXISTS idx_media_review_state ON media(review_state);
+    `);
+  } catch (error) {
+    logDbIssue("media_index_migration_failed", error);
+  }
+
   seedTables();
   persistDb();
 
@@ -1500,7 +1544,7 @@ async function main() {
   });
   app.use(express.json({ limit: "256kb" }));
   app.use(express.urlencoded({ extended: true }));
-  app.use("/uploads", express.static(UPLOAD_DIR));
+  app.use("/uploads", requireAuthForUploads, express.static(UPLOAD_DIR));
   app.use(express.static(ROOT_DIR, { index: false, dotfiles: "ignore" }));
 
   const mediaUpload = multer({
@@ -1541,7 +1585,7 @@ async function main() {
     });
   });
 
-  app.get("/api/routes", (req, res) => {
+  app.get("/api/routes", requireAuth, requireAdmin, (req, res) => {
     res.json({
       ok: true,
       ...getRouteHealth(),
@@ -1609,11 +1653,21 @@ async function main() {
   });
 
   app.get("/api/backup", requireAuth, requireAdmin, (req, res) => {
-    const summary = buildBackupSummary();
+    const payload = buildFullBackup();
     const filename = `backup-${nowLocalDateKey()}.json`;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.json(summary);
+    res.json(payload);
+  });
+
+  app.get("/api/backup/database", requireAuth, requireAdmin, (req, res) => {
+    if (!fs.existsSync(DB_PATH)) {
+      return res.status(404).json({ error: "数据库文件不存在。" });
+    }
+    const filename = `studio-${nowLocalDateKey()}.sqlite`;
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.sendFile(DB_PATH);
   });
 
   app.get("/api/settings", requireAuth, requireAdmin, (req, res) => {
@@ -1937,6 +1991,7 @@ async function main() {
   app.post("/api/media/:id/review", requireAuth, (req, res) => {
     const id = String(req.params.id || "");
     const status = String(req.body?.status || "");
+    const reviewNote = String(req.body?.reviewNote || "").trim();
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({ error: "审核状态不正确。" });
     }
@@ -1950,12 +2005,14 @@ async function main() {
         throw error;
       }
       const nextStatus = status === "approved" ? "已通过" : "退回";
+      const nextNote = reviewNote || row.note;
       runWrite(
-        "UPDATE media SET review_state = ?, status = ?, updated_at = ? WHERE id = ?",
-        [status, nextStatus, nowIso(), id],
+        "UPDATE media SET review_state = ?, status = ?, note = ?, updated_at = ? WHERE id = ?",
+        [status, nextStatus, nextNote, nowIso(), id],
       );
       updated = get("SELECT * FROM media WHERE id = ? LIMIT 1", [id]);
-      logActivity("素材审核", req.user?.username || "unknown", `${row.title} 已${nextStatus}`);
+      const detail = reviewNote ? `${row.title} 已${nextStatus}（备注：${reviewNote}）` : `${row.title} 已${nextStatus}`;
+      logActivity("素材审核", req.user?.username || "unknown", detail);
     });
 
     res.json({ ok: true, item: mediaRowToItem(updated) });
@@ -2169,7 +2226,7 @@ async function main() {
     validate: { trustProxy: false, xForwardedForHeader: false },
   });
 
-  app.post("/api/wishes", wishLimiter, (req, res) => {
+  app.post("/api/wishes", requireAuth, wishLimiter, (req, res) => {
     const body = req.body || {};
     const content = String(body.content || "").trim();
     const mood = String(body.mood || "").trim().slice(0, 10);
@@ -2228,14 +2285,25 @@ async function main() {
     }
   });
 
-  app.post("/api/client-log", (req, res) => {
+  const clientLogLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: { error: "客户端日志上报过于频繁。" },
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { trustProxy: false, xForwardedForHeader: false },
+  });
+
+  app.post("/api/client-log", clientLogLimiter, (req, res) => {
     const body = req.body || {};
+    const message = typeof body.message === "string" ? body.message.slice(0, 500) : "client error";
+    const category = typeof body.category === "string" ? body.category.slice(0, 80) : "client";
     logServerEvent("error", "client_log", {
-      message: typeof body.message === "string" ? body.message : "client error",
-      category: typeof body.category === "string" ? body.category : "client",
-      page: typeof body.page === "string" ? body.page : req.get("referer") || "",
-      payload: body.payload || {},
-      userAgent: req.get("user-agent") || "",
+      message,
+      category,
+      page: typeof body.page === "string" ? body.page.slice(0, 200) : req.get("referer") || "",
+      payload: typeof body.payload === "object" && body.payload ? body.payload : {},
+      userAgent: (req.get("user-agent") || "").slice(0, 200),
       role: req.user?.role || req.session?.user?.role || "guest",
       method: req.method,
       path: req.originalUrl || req.url,
@@ -2281,6 +2349,20 @@ async function main() {
     });
     res.status(statusCode).json({ error: "服务器内部错误。" });
   });
+
+  if (AUTO_SCAN_SECONDS > 0) {
+    setInterval(() => {
+      try {
+        const result = scanInbox();
+        if (result.imported.length) {
+          logServerEvent("info", "inbox_auto_scan", { imported: result.imported.length });
+        }
+      } catch (error) {
+        logServerEvent("error", "inbox_auto_scan_failed", { error });
+      }
+    }, AUTO_SCAN_SECONDS * 1000);
+    logServerEvent("info", "inbox_auto_scan_enabled", { seconds: AUTO_SCAN_SECONDS });
+  }
 
   app.listen(PORT, HOST, () => {
     const lanIps = getLanIpAddresses();

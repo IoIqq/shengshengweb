@@ -122,6 +122,11 @@
 
   // 初始化 Toast
   Toast.init();
+  window.showToast = (message, tone = "info") => {
+    Toast.show({ message, tone });
+  };
+
+  const cfg = window.shengshengConfig || {};
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // 📦 模块 1：基础设施 - 全局状态 / 排序器 / DOM 引用 / 模板 / 视图标签 / 常量
@@ -156,15 +161,16 @@
     teamSearch: "",
     teamSort: "name",
     teamEditingId: null,
+    deviceEditingId: null,
     profile: {
       displayName: "",
       signature: "",
       navMode: "auto",
     },
   };
-  const SORTERS = {
-    newest: (arr) => [...arr].sort((a, b) => (b.uploadedAt || "").localeCompare(a.uploadedAt || "")),
-    oldest: (arr) => [...arr].sort((a, b) => (a.uploadedAt || "").localeCompare(b.uploadedAt || "")),
+  const SORTERS = cfg.SORTERS || {
+    newest: (arr) => [...arr].sort((a, b) => (b.uploadedAt || b.createdAt || "").localeCompare(a.uploadedAt || a.createdAt || "")),
+    oldest: (arr) => [...arr].sort((a, b) => (a.uploadedAt || a.createdAt || "").localeCompare(b.uploadedAt || b.createdAt || "")),
     title: (arr) => [...arr].sort((a, b) => (a.title || "").localeCompare(b.title || "")),
     author: (arr) => [...arr].sort((a, b) => (a.author || "").localeCompare(b.author || "")),
     priority: (arr) => {
@@ -197,6 +203,7 @@
     const items = (state.bootstrap?.media || [])
       .filter((item) => mediaMatchesFilter(item) && matchesSearch(item, state.mediaSearch));
     items.forEach((item) => state.selectedMedia.add(item.id));
+    renderMedia();
   }
 
   const els = {
@@ -219,6 +226,7 @@
     activityList: document.getElementById("activity-list"),
     mediaGrid: document.getElementById("media-grid"),
     mediaSearch: document.getElementById("media-search"),
+    mediaSort: document.getElementById("media-sort"),
     mediaFilters: document.getElementById("media-filters"),
     reviewStack: document.getElementById("review-stack"),
     reviewCount: document.getElementById("review-count"),
@@ -226,6 +234,9 @@
     todoList: document.getElementById("todo-list"),
     todoOpenCount: document.getElementById("todo-open-count"),
     deviceForm: document.getElementById("device-form"),
+    deviceFormId: document.getElementById("device-form-id"),
+    deviceFormSubmit: document.getElementById("device-form-submit"),
+    deviceFormCancel: document.getElementById("device-form-cancel"),
     deviceList: document.getElementById("device-list"),
     deviceCount: document.getElementById("device-count"),
     deviceRefreshBtn: document.getElementById("device-refresh-btn"),
@@ -250,6 +261,7 @@
     teamSearch: document.getElementById("team-search"),
     teamSort: document.getElementById("team-sort"),
     teamFilters: document.getElementById("team-filters"),
+    settingsNav: document.getElementById("settings-nav"),
     settingsPanel: document.getElementById("settings-panel"),
     settingsForm: document.getElementById("settings-form"),
     systemCard: document.getElementById("system-card"),
@@ -272,15 +284,7 @@
     profilePreviewSignature: document.getElementById("profile-preview-signature"),
   };
 
-  const templates = {
-    media: document.getElementById("media-card-template"),
-    todo: document.getElementById("todo-item-template"),
-    device: document.getElementById("device-item-template"),
-    borrow: document.getElementById("borrow-item-template"),
-    team: document.getElementById("team-card-template"),
-  };
-
-  const VIEW_LABELS = {
+  const VIEW_LABELS = cfg.VIEW_LABELS || {
     overview: "首页",
     media: "素材库",
     review: "审片中心",
@@ -291,11 +295,11 @@
     settings: "系统设置",
   };
 
-  const LOGIN_PLACEHOLDER = "请输入管理员账号和密码";
-  const FEEDBACK_TTL = 2400;
-  const CLIENT_LOG_ENDPOINT = "/api/client-log";
-  const PROFILE_STORAGE_KEY = "shengsheng.workspace.profile";
-  const DEBOUNCE_DELAY = 300;
+  const LOGIN_PLACEHOLDER = cfg.UI?.LOGIN_PLACEHOLDER || "请输入管理员账号和密码";
+  const FEEDBACK_TTL = cfg.UI?.FEEDBACK_TTL ?? 2400;
+  const CLIENT_LOG_ENDPOINT = cfg.API?.CLIENT_LOG || "/api/client-log";
+  const PROFILE_STORAGE_KEY = cfg.UI?.PROFILE_STORAGE_KEY || "shengsheng.workspace.profile";
+  const DEBOUNCE_DELAY = cfg.UI?.DEBOUNCE_DELAY ?? 300;
 
   let feedbackTimer = null;
   let revealObserver = null;
@@ -765,6 +769,14 @@
     els.userAvatarBtn?.setAttribute("aria-expanded", "false");
   }
 
+  function applyNavMode(mode) {
+    if (!els.topnav) return;
+    const useCompact = mode === "auto" && window.matchMedia("(max-width: 900px)").matches;
+    els.topnav.classList.toggle("is-compact", useCompact);
+    els.topnav.dataset.navMode = mode;
+    requestAnimationFrame(() => updateNavIndicator());
+  }
+
   function syncProfileUI() {
     const user = state.session?.user;
     const stored = state.profile;
@@ -802,6 +814,13 @@
     if (els.profileNavMode) els.profileNavMode.value = stored.navMode || "auto";
     if (els.settingsPanel) els.settingsPanel.hidden = role !== "admin";
     if (els.settingsPanel) els.settingsPanel.style.display = role === "admin" ? "" : "none";
+    if (els.settingsNav) {
+      els.settingsNav.hidden = role !== "admin";
+      els.settingsNav.style.display = role === "admin" ? "" : "none";
+    }
+    window.shengshengSession = user ? { role: user.role, username: user.username } : null;
+    window.dispatchEvent(new CustomEvent("shengsheng:session", { detail: window.shengshengSession }));
+    applyNavMode(stored.navMode || "auto");
   }
 
   function loadStoredProfile() {
@@ -1105,7 +1124,7 @@
             }
           )
           .join("")
-      : `<div class="empty-state"><strong>没有找到符合条件的素材</strong><p>可以尝试清空筛选条件，或者换一个关键词再试一次。</p></div>`);
+      : `<div class="empty-state"><strong>没有找到符合条件的素材</strong><p>可以尝试清空筛选条件，或者 <button class="link-btn" type="button" data-jump="media">上传新素材</button>。</p></div>`);
   }
 
   function reviewItems() {
@@ -1136,6 +1155,10 @@
                     <span class="status-pill">待审</span>
                   </div>
                   ${item.note ? `<p class="review-note">${escapeHtml(item.note)}</p>` : ""}
+                  <label class="field review-note-field">
+                    <span>审片备注</span>
+                    <textarea class="review-note-input" data-review-note-for="${escapeHtml(item.id)}" rows="2" placeholder="可选：填写通过或退回说明"></textarea>
+                  </label>
                   <div class="tag-row">${(item.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
                   <div class="review-actions">
                     <button class="primary-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button">✓ 通过</button>
@@ -1146,14 +1169,14 @@
             `,
           )
           .join("")
-      : `<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已经处理完成，稍后有新内容会自动出现在这里。</p></div>`;
+      : `<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已处理完成。<button class="link-btn" type="button" data-jump="media">去素材库上传</button> 或等待服务器同步。</p></div>`;
   }
 
   function getReviewStats() {
     const items = (state.bootstrap?.media || []).filter((item) => item.reviewState === "pending");
     return {
       total: items.length,
-      image: items.filter((item) => item.kind === "image").length,
+      image: items.filter((item) => item.kind === "photo").length,
       video: items.filter((item) => item.kind === "video").length,
     };
   }
@@ -1332,6 +1355,7 @@
       `;
     }
     
+    const isAdmin = state.session?.user?.role === "admin";
     if (!els.teamGrid) return;
     els.teamGrid.innerHTML = items.length
       ? items
@@ -1353,6 +1377,7 @@
                   ${item.joinedAt ? `<span>📅 入职 ${escapeHtml(formatDatetime(item.joinedAt).split(' ')[0])}</span>` : ""}
                 </div>
                 <div class="team-actions">
+                  ${isAdmin ? `<button class="ghost-btn" data-team-move-up="${escapeHtml(item.id)}" type="button" title="上移">↑</button><button class="ghost-btn" data-team-move-down="${escapeHtml(item.id)}" type="button" title="下移">↓</button>` : ""}
                   <button class="ghost-btn" data-team-edit="${escapeHtml(item.id)}" type="button">编辑</button>
                   <button class="ghost-btn" data-team-delete="${escapeHtml(item.id)}" type="button">删除</button>
                 </div>
@@ -1527,16 +1552,49 @@
     }
   }
 
-  function getTemplate(template) {
-    return template?.content?.firstElementChild?.cloneNode(true) || null;
-  }
-
   function fillTodoFormReset() {
     if (els.todoForm) els.todoForm.reset();
   }
 
   function fillDeviceFormReset() {
+    state.deviceEditingId = null;
     if (els.deviceForm) els.deviceForm.reset();
+    if (els.deviceFormId) els.deviceFormId.value = "";
+    if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = "保存设备";
+    if (els.deviceFormCancel) els.deviceFormCancel.hidden = true;
+  }
+
+  function openDeviceForm(device) {
+    if (!els.deviceForm) return;
+    state.deviceEditingId = device?.id || null;
+    const form = els.deviceForm;
+    if (els.deviceFormId) els.deviceFormId.value = device?.id || "";
+    if (form.elements.name) form.elements.name.value = device?.name || "";
+    if (form.elements.category) form.elements.category.value = device?.category || "";
+    if (form.elements.assetNo) form.elements.assetNo.value = device?.assetNo || "";
+    if (form.elements.status) form.elements.status.value = device?.status || "available";
+    if (form.elements.location) form.elements.location.value = device?.location || "";
+    if (form.elements.owner) form.elements.owner.value = device?.owner || "";
+    if (form.elements.note) form.elements.note.value = device?.note || "";
+    if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = device ? "更新设备" : "保存设备";
+    if (els.deviceFormCancel) els.deviceFormCancel.hidden = !device;
+    form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function moveTeamMember(id, direction) {
+    const team = [...(state.bootstrap?.team || [])].sort(
+      (a, b) => (a.orderIndex || 0) - (b.orderIndex || 0),
+    );
+    const index = team.findIndex((member) => member.id === id);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= team.length) return;
+    const result = await requestJSON(`/api/team/${encodeURIComponent(id)}/order`, {
+      method: "PATCH",
+      body: { orderIndex: team[targetIndex].orderIndex },
+    });
+    state.bootstrap.team = normalizeListResponse(result);
+    renderTeam();
   }
 
   function fillBorrowFormReset() {
@@ -1618,7 +1676,7 @@
     renderAll();
   }
 
-  async function createDevice(formData) {
+  async function saveDevice(formData) {
     const payload = {
       name: String(formData.get("name") || "").trim(),
       category: String(formData.get("category") || "").trim(),
@@ -1628,13 +1686,26 @@
       owner: String(formData.get("owner") || "").trim(),
       note: String(formData.get("note") || "").trim(),
     };
-    const result = await requestJSON("/api/devices", {
-      method: "POST",
-      body: payload,
-    });
-    state.deviceCatalog = [result.item, ...(state.deviceCatalog || [])];
+    const editingId = state.deviceEditingId || String(formData.get("id") || "").trim();
+    if (editingId) {
+      const result = await requestJSON(`/api/devices/${encodeURIComponent(editingId)}`, {
+        method: "PATCH",
+        body: payload,
+      });
+      state.deviceCatalog = (state.deviceCatalog || []).map((row) => (row.id === editingId ? result.item : row));
+    } else {
+      const result = await requestJSON("/api/devices", {
+        method: "POST",
+        body: payload,
+      });
+      state.deviceCatalog = [result.item, ...(state.deviceCatalog || [])];
+    }
     syncDeviceView();
     fillDeviceFormReset();
+  }
+
+  async function createDevice(formData) {
+    return saveDevice(formData);
   }
 
   async function updateDevice(id, patch) {
@@ -1790,11 +1861,18 @@
     renderTeam();
   }
 
-  async function reviewMedia(id, status) {
+  function getReviewNoteForItem(id) {
+    const field = document.querySelector(`[data-review-note-for="${CSS.escape(id)}"]`);
+    return field ? String(field.value || "").trim() : "";
+  }
+
+  async function reviewMedia(id, status, reviewNote = "") {
+    const body = { status };
+    if (reviewNote) body.reviewNote = reviewNote;
 
     const result = await requestJSON(`/api/media/${encodeURIComponent(id)}/review`, {
       method: "POST",
-      body: { status },
+      body,
     });
     state.bootstrap.media = (state.bootstrap.media || []).map((row) => (row.id === id ? result.item : row));
     renderMedia();
@@ -1878,7 +1956,7 @@
   const debouncer = createDebouncer();
 
   // 输入验证规则
-  const VALIDATION_RULES = {
+  const VALIDATION_RULES = cfg.VALIDATION_RULES || {
     login: {
       username: {
         required: true,
@@ -2050,6 +2128,11 @@
   }
 
   function bindEvents() {
+    window.addEventListener(
+      "resize",
+      debounce(() => applyNavMode(state.profile.navMode || "auto"), 150, "nav-resize"),
+    );
+
     els.loginForm?.addEventListener("submit", (event) => {
       event.preventDefault();
       const form = new FormData(els.loginForm);
@@ -2145,6 +2228,10 @@
       showFeedback("账户信息已保存。", "success", "overview");
     });
 
+    els.mediaSort?.addEventListener("change", () => {
+      state.mediaSort = els.mediaSort.value || "newest";
+      renderMedia();
+    });
     els.mediaSearch?.addEventListener(
       "input",
       debounce(() => {
@@ -2270,7 +2357,7 @@
       }
       
       const assetNo = String(els.deviceForm.elements.assetNo?.value || "").trim();
-      const assetNoError = validateDeviceAssetNo(assetNo);
+      const assetNoError = validateDeviceAssetNo(assetNo, state.deviceEditingId);
       if (assetNoError) {
         showFieldError(els.deviceForm, "assetNo", assetNoError);
         showFeedback(assetNoError, "error", "device");
@@ -2280,15 +2367,17 @@
       const form = new FormData(els.deviceForm);
       try {
         setPending(true);
-        await createDevice(form);
-        showFeedback("设备已保存。", "success", "device");
+        await saveDevice(form);
+        showFeedback(state.deviceEditingId ? "设备已更新。" : "设备已保存。", "success", "device");
       } catch (error) {
         showFeedback(error.message || "保存设备失败", "error", "device");
-        reportClientError(error, "device_create");
+        reportClientError(error, state.deviceEditingId ? "device_update" : "device_create");
       } finally {
         setPending(false);
       }
     });
+
+    els.deviceFormCancel?.addEventListener("click", () => fillDeviceFormReset());
 
     els.deviceList?.addEventListener("click", async (event) => {
       const deleteButton = event.target.closest("[data-device-delete]");
@@ -2309,18 +2398,7 @@
       if (!button) return;
       const device = (state.deviceCatalog || []).find((row) => row.id === button.dataset.deviceEdit);
       if (!device) return;
-      const nextNote = window.prompt("编辑备注", device.note || "");
-      if (nextNote === null) return;
-      try {
-        setPending(true);
-        await updateDevice(device.id, { note: nextNote });
-        showFeedback("设备已更新。", "success", "device");
-      } catch (error) {
-        showFeedback(error.message || "更新设备失败", "error", "device");
-        reportClientError(error, "device_update");
-      } finally {
-        setPending(false);
-      }
+      openDeviceForm(device);
     });
 
     els.deviceRefreshBtn?.addEventListener("click", async () => {
@@ -2419,7 +2497,7 @@
           if (ids.length === 0) return;
           try {
             setPending(true);
-            await Promise.all(ids.map((id) => reviewMedia(id, status)));
+            await Promise.all(ids.map((id) => reviewMedia(id, status, getReviewNoteForItem(id))));
             clearMediaSelection();
             showFeedback(`已批量${action === "approve" ? "通过" : "退回"} ${ids.length} 个素材`, "success", "media");
           } catch (error) {
@@ -2436,7 +2514,7 @@
       if (!button) return;
       try {
         setPending(true);
-        await reviewMedia(button.dataset.id, button.dataset.mediaReview);
+        await reviewMedia(button.dataset.id, button.dataset.mediaReview, getReviewNoteForItem(button.dataset.id));
         showFeedback("素材审核已更新。", "success", "media");
       } catch (error) {
         showFeedback(error.message || "素材审核失败", "error", "media");
@@ -2451,7 +2529,7 @@
       if (!button) return;
       try {
         setPending(true);
-        await reviewMedia(button.dataset.id, button.dataset.mediaReview);
+        await reviewMedia(button.dataset.id, button.dataset.mediaReview, getReviewNoteForItem(button.dataset.id));
         showFeedback("素材审核已更新。", "success", "review");
       } catch (error) {
         showFeedback(error.message || "素材审核失败", "error", "review");
@@ -2514,6 +2592,13 @@
 
     els.teamForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
+      clearFieldErrors(els.teamForm);
+      const errors = validateForm(els.teamForm, VALIDATION_RULES.team || {});
+      if (errors.length > 0) {
+        errors.forEach((err) => showFieldError(els.teamForm, err.field, err.message));
+        showFeedback(errors[0].message, "error", "team");
+        return;
+      }
       const form = new FormData(els.teamForm);
       const editingId = state.teamEditingId;
       
@@ -2536,6 +2621,32 @@
     });
 
     els.teamGrid?.addEventListener("click", async (event) => {
+      const moveUpButton = event.target.closest("[data-team-move-up]");
+      if (moveUpButton) {
+        try {
+          setPending(true);
+          await moveTeamMember(moveUpButton.dataset.teamMoveUp, "up");
+        } catch (error) {
+          showFeedback(error.message || "调整排序失败", "error", "team");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+
+      const moveDownButton = event.target.closest("[data-team-move-down]");
+      if (moveDownButton) {
+        try {
+          setPending(true);
+          await moveTeamMember(moveDownButton.dataset.teamMoveDown, "down");
+        } catch (error) {
+          showFeedback(error.message || "调整排序失败", "error", "team");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+
       const editButton = event.target.closest("[data-team-edit]");
       if (editButton) {
         const member = (state.bootstrap?.team || []).find((m) => m.id === editButton.dataset.teamEdit);
