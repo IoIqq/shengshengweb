@@ -126,9 +126,12 @@ import { API, VALIDATION_RULES } from './config.js';
 - **L345-353** `escapeHtml()` HTML 转义
 - **L354-358** `normalizeListResponse()` 统一列表响应
 
-### 🌐 模块 3：API 与网络（L598-633）
-- **L598-627** `request(path, options)` 通用请求
-- **L628-633** `requestJSON(path, options)` JSON 请求封装
+### 🌐 模块 3：API 与网络
+- `readCookie(name)` 读取 cookie 值（用于取 CSRF token）
+- `request(path, options)` 通用请求，自动注入 `X-CSRF-Token` 请求头
+- `requestJSON(path, options)` JSON 请求封装
+
+> 提示：行号会随代码演进失效，建议直接 grep 函数名定位。
 
 ### 📡 模块 4：数据同步（L360-484）
 - **L360-374** 查询字符串构建（buildDeviceQuery, buildBorrowQuery）

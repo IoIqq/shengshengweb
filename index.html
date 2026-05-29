@@ -123,7 +123,7 @@
     </button>
 
     <!-- 留言墙侧边抽屉 -->
-    <div class="wish-drawer" id="wish-modal" hidden>
+    <div class="wish-drawer" id="wish-modal" role="dialog" aria-modal="true" aria-label="留言墙" hidden>
       <div class="wish-drawer-overlay" id="wish-modal-overlay"></div>
       <div class="wish-drawer-content">
         <div class="wish-drawer-header">
@@ -209,7 +209,7 @@
           <div class="topbar-actions">
             <button class="ghost-btn" id="refresh-btn" type="button">刷新</button>
             <button class="topbar-cta" id="logout-btn" type="button">退出</button>
-            <button class="avatar-btn" id="user-avatar-btn" type="button" aria-haspopup="dialog" aria-expanded="false">
+            <button class="avatar-btn" id="user-avatar-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="打开账户面板">
               <span class="avatar-initials" id="user-avatar-initials">工</span>
               <span class="avatar-tooltip" id="avatar-tooltip" hidden></span>
             </button>

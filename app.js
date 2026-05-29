@@ -635,6 +635,11 @@
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🌐 模块 3：API 与网络（HTTP 请求封装 / CSRF token 注入 / cookie 读取）
+  //
+  // 详见：CODE_GUIDE.md → "模块 3：API 与网络"
+  // ═══════════════════════════════════════════════════════════════════════════════
   function readCookie(name) {
     const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
     return match ? decodeURIComponent(match[1]) : "";
