@@ -102,6 +102,43 @@ function serializeLogValue(value) {
   return value;
 }
 
+const LOG_MAX_BYTES = 5 * 1024 * 1024; // 5MB 轮转阈值
+const LOG_RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // 30 天保留
+
+function rotateLogIfNeeded(filePath) {
+  try {
+    const stat = fs.statSync(filePath);
+    if (stat.size < LOG_MAX_BYTES) return;
+    let seq = 1;
+    let target;
+    do {
+      target = filePath.replace(/\.log$/, `-${seq}.log`);
+      seq += 1;
+    } while (fs.existsSync(target) && seq < 1000);
+    fs.renameSync(filePath, target);
+  } catch (_) { /* 文件不存在等情况忽略 */ }
+}
+
+let logCleanupRan = false;
+function cleanupOldLogs() {
+  if (logCleanupRan) return;
+  logCleanupRan = true;
+  fs.readdir(LOG_DIR, (err, files) => {
+    if (err) return;
+    const cutoff = Date.now() - LOG_RETENTION_MS;
+    files.forEach((name) => {
+      if (!name.endsWith(".log")) return;
+      const full = path.join(LOG_DIR, name);
+      fs.stat(full, (statErr, stat) => {
+        if (statErr || !stat) return;
+        if (stat.mtimeMs < cutoff) {
+          fs.unlink(full, () => {});
+        }
+      });
+    });
+  });
+}
+
 function appendServerLog(level, event, details = {}) {
   const line = JSON.stringify({
     timestamp: nowIso(),
@@ -110,11 +147,13 @@ function appendServerLog(level, event, details = {}) {
     ...serializeLogValue(details),
   });
   const filePath = path.join(LOG_DIR, `${nowLocalDateKey()}.log`);
-  try {
-    fs.appendFileSync(filePath, `${line}\n`);
-  } catch (error) {
-    console.error("日志写入失败：", error);
-  }
+  rotateLogIfNeeded(filePath);
+  fs.appendFile(filePath, `${line}\n`, (error) => {
+    if (error) {
+      // 写日志的失败不再走日志，避免循环
+      console.error("日志写入失败：", error.message || error);
+    }
+  });
 }
 
 function logServerEvent(level, event, details = {}) {
@@ -1241,9 +1280,11 @@ function createDb(SQL) {
   return new SQL.Database();
 }
 
-function persistDb() {
+function persistDbSync() {
   try {
-    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+    const tmp = `${DB_PATH}.tmp`;
+    fs.writeFileSync(tmp, Buffer.from(db.export()));
+    fs.renameSync(tmp, DB_PATH);
   } catch (error) {
     logServerEvent("error", "database_persist_failed", {
       databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
@@ -1251,6 +1292,91 @@ function persistDb() {
     });
     throw error;
   }
+}
+
+let persistTimer = null;
+let persistChain = Promise.resolve();
+const PERSIST_DEBOUNCE_MS = 200;
+
+function persistDbNow() {
+  persistChain = persistChain.then(() => new Promise((resolve) => {
+    let payload;
+    try {
+      payload = Buffer.from(db.export());
+    } catch (error) {
+      logServerEvent("error", "database_persist_failed", {
+        databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
+        stage: "export",
+        error,
+      });
+      return resolve();
+    }
+    const tmp = `${DB_PATH}.tmp`;
+    fs.writeFile(tmp, payload, (writeErr) => {
+      if (writeErr) {
+        logServerEvent("error", "database_persist_failed", {
+          databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
+          stage: "write",
+          error: writeErr,
+        });
+        return resolve();
+      }
+      fs.rename(tmp, DB_PATH, (renameErr) => {
+        if (renameErr) {
+          logServerEvent("error", "database_persist_failed", {
+            databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
+            stage: "rename",
+            error: renameErr,
+          });
+        }
+        resolve();
+      });
+    });
+  }));
+  return persistChain;
+}
+
+function schedulePersist() {
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    persistDbNow();
+  }, PERSIST_DEBOUNCE_MS);
+}
+
+function flushPersistSync() {
+  if (persistTimer) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  // 等待异步链落地，再做一次同步快照兜底
+  persistChain = persistChain.then(() => {
+    try {
+      persistDbSync();
+    } catch (_) { /* already logged */ }
+  });
+  return persistChain;
+}
+
+// 进程退出时确保最后一次写入落盘
+let exitFlushed = false;
+function exitFlush() {
+  if (exitFlushed) return;
+  exitFlushed = true;
+  try {
+    if (persistTimer) {
+      clearTimeout(persistTimer);
+      persistTimer = null;
+    }
+    persistDbSync();
+  } catch (_) { /* already logged */ }
+}
+process.on("SIGINT", () => { exitFlush(); process.exit(0); });
+process.on("SIGTERM", () => { exitFlush(); process.exit(0); });
+process.on("beforeExit", exitFlush);
+
+function persistDb() {
+  schedulePersist();
 }
 
 function runWrite(sql, params = []) {
@@ -1683,13 +1809,15 @@ async function main() {
   });
 
   app.get("/api/backup/database", requireAuth, requireAdmin, (req, res) => {
-    if (!fs.existsSync(DB_PATH)) {
-      return res.status(404).json({ error: "数据库文件不存在。" });
-    }
-    const filename = `studio-${nowLocalDateKey()}.sqlite`;
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.sendFile(DB_PATH);
+    flushPersistSync().finally(() => {
+      if (!fs.existsSync(DB_PATH)) {
+        return res.status(404).json({ error: "数据库文件不存在。" });
+      }
+      const filename = `studio-${nowLocalDateKey()}.sqlite`;
+      res.setHeader("Content-Type", "application/octet-stream");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.sendFile(DB_PATH);
+    });
   });
 
   app.get("/api/settings", requireAuth, requireAdmin, (req, res) => {
@@ -2387,6 +2515,7 @@ async function main() {
   }
 
   app.listen(PORT, HOST, () => {
+    cleanupOldLogs();
     const lanIps = getLanIpAddresses();
     const localUrl = `http://127.0.0.1:${PORT}`;
     const lanUrls = lanIps.map((ip) => `http://${ip}:${PORT}`);
