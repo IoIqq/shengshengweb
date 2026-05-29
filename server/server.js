@@ -966,8 +966,17 @@ function countFilesRecursively(dir) {
   return total;
 }
 
+const ALLOWED_MEDIA_EXTS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg",
+  ".mp4", ".webm", ".mov", ".m4v", ".ogg",
+]);
+
 function isMediaFile(file) {
-  return Boolean(file && (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")));
+  if (!file || !file.mimetype) return false;
+  const mimeOk = file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/");
+  if (!mimeOk) return false;
+  const ext = path.extname(file.originalname || "").toLowerCase();
+  return ALLOWED_MEDIA_EXTS.has(ext);
 }
 
 function buildUploadedMedia(file, overrides = {}) {
@@ -1488,10 +1497,10 @@ async function main() {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "blob:"],
         connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", "blob:"],
         frameSrc: ["'none'"],
@@ -1525,6 +1534,19 @@ async function main() {
     legacyHeaders: false,
     validate: { trustProxy: false, xForwardedForHeader: false },
   });
+
+  // 写接口限速工厂（已登录场景，相对宽松，避免误伤正常使用）
+  const makeWriteLimiter = (max, message) => rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max,
+    message: { error: message },
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { trustProxy: false, xForwardedForHeader: false },
+  });
+  const uploadLimiter = makeWriteLimiter(30, "上传过于频繁,请稍后再试。");
+  const borrowLimiter = makeWriteLimiter(30, "借出申请提交过于频繁,请稍后再试。");
+  const teamWriteLimiter = makeWriteLimiter(20, "团队成员变更过于频繁,请稍后再试。");
   ["get", "post", "patch", "delete", "put", "use"].forEach((methodName) => {
     const original = app[methodName].bind(app);
     app[methodName] = (firstArg, ...rest) => {
@@ -1833,7 +1855,7 @@ async function main() {
     res.json({ ok: true, item: borrowRequestRowToItem(item) });
   });
 
-  app.post("/api/borrow-requests", requireAuth, (req, res) => {
+  app.post("/api/borrow-requests", borrowLimiter, requireAuth, (req, res) => {
     const body = req.body || {};
     const applicant = String(body.applicant || "").trim();
     const deviceId = String(body.deviceId || "").trim();
@@ -1967,7 +1989,7 @@ async function main() {
     }
   });
 
-  app.post("/api/media/upload", requireAuth, mediaUpload.array("files", MAX_UPLOAD_FILES), (req, res) => {
+  app.post("/api/media/upload", uploadLimiter, requireAuth, mediaUpload.array("files", MAX_UPLOAD_FILES), (req, res) => {
     const files = Array.isArray(req.files) ? req.files : [];
     if (!files.length) {
       return res.status(400).json({ error: "请先选择要上传的文件。" });
@@ -2108,7 +2130,7 @@ async function main() {
     res.json({ ok: true, items });
   });
 
-  app.post("/api/team", requireAuth, requireAdmin, (req, res) => {
+  app.post("/api/team", teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
     const body = req.body || {};
     const name = String(body.name || "").trim();
     const role = String(body.role || "").trim();
