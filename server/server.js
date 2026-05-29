@@ -673,6 +673,21 @@ function normalizePriority(value) {
   return "中";
 }
 
+function normalizeDueDate(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const s = String(value).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return undefined; // undefined = 校验失败
+  const d = new Date(`${s}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return s;
+}
+
+function teamMemberExists(id) {
+  if (!id) return true;
+  const row = get("SELECT id FROM team WHERE id = ? LIMIT 1", [String(id)]);
+  return Boolean(row);
+}
+
 function normalizeReviewState(value) {
   if (value === "approved") return "approved";
   if (value === "rejected") return "rejected";
@@ -754,6 +769,9 @@ function todoRowToItem(row) {
     title: row.title,
     priority: row.priority,
     done: Boolean(row.done),
+    dueDate: row.due_date || null,
+    assigneeId: row.assignee_id || null,
+    completedAt: row.completed_at || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -1243,9 +1261,9 @@ function seedTables() {
       const now = nowIso();
       defaultTodos().forEach((item) => {
         runWrite(
-          `INSERT INTO todos (id, title, priority, done, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [item.id, item.title, normalizePriority(item.priority), item.done ? 1 : 0, now, now],
+          `INSERT INTO todos (id, title, priority, done, due_date, assignee_id, completed_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [item.id, item.title, normalizePriority(item.priority), item.done ? 1 : 0, null, null, null, now, now],
         );
       });
     });
@@ -1576,6 +1594,9 @@ async function main() {
       title TEXT NOT NULL,
       priority TEXT NOT NULL,
       done INTEGER NOT NULL DEFAULT 0,
+      due_date TEXT,
+      assignee_id TEXT,
+      completed_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -1645,6 +1666,22 @@ async function main() {
     }
   } catch (error) {
     logDbIssue("team_table_migration_failed", error);
+  }
+
+  // 扩展 todos 表字段
+  try {
+    const todoColumns = all("PRAGMA table_info(todos)").map(col => col.name);
+    if (!todoColumns.includes("due_date")) {
+      db.exec("ALTER TABLE todos ADD COLUMN due_date TEXT");
+    }
+    if (!todoColumns.includes("assignee_id")) {
+      db.exec("ALTER TABLE todos ADD COLUMN assignee_id TEXT");
+    }
+    if (!todoColumns.includes("completed_at")) {
+      db.exec("ALTER TABLE todos ADD COLUMN completed_at TEXT");
+    }
+  } catch (error) {
+    logDbIssue("todos_table_migration_failed", error);
   }
 
   try {
@@ -2229,18 +2266,30 @@ async function main() {
       return res.status(400).json({ error: "请输入待办标题。" });
     }
 
+    const dueDate = normalizeDueDate(req.body?.dueDate);
+    if (dueDate === undefined) {
+      return res.status(400).json({ error: "截止日期格式有误，需为 YYYY-MM-DD。" });
+    }
+    const assigneeId = req.body?.assigneeId ? String(req.body.assigneeId).trim() : null;
+    if (!teamMemberExists(assigneeId)) {
+      return res.status(400).json({ error: "指定的负责人不存在。" });
+    }
+
     const item = {
       id: randomId("todo"),
       title,
       priority,
       done: false,
+      due_date: dueDate,
+      assignee_id: assigneeId,
+      completed_at: null,
       created_at: nowIso(),
       updated_at: nowIso(),
     };
     transaction(() => {
       runWrite(
-        "INSERT INTO todos (id, title, priority, done, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-        [item.id, item.title, item.priority, 0, item.created_at, item.updated_at],
+        "INSERT INTO todos (id, title, priority, done, due_date, assignee_id, completed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [item.id, item.title, item.priority, 0, item.due_date, item.assignee_id, item.completed_at, item.created_at, item.updated_at],
       );
       logActivity("待办新增", req.user?.username || "unknown", item.title);
     });
@@ -2256,13 +2305,44 @@ async function main() {
     }
 
     const nextTitle = req.body?.title !== undefined ? String(req.body.title || "").trim() : existing.title;
+    if (req.body?.title !== undefined && !nextTitle) {
+      return res.status(400).json({ error: "标题不能为空。" });
+    }
     const nextPriority = req.body?.priority !== undefined ? normalizePriority(String(req.body.priority || "")) : existing.priority;
     const nextDone = req.body?.done !== undefined ? (req.body.done ? 1 : 0) : existing.done;
 
+    let nextDueDate = existing.due_date;
+    if (req.body?.dueDate !== undefined) {
+      const parsed = normalizeDueDate(req.body.dueDate);
+      if (parsed === undefined) {
+        return res.status(400).json({ error: "截止日期格式有误，需为 YYYY-MM-DD。" });
+      }
+      nextDueDate = parsed;
+    }
+
+    let nextAssigneeId = existing.assignee_id;
+    if (req.body?.assigneeId !== undefined) {
+      const aid = req.body.assigneeId ? String(req.body.assigneeId).trim() : null;
+      if (!teamMemberExists(aid)) {
+        return res.status(400).json({ error: "指定的负责人不存在。" });
+      }
+      nextAssigneeId = aid;
+    }
+
+    // done 切换时同步 completed_at
+    let nextCompletedAt = existing.completed_at;
+    if (req.body?.done !== undefined) {
+      if (req.body.done && !existing.done) {
+        nextCompletedAt = nowIso();
+      } else if (!req.body.done && existing.done) {
+        nextCompletedAt = null;
+      }
+    }
+
     transaction(() => {
       runWrite(
-        "UPDATE todos SET title = ?, priority = ?, done = ?, updated_at = ? WHERE id = ?",
-        [nextTitle, nextPriority, nextDone, nowIso(), id],
+        "UPDATE todos SET title = ?, priority = ?, done = ?, due_date = ?, assignee_id = ?, completed_at = ?, updated_at = ? WHERE id = ?",
+        [nextTitle, nextPriority, nextDone, nextDueDate, nextAssigneeId, nextCompletedAt, nowIso(), id],
       );
     });
 
