@@ -370,5 +370,35 @@ bindEvents()
 
 ---
 
-**最后更新**：2026-05-25  
+## 🧾 代码约定（重要）
+
+### 事件处理：统一走事件委托
+**所有动态生成卡片（媒体、设备、借用、团队、待办等）的交互，事件监听都绑在静态父容器上**（如 `els.mediaGrid`、`els.deviceList`），通过 `event.target.closest("[data-action]")` 路由到具体卡片。
+
+✅ 正确：
+```js
+els.deviceList.addEventListener("click", (e) => {
+  const card = e.target.closest(".device-card");
+  if (!card) return;
+  // ...
+});
+```
+
+❌ 反模式（不要这样写）：
+```js
+function renderDevices() {
+  els.deviceList.innerHTML = devices.map(d => `<div class="device-card">...</div>`).join("");
+  els.deviceList.querySelectorAll(".device-card").forEach(card => {
+    card.addEventListener("click", ...);  // 每次 render 都会累加监听器！
+  });
+}
+```
+
+**为什么**：本项目所有 `render*` 函数都用 `innerHTML =` 重写卡片，单卡片 addEventListener 在重渲染时不会被自动清除（即使 DOM 被替换，闭包持有的旧引用也会延迟回收）。统一委托到静态容器是最稳妥的做法。
+
+所有 `addEventListener` 调用应集中在 `bindEvents()` 内一次性执行，由 `init()` 启动时调用一次。
+
+---
+
+**最后更新**：2026-05-29  
 **维护原则**：每次新增模块/重构后立即同步，让本文件成为活的代码地图。
