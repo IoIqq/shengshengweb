@@ -3065,6 +3065,10 @@ h6,
   background: linear-gradient(180deg, rgba(44, 107, 79, 0.55), transparent);
 }
 
+.focus-card[data-tone="danger"]::before {
+  background: linear-gradient(180deg, rgba(200, 57, 44, 0.6), transparent);
+}
+
 .focus-head .eyebrow {
   margin: 0;
 }
@@ -3310,6 +3314,7 @@ h6,
 .focus-card[data-tone="warning"] { border-left: 4px solid #f59e0b; }
 .focus-card[data-tone="info"] { border-left: 4px solid #3b82f6; }
 .focus-card[data-tone="primary"] { border-left: 4px solid #4f46e5; }
+.focus-card[data-tone="danger"] { border-left: 4px solid #c8392c; }
 
 .focus-head {
   display: flex;

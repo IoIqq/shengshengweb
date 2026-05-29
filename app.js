@@ -934,9 +934,19 @@
       const pendingMedia = (state.bootstrap?.media || [])
         .filter((m) => m.reviewState === "pending")
         .slice(0, 3);
-      const openTodos = (state.bootstrap?.todos || [])
-        .filter((t) => !t.done)
-        .slice(0, 3);
+      const todoTodayKey = todoDayKey(new Date());
+      const allTodos = state.bootstrap?.todos || [];
+      const overdueTodos = allTodos
+        .filter((t) => !t.done && classifyTodoByDate(t, todoTodayKey) === "overdue")
+        .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+      const todayTodos = allTodos
+        .filter((t) => !t.done && classifyTodoByDate(t, todoTodayKey) === "today");
+      const focusTodos = [...overdueTodos, ...todayTodos].slice(0, 4);
+      const focusTodoTone = overdueTodos.length ? "danger" : (todayTodos.length ? "warning" : "info");
+      const focusTodoEmpty = (() => {
+        if (allTodos.filter((t) => !t.done).length === 0) return "所有待办已完成";
+        return "今日无紧急待办";
+      })();
       const upcomingBorrows = (state.borrowCatalog || [])
         .filter((b) => b.status === "approved" && b.returnStatus !== "returned")
         .sort((a, b) => (a.expectedReturnAt || "").localeCompare(b.expectedReturnAt || ""))
@@ -968,27 +978,32 @@
             }
           </div>
         </article>
-        <article class="focus-card" data-tone="info">
+        <article class="focus-card" data-tone="${focusTodoTone}">
           <div class="focus-head">
-            <p class="eyebrow">未完成待办</p>
+            <p class="eyebrow">${overdueTodos.length ? `逾期 ${overdueTodos.length} 项` : (todayTodos.length ? "今日截止" : "未完成待办")}</p>
             <button class="focus-link" data-jump="todo" type="button">全部 →</button>
           </div>
           <div class="focus-body">
             ${
-              openTodos.length
-                ? openTodos
+              focusTodos.length
+                ? focusTodos
                     .map(
-                      (t) => `
-                  <div class="focus-row">
+                      (t) => {
+                        const overdue = classifyTodoByDate(t, todoTodayKey) === "overdue";
+                        const dueText = formatDueLabel(t, todoTodayKey);
+                        return `
+                  <div class="focus-row" ${overdue ? 'data-overdue="true"' : ""}>
                     <span class="focus-priority" data-priority="${escapeHtml(t.priority || "中")}">${escapeHtml(t.priority || "中")}</span>
                     <div class="focus-text">
                       <strong>${escapeHtml(t.title || "")}</strong>
+                      <small>${escapeHtml(dueText)}</small>
                     </div>
                   </div>
-                `,
+                `;
+                      },
                     )
                     .join("")
-                : '<p class="focus-empty">所有待办已完成</p>'
+                : `<p class="focus-empty">${escapeHtml(focusTodoEmpty)}</p>`
             }
           </div>
         </article>
