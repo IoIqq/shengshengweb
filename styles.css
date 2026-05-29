@@ -4673,3 +4673,120 @@ h6,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========== 移动端汉堡导航 ========== */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid rgba(23, 24, 26, 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text, #17181a);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+.hamburger-btn[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-btn[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+.mobile-nav-drawer:not([hidden]) {
+  pointer-events: auto;
+}
+
+.mobile-nav-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.mobile-nav-drawer:not([hidden]) .mobile-nav-overlay {
+  opacity: 1;
+}
+
+.mobile-nav-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 280px;
+  max-width: 85vw;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface-strong, #ffffff);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.16);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+.mobile-nav-drawer:not([hidden]) .mobile-nav-content {
+  transform: translateX(0);
+}
+
+.mobile-nav-close {
+  align-self: flex-end;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text, #17181a);
+  cursor: pointer;
+}
+
+.mobile-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mobile-nav-items .nav-chip {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  font-size: 16px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+  .topnav {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-overlay,
+  .mobile-nav-content {
+    transition-duration: 0.01ms !important;
+  }
+}
