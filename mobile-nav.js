@@ -18,6 +18,7 @@
       topnav.querySelectorAll(".nav-chip").forEach((chip) => {
         const clone = chip.cloneNode(true);
         clone.removeAttribute("id");
+        clone.classList.remove("is-active");
         clone.addEventListener("click", () => {
           chip.click();
           close();
@@ -26,17 +27,44 @@
       });
     }
 
+    function focusableInDrawer() {
+      return drawer.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+    }
+
+    function trapTab(e) {
+      if (e.key !== "Tab") return;
+      const items = focusableInDrawer();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
     function open() {
       syncItems();
       drawer.hidden = false;
       btn.setAttribute("aria-expanded", "true");
       document.body.style.overflow = "hidden";
+      // 焦点交给抽屉的关闭按钮
+      requestAnimationFrame(() => closeBtn && closeBtn.focus());
+      drawer.addEventListener("keydown", trapTab);
     }
 
     function close() {
       drawer.hidden = true;
       btn.setAttribute("aria-expanded", "false");
       document.body.style.overflow = "";
+      drawer.removeEventListener("keydown", trapTab);
+      // 焦点回到汉堡按钮
+      btn.focus();
     }
 
     btn.addEventListener("click", () => {
