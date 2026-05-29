@@ -4590,6 +4590,35 @@ h6,
   overflow-y: auto;
 }
 
+.todo-item:not(.todo-item--editing) {
+  cursor: pointer;
+}
+.todo-item--editing {
+  display: block;
+  padding: 16px;
+  cursor: default;
+  border-color: var(--accent, #2d3137);
+  box-shadow: 0 0 0 3px rgba(45, 49, 55, 0.12);
+}
+.todo-edit-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.todo-edit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .todo-edit-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .todo-form {
     grid-template-columns: 1fr;

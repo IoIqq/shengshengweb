@@ -162,6 +162,7 @@
     teamSort: "name",
     teamEditingId: null,
     deviceEditingId: null,
+    todoEditingId: null,
     profile: {
       displayName: "",
       signature: "",
@@ -1292,7 +1293,52 @@
       { key: "done", label: "已完成", tone: "done" },
     ];
 
+    const team = state.bootstrap?.team || [];
+    const renderEditCard = (item) => {
+      const assigneeOpts =
+        `<option value="">未分配</option>` +
+        team
+          .map(
+            (m) =>
+              `<option value="${escapeHtml(m.id)}" ${item.assigneeId === m.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`,
+          )
+          .join("");
+      const priorityOpts = ["高", "中", "低"]
+        .map(
+          (p) =>
+            `<option value="${p}" ${item.priority === p ? "selected" : ""}>${p}优先</option>`,
+        )
+        .join("");
+      return `
+        <article class="todo-item todo-item--editing" data-todo-id="${escapeHtml(item.id)}">
+          <form class="todo-edit-form" data-todo-edit-form="${escapeHtml(item.id)}">
+            <label class="field">
+              <span>标题</span>
+              <input name="title" type="text" value="${escapeHtml(item.title)}" required data-todo-edit-focus />
+            </label>
+            <label class="field">
+              <span>截止日期</span>
+              <input name="dueDate" type="date" value="${escapeHtml(item.dueDate || "")}" />
+            </label>
+            <label class="field">
+              <span>负责人</span>
+              <select name="assigneeId">${assigneeOpts}</select>
+            </label>
+            <label class="field">
+              <span>优先级</span>
+              <select name="priority">${priorityOpts}</select>
+            </label>
+            <div class="todo-edit-actions">
+              <button class="ghost-btn" type="button" data-todo-edit-cancel>取消</button>
+              <button class="primary-btn" type="submit">保存</button>
+            </div>
+          </form>
+        </article>
+      `;
+    };
+
     const renderCard = (item) => {
+      if (state.todoEditingId === item.id) return renderEditCard(item);
       const assignee = getAssigneeName(item.assigneeId);
       const dueLabel = formatDueLabel(item, todayKey);
       const dueState =
@@ -1350,6 +1396,14 @@
         ${sections}
       </div>
     `;
+
+    if (state.todoEditingId) {
+      const focusEl = els.todoList.querySelector("[data-todo-edit-focus]");
+      if (focusEl) {
+        focusEl.focus();
+        if (typeof focusEl.select === "function") focusEl.select();
+      }
+    }
   }
 
   function deviceStatusLabel(status) {
@@ -1771,6 +1825,31 @@
     await requestJSON(`/api/todos/${encodeURIComponent(id)}`, { method: "DELETE", body: {} });
     state.bootstrap.todos = (state.bootstrap.todos || []).filter((row) => row.id !== id);
     renderTodos();
+  }
+
+  function startEditTodo(id) {
+    if (state.todoEditingId === id) return;
+    state.todoEditingId = id;
+    renderTodos();
+  }
+
+  function cancelEditTodo() {
+    if (!state.todoEditingId) return;
+    state.todoEditingId = null;
+    renderTodos();
+  }
+
+  async function saveEditTodo(id, payload) {
+    const result = await requestJSON(`/api/todos/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: payload,
+    });
+    state.bootstrap.todos = (state.bootstrap.todos || []).map((row) =>
+      row.id === id ? result.item : row,
+    );
+    state.todoEditingId = null;
+    renderTodos();
+    return result.item;
   }
 
   function validateUrl(url) {
@@ -2465,17 +2544,70 @@
         if (overdueGroup) overdueGroup.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-      const button = event.target.closest("[data-todo-delete]");
-      if (!button) return;
+      // 编辑取消按钮
+      if (event.target.closest("[data-todo-edit-cancel]")) {
+        cancelEditTodo();
+        return;
+      }
+      const deleteBtn = event.target.closest("[data-todo-delete]");
+      if (deleteBtn) {
+        try {
+          setPending(true);
+          await deleteTodo(deleteBtn.dataset.todoDelete);
+          showFeedback("待办已删除。", "success", "todo");
+        } catch (error) {
+          showFeedback(error.message || "删除待办失败", "error", "todo");
+          reportClientError(error, "todo_delete");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+      // 点卡片任意位置（除 toggle/delete/编辑表单内）→ 进入编辑
+      if (event.target.closest("[data-todo-edit-skip]")) return;
+      if (event.target.closest("[data-todo-edit-form]")) return;
+      const card = event.target.closest("[data-todo-id]");
+      if (!card) return;
+      // 已勾选完成的项不进入编辑
+      const id = card.dataset.todoId;
+      const item = (state.bootstrap?.todos || []).find((t) => t.id === id);
+      if (item && item.done) return;
+      startEditTodo(id);
+    });
+
+    els.todoList?.addEventListener("submit", async (event) => {
+      const form = event.target.closest("[data-todo-edit-form]");
+      if (!form) return;
+      event.preventDefault();
+      const id = form.dataset.todoEditForm;
+      const fd = new FormData(form);
+      const title = String(fd.get("title") || "").trim();
+      if (!title) {
+        showFeedback("标题不能为空", "error", "todo");
+        return;
+      }
+      const payload = {
+        title,
+        priority: String(fd.get("priority") || "中"),
+        dueDate: String(fd.get("dueDate") || "").trim() || null,
+        assigneeId: String(fd.get("assigneeId") || "").trim() || null,
+      };
       try {
         setPending(true);
-        await deleteTodo(button.dataset.todoDelete);
-        showFeedback("待办已删除。", "success", "todo");
+        await saveEditTodo(id, payload);
+        showFeedback("待办已更新", "success", "todo");
       } catch (error) {
-        showFeedback(error.message || "删除待办失败", "error", "todo");
-        reportClientError(error, "todo_delete");
+        showFeedback(error.message || "更新失败", "error", "todo");
+        reportClientError(error, "todo_update");
       } finally {
         setPending(false);
+      }
+    });
+
+    els.todoList?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && state.todoEditingId) {
+        event.preventDefault();
+        cancelEditTodo();
       }
     });
 
