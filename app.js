@@ -133,7 +133,7 @@
   // ───────────────────────────────────────────────────────────────────────────────
   // 职责：管理应用全局状态，缓存 DOM 节点引用，定义全局常量
   // 调用方：所有模块
-  // 详见：CODE_GUIDE.md → "模块 1：基础设施"
+  // 详见：PROJECT_GUIDE.md → "代码导航 / 前端核心文件 / app.js"
   // ═══════════════════════════════════════════════════════════════════════════════
   const state = {
     session: null,
@@ -166,6 +166,7 @@
     profile: {
       displayName: "",
       signature: "",
+      avatarUrl: "",
       navMode: "auto",
     },
   };
@@ -284,6 +285,16 @@
     profileAvatarPreview: document.getElementById("profile-avatar-preview"),
     profilePreviewName: document.getElementById("profile-preview-name"),
     profilePreviewSignature: document.getElementById("profile-preview-signature"),
+    userAvatarImage: document.getElementById("user-avatar-image"),
+    profileAvatarImage: document.getElementById("profile-avatar-image"),
+    profileAvatarInput: document.getElementById("profile-avatar-input"),
+    profileSaveBtn: document.getElementById("profile-save-btn"),
+    profilePwdOld: document.getElementById("profile-pwd-old"),
+    profilePwdNew: document.getElementById("profile-pwd-new"),
+    profilePwdConfirm: document.getElementById("profile-pwd-confirm"),
+    profilePwdHint: document.getElementById("profile-pwd-hint"),
+    profilePwdBtn: document.getElementById("profile-pwd-btn"),
+    profileFeedback: document.getElementById("profile-feedback"),
   };
 
   const VIEW_LABELS = cfg.VIEW_LABELS || {
@@ -311,7 +322,7 @@
   // 🔧 模块 2：工具函数（DOM 选择 / 格式化 / 防抖 / 转义）
   // ───────────────────────────────────────────────────────────────────────────────
   // 职责：通用工具方法，无业务逻辑
-  // 详见：CODE_GUIDE.md → "模块 2：工具函数"
+  // 详见：PROJECT_GUIDE.md → "开发约定 / 网络原则 / 渲染原则"
   // ═══════════════════════════════════════════════════════════════════════════════
   function $(root, selector) {
     return root ? root.querySelector(selector) : null;
@@ -640,7 +651,7 @@
   // ═══════════════════════════════════════════════════════════════════════════════
   // 🌐 模块 3：API 与网络（HTTP 请求封装 / CSRF token 注入 / cookie 读取）
   //
-  // 详见：CODE_GUIDE.md → "模块 3：API 与网络"
+  // 详见：PROJECT_GUIDE.md → "开发约定 / 网络原则"
   // ═══════════════════════════════════════════════════════════════════════════════
   function readCookie(name) {
     const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
@@ -776,16 +787,40 @@
     }
   }
 
+  let profileCloseTimer = null;
+
+  function isProfileOpen() {
+    return !!els.profilePopover && els.profilePopover.classList.contains("is-open");
+  }
+
   function openProfilePopover() {
     if (!els.profilePopover) return;
+    if (profileCloseTimer) {
+      clearTimeout(profileCloseTimer);
+      profileCloseTimer = null;
+    }
     els.profilePopover.hidden = false;
+    requestAnimationFrame(() => els.profilePopover.classList.add("is-open"));
     els.userAvatarBtn?.setAttribute("aria-expanded", "true");
+    setProfileFeedback("");
+    setProfilePwdHint("");
   }
 
   function closeProfilePopover() {
-    if (!els.profilePopover) return;
-    els.profilePopover.hidden = true;
+    if (!els.profilePopover || !isProfileOpen()) return;
+    els.profilePopover.classList.remove("is-open");
     els.userAvatarBtn?.setAttribute("aria-expanded", "false");
+    const inner = els.profilePopover.querySelector(".profile-popover-inner");
+    const finish = () => {
+      if (profileCloseTimer) {
+        clearTimeout(profileCloseTimer);
+        profileCloseTimer = null;
+      }
+      if (!isProfileOpen()) els.profilePopover.hidden = true;
+      inner?.removeEventListener("transitionend", finish);
+    };
+    inner?.addEventListener("transitionend", finish);
+    profileCloseTimer = setTimeout(finish, 320);
   }
 
   function applyNavMode(mode) {
@@ -796,17 +831,40 @@
     requestAnimationFrame(() => updateNavIndicator());
   }
 
+  function applyAvatar(imgEl, initialsEl, avatarUrl) {
+    if (imgEl) {
+      if (avatarUrl) {
+        imgEl.src = avatarUrl;
+        imgEl.hidden = false;
+        imgEl.onerror = () => {
+          imgEl.hidden = true;
+          if (initialsEl) initialsEl.hidden = false;
+        };
+        if (initialsEl) initialsEl.hidden = true;
+      } else {
+        imgEl.hidden = true;
+        imgEl.removeAttribute("src");
+        if (initialsEl) initialsEl.hidden = false;
+      }
+    } else if (initialsEl) {
+      initialsEl.hidden = false;
+    }
+  }
+
   function syncProfileUI() {
     const user = state.session?.user;
     const stored = state.profile;
     const displayName = stored.displayName || user?.username || "";
     const signature = stored.signature || "工作台成员";
+    const avatarUrl = stored.avatarUrl || "";
     const role = user?.role || "guest";
     const initials = getInitials(displayName);
 
     if (els.userAvatarInitials) els.userAvatarInitials.textContent = initials;
     if (els.avatarTooltip) els.avatarTooltip.textContent = `${displayName || "未登录"} · ${signature}`;
     if (els.profileAvatarPreview) els.profileAvatarPreview.textContent = initials;
+    applyAvatar(els.userAvatarImage, els.userAvatarInitials, avatarUrl);
+    applyAvatar(els.profileAvatarImage, els.profileAvatarPreview, avatarUrl);
     if (els.profilePreviewName) els.profilePreviewName.textContent = displayName || "-";
     if (els.profilePreviewSignature) els.profilePreviewSignature.textContent = signature;
     if (els.profileAccountName) els.profileAccountName.textContent = user?.username || "-";
@@ -828,7 +886,7 @@
           ? "先看总览，再进入站点配置、素材审核、借出审批和设备管理。"
           : "先看总览，再切换到素材、审片、待办和借出申请。";
     }
-    if (els.profileDisplayName) els.profileDisplayName.value = displayName;
+    if (els.profileDisplayName) els.profileDisplayName.value = stored.displayName || "";
     if (els.profileSignature) els.profileSignature.value = stored.signature || "";
     if (els.profileNavMode) els.profileNavMode.value = stored.navMode || "auto";
     if (els.settingsPanel) els.settingsPanel.hidden = role !== "admin";
@@ -847,18 +905,122 @@
       const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      state.profile = {
-        displayName: parsed.displayName || "",
-        signature: parsed.signature || "",
-        navMode: parsed.navMode || "auto",
-      };
+      // localStorage 仅保存设备级偏好 navMode；name/signature/avatar 以服务端为准
+      state.profile.navMode = parsed.navMode || "auto";
     } catch {
       // ignore
     }
   }
 
   function saveStoredProfile() {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(state.profile));
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ navMode: state.profile.navMode || "auto" }));
+  }
+
+  function hydrateProfileFromSession() {
+    const user = state.session?.user;
+    if (!user) return;
+    state.profile.displayName = user.displayName || "";
+    state.profile.signature = user.signature || "";
+    state.profile.avatarUrl = user.avatarUrl || "";
+  }
+
+  function setProfileFeedback(message, type = "success") {
+    if (!els.profileFeedback) return;
+    els.profileFeedback.textContent = message || "";
+    els.profileFeedback.hidden = !message;
+    els.profileFeedback.classList.toggle("is-success", !!message && type === "success");
+    els.profileFeedback.classList.toggle("is-error", !!message && type === "error");
+  }
+
+  function setProfilePwdHint(message, tone = "") {
+    if (!els.profilePwdHint) return;
+    els.profilePwdHint.textContent = message || "";
+    els.profilePwdHint.hidden = !message;
+    els.profilePwdHint.classList.toggle("is-ok", tone === "ok");
+    els.profilePwdHint.classList.toggle("is-error", tone === "error");
+  }
+
+  async function saveProfileInfo() {
+    const displayName = (els.profileDisplayName?.value || "").trim();
+    const signature = (els.profileSignature?.value || "").trim();
+    try {
+      const data = await requestJSON("/api/profile", {
+        method: "PATCH",
+        body: { displayName, signature },
+      });
+      state.profile.displayName = data.user?.displayName ?? displayName;
+      state.profile.signature = data.user?.signature ?? signature;
+      if (state.session?.user) {
+        state.session.user.displayName = state.profile.displayName;
+        state.session.user.signature = state.profile.signature;
+      }
+      syncProfileUI();
+      setProfileFeedback("资料已保存。", "success");
+    } catch (error) {
+      setProfileFeedback(error.message || "保存失败。", "error");
+      reportClientError(error, "profile_save");
+    }
+  }
+
+  async function changeProfilePassword() {
+    const oldPassword = els.profilePwdOld?.value || "";
+    const newPassword = els.profilePwdNew?.value || "";
+    const confirmPassword = els.profilePwdConfirm?.value || "";
+    if (!oldPassword || !newPassword) {
+      setProfilePwdHint("请填写当前密码和新密码。", "error");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setProfilePwdHint("新密码至少 6 个字符。", "error");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setProfilePwdHint("两次输入的新密码不一致。", "error");
+      return;
+    }
+    try {
+      await requestJSON("/api/profile/password", {
+        method: "POST",
+        body: { oldPassword, newPassword },
+      });
+      if (els.profilePwdOld) els.profilePwdOld.value = "";
+      if (els.profilePwdNew) els.profilePwdNew.value = "";
+      if (els.profilePwdConfirm) els.profilePwdConfirm.value = "";
+      setProfilePwdHint("");
+      setProfileFeedback("登录密码已修改。", "success");
+    } catch (error) {
+      setProfilePwdHint(error.message || "修改失败。", "error");
+      reportClientError(error, "profile_password");
+    }
+  }
+
+  async function uploadProfileAvatar() {
+    const input = els.profileAvatarInput;
+    if (!input?.files?.length) return;
+    const file = input.files[0];
+    try {
+      setProfileFeedback("正在上传头像...", "success");
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const csrfToken = readCookie("ss_csrf");
+      const response = await fetch("/api/profile/avatar", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "头像上传失败。");
+      state.profile.avatarUrl = data.avatarUrl || "";
+      if (state.session?.user) state.session.user.avatarUrl = state.profile.avatarUrl;
+      syncProfileUI();
+      setProfileFeedback("头像已更新。", "success");
+    } catch (error) {
+      setProfileFeedback(error.message || "头像上传失败。", "error");
+      reportClientError(error, "profile_avatar");
+    } finally {
+      input.value = "";
+    }
   }
 
   function renderDashboard() {
@@ -1690,6 +1852,7 @@
       state.session = data.authenticated ? data : null;
       if (state.session?.authenticated) {
         setShellLoggedIn(true);
+        hydrateProfileFromSession();
         syncProfileUI();
         try {
           await loadBootstrap();
@@ -1735,6 +1898,7 @@
       state.session = data;
       setShellLoggedIn(true);
       await loadBootstrap();
+      hydrateProfileFromSession();
       syncProfileUI();
       if (els.loginForm) els.loginForm.reset();
       showFeedback("登录成功，工作台已打开。", "success", "overview");
@@ -2446,26 +2610,51 @@
     });
 
     els.userAvatarBtn?.addEventListener("click", () => {
-      if (els.profilePopover?.hidden) openProfilePopover();
-      else closeProfilePopover();
+      if (isProfileOpen()) closeProfilePopover();
+      else openProfilePopover();
     });
     els.profileClose?.addEventListener("click", () => closeProfilePopover());
     document.addEventListener("click", (event) => {
-      if (!els.profilePopover || els.profilePopover.hidden) return;
+      if (!isProfileOpen()) return;
       if (els.profilePopover.contains(event.target) || els.userAvatarBtn?.contains(event.target)) return;
       closeProfilePopover();
     });
-
-    els.profileForm?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const form = new FormData(els.profileForm);
-      state.profile.displayName = String(form.get("displayName") || "").trim();
-      state.profile.signature = String(form.get("signature") || "").trim();
-      state.profile.navMode = String(form.get("navMode") || "auto");
-      saveStoredProfile();
-      syncProfileUI();
-      showFeedback("账户信息已保存。", "success", "overview");
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isProfileOpen()) closeProfilePopover();
     });
+
+    els.profileForm?.addEventListener("submit", (event) => event.preventDefault());
+
+    els.profileNavMode?.addEventListener("change", () => {
+      state.profile.navMode = els.profileNavMode.value || "auto";
+      saveStoredProfile();
+      applyNavMode(state.profile.navMode);
+    });
+
+    els.profileSaveBtn?.addEventListener("click", () => saveProfileInfo());
+    els.profilePwdBtn?.addEventListener("click", () => changeProfilePassword());
+
+    const checkPwdMatch = () => {
+      const next = els.profilePwdNew?.value || "";
+      const confirm = els.profilePwdConfirm?.value || "";
+      if (!next && !confirm) {
+        setProfilePwdHint("");
+        return;
+      }
+      if (next.length < 6) {
+        setProfilePwdHint("新密码至少 6 个字符。", "error");
+      } else if (confirm && next !== confirm) {
+        setProfilePwdHint("两次输入的新密码不一致。", "error");
+      } else if (confirm && next === confirm) {
+        setProfilePwdHint("两次输入一致。", "ok");
+      } else {
+        setProfilePwdHint("");
+      }
+    };
+    els.profilePwdNew?.addEventListener("input", checkPwdMatch);
+    els.profilePwdConfirm?.addEventListener("input", checkPwdMatch);
+
+    els.profileAvatarInput?.addEventListener("change", () => uploadProfileAvatar());
 
     els.mediaSort?.addEventListener("change", () => {
       state.mediaSort = els.mediaSort.value || "newest";

@@ -37,6 +37,9 @@
     DEVICE_BY_ID:   (id) => `/api/devices/${encodeURIComponent(id)}`,
     BORROW:         "/api/borrow-requests",
     BORROW_BY_ID:   (id) => `/api/borrow-requests/${encodeURIComponent(id)}`,
+    PROFILE:          "/api/profile",
+    PROFILE_PASSWORD: "/api/profile/password",
+    PROFILE_AVATAR:   "/api/profile/avatar",
   };
 
   // ─── UI 常量 ──────────────────────────────────────────────────────────────────

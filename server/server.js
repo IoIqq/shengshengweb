@@ -29,6 +29,7 @@ const DATA_DIR = resolvePath(null, path.join(__dirname, "data"));
 const LOG_DIR = resolvePath(null, path.join(__dirname, "logs"));
 const UPLOAD_DIR = resolvePath(process.env.UPLOAD_DIR, path.join(__dirname, "uploads"));
 const MEDIA_DIR = path.join(UPLOAD_DIR, "media");
+const AVATAR_DIR = path.join(UPLOAD_DIR, "avatars");
 const INBOX_DIR = resolvePath(process.env.INBOX_DIR, path.join(UPLOAD_DIR, "inbox"));
 const DB_PATH = resolvePath(process.env.DATABASE_PATH, path.join(DATA_DIR, "studio.sqlite"));
 const PORT = Number(process.env.PORT || 3001);
@@ -38,6 +39,7 @@ const TRUST_PROXY = String(process.env.TRUST_PROXY || "1") !== "0";
 const AUTO_SCAN_SECONDS = Number(process.env.INBOX_AUTO_SCAN_SECONDS || 60);
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 200);
 const MAX_UPLOAD_FILES = Number(process.env.MAX_UPLOAD_FILES || 30);
+const MAX_AVATAR_MB = Number(process.env.MAX_AVATAR_MB || 5);
 const SITE_TITLE = process.env.SITE_TITLE || "思想工作台";
 const SITE_SUBTITLE = process.env.SITE_SUBTITLE || "可落盘的排障与协作中心";
 const PUBLIC_URL = process.env.PUBLIC_URL || "";
@@ -54,6 +56,7 @@ ensureDir(DATA_DIR);
 ensureDir(LOG_DIR);
 ensureDir(UPLOAD_DIR);
 ensureDir(MEDIA_DIR);
+ensureDir(AVATAR_DIR);
 ensureDir(INBOX_DIR);
 
 function ensureDir(dir) {
@@ -565,7 +568,8 @@ function getSession(req) {
   if (!token) return null;
   cleanupExpiredSessionState();
   const row = get(
-    `SELECT sessions.token, sessions.expires_at, users.id AS user_id, users.username, users.role
+    `SELECT sessions.token, sessions.expires_at, users.id AS user_id, users.username, users.role,
+            users.display_name, users.signature, users.avatar_url
      FROM sessions
      JOIN users ON users.id = sessions.user_id
      WHERE sessions.token = ? AND sessions.expires_at > ?`,
@@ -579,6 +583,9 @@ function getSession(req) {
       id: row.user_id,
       username: row.username,
       role: row.role,
+      displayName: row.display_name || "",
+      signature: row.signature || "",
+      avatarUrl: row.avatar_url || "",
     },
   };
 }
@@ -1684,6 +1691,22 @@ async function main() {
     logDbIssue("todos_table_migration_failed", error);
   }
 
+  // 扩展 users 表字段（个人资料）
+  try {
+    const userColumns = all("PRAGMA table_info(users)").map((col) => col.name);
+    if (!userColumns.includes("display_name")) {
+      db.exec("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''");
+    }
+    if (!userColumns.includes("signature")) {
+      db.exec("ALTER TABLE users ADD COLUMN signature TEXT DEFAULT ''");
+    }
+    if (!userColumns.includes("avatar_url")) {
+      db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''");
+    }
+  } catch (error) {
+    logDbIssue("users_table_migration_failed", error);
+  }
+
   try {
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_media_created_at ON media(created_at);
@@ -1807,6 +1830,34 @@ async function main() {
     },
   });
 
+  const AVATAR_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
+  const avatarUpload = multer({
+    storage: multer.diskStorage({
+      destination(req, file, cb) {
+        cb(null, AVATAR_DIR);
+      },
+      filename(req, file, cb) {
+        const ext = path.extname(file.originalname || "").toLowerCase();
+        cb(null, `${randomId("avatar")}${ext}`);
+      },
+    }),
+    limits: {
+      fileSize: MAX_AVATAR_MB * 1024 * 1024,
+      files: 1,
+    },
+    fileFilter(req, file, cb) {
+      const ext = path.extname(file.originalname || "").toLowerCase();
+      const isImage = typeof file.mimetype === "string" && file.mimetype.startsWith("image/");
+      if (isImage && AVATAR_EXTENSIONS.has(ext)) {
+        return cb(null, true);
+      }
+      const error = new Error("仅支持图片文件（PNG/JPG/WEBP/GIF）。");
+      error.statusCode = 400;
+      error.code = "UNSUPPORTED_MEDIA_TYPE";
+      cb(error);
+    },
+  });
+
   app.get("/api/health", (req, res) => {
     res.json({
       ok: true,
@@ -1861,6 +1912,9 @@ async function main() {
         id: userRow.id,
         username: userRow.username,
         role: userRow.role,
+        displayName: userRow.display_name || "",
+        signature: userRow.signature || "",
+        avatarUrl: userRow.avatar_url || "",
       },
       expiresAt: session.expiresAt,
     };
@@ -1948,6 +2002,78 @@ async function main() {
     });
 
     res.json({ ok: true, settings: getSettings() });
+  });
+
+  app.patch("/api/profile", requireAuth, (req, res) => {
+    const body = req.body || {};
+    const displayName = String(body.displayName || "").trim().slice(0, 50);
+    const signature = String(body.signature || "").trim().slice(0, 120);
+
+    transaction(() => {
+      runWrite("UPDATE users SET display_name = ?, signature = ?, updated_at = ? WHERE id = ?", [
+        displayName,
+        signature,
+        nowIso(),
+        req.user.id,
+      ]);
+      logActivity("账户资料更新", req.user.username, "更新了显示名称或个人签名。");
+    });
+
+    res.json({ ok: true, user: { displayName, signature } });
+  });
+
+  app.post("/api/profile/password", requireAuth, (req, res) => {
+    const body = req.body || {};
+    const oldPassword = String(body.oldPassword || "");
+    const newPassword = String(body.newPassword || "");
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: "请输入当前密码和新密码。" });
+    }
+    if (newPassword.length < 6 || newPassword.length > 100) {
+      return res.status(400).json({ error: "新密码长度需为 6-100 个字符。" });
+    }
+
+    const row = get("SELECT * FROM users WHERE id = ? LIMIT 1", [req.user.id]);
+    if (!row || !verifyPassword(oldPassword, row)) {
+      return res.status(400).json({ error: "当前密码不正确。" });
+    }
+
+    transaction(() => {
+      const { salt, hash } = createPasswordHash(newPassword);
+      runWrite("UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?", [
+        hash,
+        salt,
+        nowIso(),
+        req.user.id,
+      ]);
+      logActivity("登录密码修改", req.user.username, "修改了登录密码。");
+    });
+
+    res.json({ ok: true });
+  });
+
+  app.post("/api/profile/avatar", uploadLimiter, requireAuth, avatarUpload.single("avatar"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "请先选择头像图片。" });
+    }
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const previous = get("SELECT avatar_url FROM users WHERE id = ? LIMIT 1", [req.user.id]);
+
+    transaction(() => {
+      runWrite("UPDATE users SET avatar_url = ?, updated_at = ? WHERE id = ?", [
+        avatarUrl,
+        nowIso(),
+        req.user.id,
+      ]);
+      logActivity("头像更新", req.user.username, "上传了新的头像。");
+    });
+
+    if (previous?.avatar_url && previous.avatar_url.startsWith("/uploads/avatars/")) {
+      const oldPath = path.join(AVATAR_DIR, path.basename(previous.avatar_url));
+      fs.unlink(oldPath, () => {});
+    }
+
+    res.json({ ok: true, avatarUrl });
   });
 
   app.get("/api/devices", requireAuth, (req, res) => {
@@ -2618,7 +2744,7 @@ async function main() {
     }
     if (err && err.code === "UNSUPPORTED_MEDIA_TYPE") {
       logUploadIssue(req, err, { reason: "unsupported_media_type" });
-      return res.status(400).json({ error: "仅支持图片或视频文件。" });
+      return res.status(400).json({ error: err.message || "仅支持图片或视频文件。" });
     }
     if (statusCode === 404) {
       return res.status(404).json({ error: "未找到对应接口。" });

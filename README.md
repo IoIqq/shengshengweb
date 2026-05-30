@@ -58,6 +58,8 @@ http://<本机局域网IP>:3002
 - 上传图片：`server/uploads/media`
 - 服务端收件箱：`server/uploads/inbox`
 
+外部硬盘部署、安全机制、代码导航等完整说明见 `PROJECT_GUIDE.md`。
+
 ## 默认账号
 
 项目的管理员账号由 `.env` 里的这两个变量控制：

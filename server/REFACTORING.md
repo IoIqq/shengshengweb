@@ -11,7 +11,7 @@
 - 业务路由：集中在 `server.js` 中按注释分区维护
 - 配置：通过项目根目录 `.env` / `.env.example`
 - 数据：`sql.js` + `server/data/studio.sqlite` + `server/uploads/`
-- 部署：见 [`DEPLOYMENT_GUIDE.md`](../DEPLOYMENT_GUIDE.md)
+- 部署：见 [`PROJECT_GUIDE.md`](../PROJECT_GUIDE.md)
 
 ## 若需再次模块化
 
