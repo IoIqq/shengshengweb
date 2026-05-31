@@ -96,7 +96,7 @@
     };
 
     try {
-      const csrfToken = readCsrfCookie();
+      const csrfToken = readCsrfToken();
       const response = await fetch('/api/wishes', {
         method: 'POST',
         headers: {
@@ -162,7 +162,7 @@
     if (!confirm('确定要删除这条留言吗？')) return;
 
     try {
-      const csrfToken = readCsrfCookie();
+      const csrfToken = readCsrfToken();
       const response = await fetch(`/api/wishes/${id}`, {
         method: 'DELETE',
         headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
@@ -181,14 +181,20 @@
   };
 
   function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return window.shengshengUtils?.escapeHtml
+      ? window.shengshengUtils.escapeHtml(text)
+      : String(text || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
   }
 
-  function readCsrfCookie() {
-    const match = document.cookie.match(/(?:^|; )ss_csrf=([^;]*)/);
-    return match ? decodeURIComponent(match[1]) : '';
+  function readCsrfToken() {
+    return window.shengshengUtils?.readCookie
+      ? window.shengshengUtils.readCookie('ss_csrf')
+      : '';
   }
 
   function isWishAdmin() {
@@ -219,29 +225,6 @@
   }
 
   function showToast(message, type = 'info') {
-    // 如果已有 toast 系统，使用它
-    if (window.showToast) {
-      window.showToast(message, type);
-      return;
-    }
-
-    // 简单的 toast 实现
-    const toast = document.createElement('div');
-    toast.className = `toast is-visible`;
-    toast.setAttribute('data-tone', type);
-    toast.innerHTML = `
-      <div class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</div>
-      <div class="toast-content">
-        <div class="toast-message">${message}</div>
-      </div>
-    `;
-    
-    const container = document.getElementById('toast-container') || document.body;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.classList.remove('is-visible');
-      setTimeout(() => toast.remove(), 400);
-    }, 3000);
+    window.showToast?.(message, type);
   }
 })();

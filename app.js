@@ -385,6 +385,11 @@
       .replaceAll("'", "&#39;");
   }
 
+  window.shengshengUtils = {
+    ...(window.shengshengUtils || {}),
+    escapeHtml,
+  };
+
   function normalizeListResponse(data) {
     if (Array.isArray(data?.items)) return data.items;
     if (Array.isArray(data)) return data;
@@ -657,6 +662,11 @@
     const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
     return match ? decodeURIComponent(match[1]) : "";
   }
+
+  window.shengshengUtils = {
+    ...(window.shengshengUtils || {}),
+    readCookie,
+  };
 
   async function request(path, options = {}) {
     const method = (options.method || "GET").toUpperCase();
