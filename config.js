@@ -50,6 +50,7 @@
     TOAST_ERROR_DURATION: 6000,
     TOAST_MAX_VISIBLE:    3,
     PROFILE_STORAGE_KEY:  "shengsheng.workspace.profile",
+    LOGIN_REMEMBER_KEY:   "shengsheng.login.remember",
     LOGIN_PLACEHOLDER:    "请输入管理员账号和密码",
   };
 

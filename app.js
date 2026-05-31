@@ -183,6 +183,9 @@
 
   function sortMedia(items, sortBy) { return (SORTERS[sortBy] || SORTERS.newest)(items); }
   function sortReview(items, sortBy) { return (SORTERS[sortBy] || SORTERS.newest)(items); }
+  function isAdminUser() {
+    return state.session?.user?.role === "admin";
+  }
   function reviewMatchesFilter(item) {
     const filter = state.reviewFilter;
     if (filter === "all") return item.reviewState === "pending";
@@ -201,6 +204,18 @@
     state.selectedMedia.clear();
   }
 
+  function clearInvalidMediaSelection(items = state.bootstrap?.media || []) {
+    const validIds = new Set((items || []).map((item) => item.id));
+    let changed = false;
+    for (const id of Array.from(state.selectedMedia)) {
+      if (!validIds.has(id)) {
+        state.selectedMedia.delete(id);
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   function selectAllVisibleMedia() {
     const items = (state.bootstrap?.media || [])
       .filter((item) => mediaMatchesFilter(item) && matchesSearch(item, state.mediaSearch));
@@ -214,6 +229,11 @@
     loginForm: document.getElementById("login-form"),
     loginMessage: document.getElementById("login-message"),
     loginSubmit: document.querySelector("#login-form button[type='submit']"),
+    loginUsername: document.getElementById("login-username"),
+    loginPassword: document.getElementById("login-password"),
+    loginPasswordToggle: document.getElementById("login-password-toggle"),
+    capsLockHint: document.getElementById("caps-lock-hint"),
+    loginRemember: document.getElementById("login-remember"),
     logoutBtn: document.getElementById("logout-btn"),
     refreshBtn: document.getElementById("refresh-btn"),
     topnav: document.getElementById("topnav"),
@@ -312,6 +332,7 @@
   const FEEDBACK_TTL = cfg.UI?.FEEDBACK_TTL ?? 2400;
   const CLIENT_LOG_ENDPOINT = cfg.API?.CLIENT_LOG || "/api/client-log";
   const PROFILE_STORAGE_KEY = cfg.UI?.PROFILE_STORAGE_KEY || "shengsheng.workspace.profile";
+  const LOGIN_REMEMBER_KEY = cfg.UI?.LOGIN_REMEMBER_KEY || "shengsheng.login.remember";
   const DEBOUNCE_DELAY = cfg.UI?.DEBOUNCE_DELAY ?? 300;
 
   let feedbackTimer = null;
@@ -596,9 +617,9 @@
   function setLoginPending(pending) {
     state.loginPending = pending;
     if (els.loginSubmit) {
+      // 仅切换 disabled，由 CSS .login-submit[disabled] 接管 spinner 显示；
+      // 不要改 textContent，否则会抹掉按钮内的 .login-submit-text / .login-submit-spinner
       els.loginSubmit.disabled = pending;
-      els.loginSubmit.dataset.originalText ||= els.loginSubmit.textContent || "";
-      els.loginSubmit.textContent = pending ? "登录中..." : els.loginSubmit.dataset.originalText;
     }
     if (els.loginForm) {
       $$("input, button", els.loginForm).forEach((el) => {
@@ -1299,6 +1320,7 @@
           .map(
             (item) => {
               const isSelected = state.selectedMedia.has(item.id);
+              const canDelete = isAdminUser();
               return `
               <article class="media-card ${isSelected ? "is-selected" : ""}" data-media-id="${escapeHtml(item.id)}">
                 <div class="media-select-overlay">
@@ -1323,6 +1345,7 @@
                         ? `<button class="ghost-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button">撤回</button>`
                         : `<button class="ghost-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button">重新通过</button>`
                     }
+                    ${canDelete ? `<button class="ghost-btn" data-media-delete="${escapeHtml(item.id)}" type="button">删除</button>` : ""}
                   </div>
                 </div>
               </article>
@@ -1369,6 +1392,7 @@
                   <div class="review-actions">
                     <button class="primary-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button">✓ 通过</button>
                     <button class="ghost-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button">✗ 退回</button>
+                    ${isAdminUser() ? `<button class="ghost-btn" data-media-delete="${escapeHtml(item.id)}" type="button">删除</button>` : ""}
                   </div>
                 </div>
               </article>
@@ -1836,6 +1860,7 @@
     state.bootstrap = await request("/api/bootstrap");
     state.deviceCatalog = Array.isArray(state.bootstrap.devices) ? state.bootstrap.devices : [];
     state.borrowCatalog = Array.isArray(state.bootstrap.borrowRequests) ? state.bootstrap.borrowRequests : [];
+    clearInvalidMediaSelection(state.bootstrap.media || []);
     syncDeviceView();
     syncBorrowView();
     renderAll();
@@ -1910,6 +1935,16 @@
       await loadBootstrap();
       hydrateProfileFromSession();
       syncProfileUI();
+      // 记住账号：只存用户名，绝不存密码；放在 reset 之前避免被清空
+      try {
+        if (els.loginRemember?.checked) {
+          localStorage.setItem(LOGIN_REMEMBER_KEY, username);
+        } else {
+          localStorage.removeItem(LOGIN_REMEMBER_KEY);
+        }
+      } catch {
+        // ignore
+      }
       if (els.loginForm) els.loginForm.reset();
       showFeedback("登录成功，工作台已打开。", "success", "overview");
     } catch (error) {
@@ -2050,7 +2085,7 @@
       }
       return null;
     } catch {
-      return "公开地址格式不正确，请输入完整的 URL（如 http://192.168.1.100:3001）";
+      return "公开地址格式不正确，请输入完整的 URL（如 http://192.168.1.100:3002）";
     }
   }
 
@@ -2279,7 +2314,7 @@
     return field ? String(field.value || "").trim() : "";
   }
 
-  async function reviewMedia(id, status, reviewNote = "") {
+  async function reviewMedia(id, status, reviewNote = "", options = {}) {
     const body = { status };
     if (reviewNote) body.reviewNote = reviewNote;
 
@@ -2287,9 +2322,10 @@
       method: "POST",
       body,
     });
-    state.bootstrap.media = (state.bootstrap.media || []).map((row) => (row.id === id ? result.item : row));
-    renderMedia();
-    renderReview();
+    if (options.refresh !== false) {
+      await loadBootstrap();
+    }
+    return result.item;
   }
 
   async function syncMedia() {
@@ -2299,6 +2335,29 @@
     });
     await loadBootstrap();
     showFeedback(`已同步 ${result.imported || 0} 条服务器照片`, "success", "media");
+  }
+
+  async function deleteMedia(id) {
+    await requestJSON(`/api/media/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      body: {},
+    });
+    state.selectedMedia.delete(id);
+    await loadBootstrap();
+  }
+
+  async function removeMediaWithConfirm(id, view = "media") {
+    if (!confirm("确定要删除这条素材吗？删除后无法恢复。")) return;
+    try {
+      setPending(true);
+      await deleteMedia(id);
+      showFeedback("素材已删除。", "success", view);
+    } catch (error) {
+      showFeedback(error.message || "删除素材失败", "error", view);
+      reportClientError(error, "media_delete");
+    } finally {
+      setPending(false);
+    }
   }
 
   function attachRevealObserver() {
@@ -2684,6 +2743,126 @@
       $$("button", els.mediaFilters).forEach((node) => node.classList.toggle("is-active", node === button));
       renderMedia();
     });
+
+    // 素材库视图：删除和审核操作
+    els.mediaGrid?.addEventListener("click", async (event) => {
+      // 处理删除按钮
+      const deleteBtn = event.target.closest("[data-media-delete]");
+      if (deleteBtn) {
+        await removeMediaWithConfirm(deleteBtn.dataset.mediaDelete, "media");
+        return;
+      }
+
+      // 处理审核按钮（通过/退回）
+      const reviewBtn = event.target.closest("[data-media-review]");
+      if (reviewBtn) {
+        const id = reviewBtn.dataset.id;
+        const status = reviewBtn.dataset.mediaReview;
+        if (!id || !status) return;
+        
+        try {
+          setPending(true);
+          await reviewMedia(id, status);
+          showFeedback(
+            status === "approved" ? "素材已通过。" : "素材已退回。",
+            "success",
+            "media"
+          );
+        } catch (error) {
+          showFeedback(error.message || "审核操作失败", "error", "media");
+          reportClientError(error, "media_review");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+
+      // 处理批量操作
+      const batchBtn = event.target.closest("[data-batch-action]");
+      if (batchBtn) {
+        const action = batchBtn.dataset.batchAction;
+        if (action === "clear") {
+          clearMediaSelection();
+          renderMedia();
+          return;
+        }
+        
+        if (state.selectedMedia.size === 0) {
+          showFeedback("请先选择要操作的素材", "warning", "media");
+          return;
+        }
+
+        const status = action === "approve" ? "approved" : "rejected";
+        const ids = Array.from(state.selectedMedia);
+        
+        try {
+          setPending(true);
+          for (const id of ids) {
+            await reviewMedia(id, status, "", { refresh: false });
+          }
+          await loadBootstrap();
+          clearMediaSelection();
+          showFeedback(
+            `已批量${action === "approve" ? "通过" : "退回"} ${ids.length} 条素材。`,
+            "success",
+            "media"
+          );
+        } catch (error) {
+          showFeedback(error.message || "批量操作失败", "error", "media");
+          reportClientError(error, "media_batch_review");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+
+      // 处理素材选择
+      const checkbox = event.target.closest("[data-media-select]");
+      if (checkbox) {
+        toggleMediaSelection(checkbox.dataset.mediaSelect);
+        renderMedia();
+        return;
+      }
+    });
+
+    // 审核视图：删除和审核操作
+    els.reviewStack?.addEventListener("click", async (event) => {
+      // 处理删除按钮
+      const deleteBtn = event.target.closest("[data-media-delete]");
+      if (deleteBtn) {
+        await removeMediaWithConfirm(deleteBtn.dataset.mediaDelete, "review");
+        return;
+      }
+
+      // 处理审核按钮（通过/退回）
+      const reviewBtn = event.target.closest("[data-media-review]");
+      if (reviewBtn) {
+        const id = reviewBtn.dataset.id;
+        const status = reviewBtn.dataset.mediaReview;
+        if (!id || !status) return;
+
+        // 获取审核备注
+        const noteInput = els.reviewStack.querySelector(`[data-review-note-for="${id}"]`);
+        const reviewNote = noteInput ? noteInput.value.trim() : "";
+
+        try {
+          setPending(true);
+          await reviewMedia(id, status, reviewNote);
+          showFeedback(
+            status === "approved" ? "素材已通过。" : "素材已退回。",
+            "success",
+            "review"
+          );
+        } catch (error) {
+          showFeedback(error.message || "审核操作失败", "error", "review");
+          reportClientError(error, "media_review");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+    });
+
     els.deviceSearch?.addEventListener(
       "input",
       debounce(async () => {
@@ -2994,8 +3173,9 @@
           if (ids.length === 0) return;
           try {
             setPending(true);
-            await Promise.all(ids.map((id) => reviewMedia(id, status, getReviewNoteForItem(id))));
+            await Promise.all(ids.map((id) => reviewMedia(id, status, getReviewNoteForItem(id), { refresh: false })));
             clearMediaSelection();
+            await loadBootstrap();
             showFeedback(`已批量${action === "approve" ? "通过" : "退回"} ${ids.length} 个素材`, "success", "media");
           } catch (error) {
             showFeedback(error.message || "批量操作失败", "error", "media");
@@ -3004,6 +3184,12 @@
             setPending(false);
           }
         }
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-media-delete]");
+      if (deleteButton) {
+        await removeMediaWithConfirm(deleteButton.dataset.mediaDelete, "media");
         return;
       }
 
@@ -3023,17 +3209,23 @@
 
     els.reviewStack?.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-media-review]");
-      if (!button) return;
-      try {
-        setPending(true);
-        await reviewMedia(button.dataset.id, button.dataset.mediaReview, getReviewNoteForItem(button.dataset.id));
-        showFeedback("素材审核已更新。", "success", "review");
-      } catch (error) {
-        showFeedback(error.message || "素材审核失败", "error", "review");
-        reportClientError(error, "media_review");
-      } finally {
-        setPending(false);
+      if (button) {
+        try {
+          setPending(true);
+          await reviewMedia(button.dataset.id, button.dataset.mediaReview, getReviewNoteForItem(button.dataset.id));
+          showFeedback("素材审核已更新。", "success", "review");
+        } catch (error) {
+          showFeedback(error.message || "素材审核失败", "error", "review");
+          reportClientError(error, "media_review");
+        } finally {
+          setPending(false);
+        }
+        return;
       }
+
+      const deleteButton = event.target.closest("[data-media-delete]");
+      if (!deleteButton) return;
+      await removeMediaWithConfirm(deleteButton.dataset.mediaDelete, "review");
     });
 
     els.uploadBtn?.addEventListener("click", async () => {
@@ -3231,6 +3423,47 @@
     }
   }
 
+  function syncCapsLockHint(event) {
+    if (!els.capsLockHint) return;
+    const on = typeof event.getModifierState === "function" && event.getModifierState("CapsLock");
+    els.capsLockHint.hidden = !on;
+  }
+
+  function initLoginInteractions() {
+    // 密码显示/隐藏
+    if (els.loginPasswordToggle && els.loginPassword) {
+      els.loginPasswordToggle.addEventListener("click", () => {
+        const show = els.loginPassword.type === "password";
+        els.loginPassword.type = show ? "text" : "password";
+        els.loginPasswordToggle.setAttribute("aria-pressed", String(show));
+        els.loginPasswordToggle.setAttribute("aria-label", show ? "隐藏密码" : "显示密码");
+        els.loginPassword.focus();
+      });
+    }
+
+    // 大写锁定提示
+    if (els.loginPassword) {
+      els.loginPassword.addEventListener("keydown", syncCapsLockHint);
+      els.loginPassword.addEventListener("keyup", syncCapsLockHint);
+      els.loginPassword.addEventListener("blur", () => {
+        if (els.capsLockHint) els.capsLockHint.hidden = true;
+      });
+    }
+
+    // 记住账号：回填上次记住的用户名
+    if (els.loginUsername) {
+      try {
+        const remembered = localStorage.getItem(LOGIN_REMEMBER_KEY);
+        if (remembered) {
+          els.loginUsername.value = remembered;
+          if (els.loginRemember) els.loginRemember.checked = true;
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   function initDefaultVisibility() {
     setShellLoggedIn(false);
     attachRevealObserver();
@@ -3241,6 +3474,7 @@
     initDefaultVisibility();
     bindEvents();
     initLoginHint();
+    initLoginInteractions();
     await loadSession();
     if (!state.session?.authenticated) {
       setShellLoggedIn(false);

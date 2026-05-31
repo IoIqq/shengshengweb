@@ -337,6 +337,16 @@ h6,
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 245, 247, 0.86));
   border: 1px solid rgba(23, 24, 26, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.brand-points div:hover {
+  transform: translateY(-2px);
+  border-color: rgba(200, 57, 44, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 22px rgba(23, 24, 26, 0.08);
 }
 
 .brand-points strong {
@@ -609,6 +619,23 @@ h6,
   box-shadow: 0 0 0 4px rgba(23, 24, 26, 0.06);
   background: #ffffff;
   transform: translateY(-1px);
+}
+
+/* 登录卡片输入框：焦点态带品牌朱红细环，辨识度更高（仅作用于登录场景） */
+.login-card .field input:focus {
+  border-color: rgba(200, 57, 44, 0.45);
+  box-shadow: 0 0 0 4px rgba(200, 57, 44, 0.1);
+}
+
+/* 键盘可达性：密码显隐按钮与记住勾选框的可见焦点框 */
+.input-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(200, 57, 44, 0.28);
+}
+
+.login-remember input[type="checkbox"]:focus-visible + .login-remember-box {
+  border-color: rgba(200, 57, 44, 0.45);
+  box-shadow: 0 0 0 3px rgba(200, 57, 44, 0.18);
 }
 
 .login-actions,
