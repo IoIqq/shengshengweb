@@ -1,326 +1,563 @@
-# 项目指南
-> 最后更新：2026-05-30
+# 📖 项目架构指南
 
-## 1. 快速启动
+本文档介绍项目的代码结构、模块说明和开发规范。
 
-### 本地开发
+## 📑 目录
+
+- [项目概述](#项目概述)
+- [技术栈](#技术栈)
+- [目录结构](#目录结构)
+- [前端架构](#前端架构)
+- [后端架构](#后端架构)
+- [数据库设计](#数据库设计)
+- [API 说明](#api-说明)
+- [开发规范](#开发规范)
+
+---
+
+## 📌 项目概述
+
+**声声网络思政工作室网站** 是一个面向工作室日常协作的轻量级管理系统。
+
+### 核心功能
+- 🖼️ **素材库**：图片和视频管理、审核
+- ✅ **审片中心**：素材审核、备注
+- 📋 **待办事项**：任务管理、优先级
+- 👥 **团队协作**：成员管理、状态跟踪
+- 🔧 **设备管理**：设备库存、借出记录
+- ⚙️ **系统设置**：网站配置、用户管理
+- 💬 **留言墙**：互动留言
+
+### 项目特点
+- ✅ 模块化架构
+- ✅ 响应式设计
+- ✅ 离线友好
+- ✅ 易于部署
+- ✅ 易于迁移
+
+---
+
+## 🛠️ 技术栈
+
+### 前端
+- **HTML5/CSS3** - 基础结构和样式
+- **JavaScript (ES6+)** - 模块化原生 JS
+- **无框架** - 轻量级实现
+
+### 后端
+- **Node.js** (>= 18.0.0) - 运行环境
+- **Express** - Web 框架
+- **SQLite** (sql.js) - 数据库
+- **Multer** - 文件上传
+- **Helmet** - 安全防护
+
+### 工具链
+- **ESLint** - 代码检查
+- **Prettier** - 代码格式化
+- **PM2** - 进程管理
+- **nodemon** - 开发热更新
+
+---
+
+## 📁 目录结构
+
+```
+shengsheng-ideology-studio-site/
+├── 📄 index.html              # 主页面
+├── 📄 styles.css              # 主样式
+├── 📄 config.js               # 前端配置
+├── 📄 favicon.svg             # 网站图标
+│
+├── 📁 js/                     # 前端模块化代码
+│   ├── app-modular.js         # 应用主入口
+│   ├── core/                  # 核心模块
+│   │   ├── config.js          # 配置常量
+│   │   ├── dom.js             # DOM 元素管理
+│   │   └── state.js           # 状态管理
+│   ├── ui/                    # UI 组件
+│   │   ├── feedback.js        # 用户反馈
+│   │   ├── loading.js         # 加载动画
+│   │   ├── navigation.js      # 导航控制
+│   │   └── toast.js           # 提示消息
+│   ├── modules/               # 业务模块
+│   │   ├── borrow.js          # 借出管理
+│   │   ├── dashboard.js       # 概览面板
+│   │   ├── device.js          # 设备管理
+│   │   ├── media.js           # 素材管理
+│   │   ├── settings.js        # 系统设置
+│   │   ├── team.js            # 团队管理
+│   │   └── todo.js            # 待办事项
+│   ├── utils/                 # 工具函数
+│   │   ├── api.js             # API 请求
+│   │   └── helpers.js         # 辅助函数
+│   └── services/              # 服务层
+│
+├── 📁 server/                 # 后端代码
+│   ├── server.js              # 服务器主文件
+│   ├── config/                # 配置
+│   ├── database/              # 数据库
+│   ├── middleware/            # 中间件
+│   ├── routes/                # 路由
+│   ├── services/              # 业务服务
+│   ├── utils/                 # 工具
+│   ├── scripts/               # 脚本
+│   │   ├── init-db.js         # 数据库初始化
+│   │   ├── check-env.js       # 环境检查
+│   │   └── maintenance.js     # 维护脚本
+│   ├── data/                  # 数据存储
+│   │   └── studio.sqlite      # SQLite 数据库
+│   └── uploads/               # 上传文件
+│       ├── media/             # 素材文件
+│       └── inbox/             # 待处理文件
+│
+├── 📁 assets/                 # 静态资源
+│   └── ui/                    # UI 资源
+│
+├── 📄 wish-wall.js            # 留言墙
+├── 📄 mobile-nav.js           # 移动导航
+│
+├── 📄 package.json            # 项目配置
+├── 📄 .env.example            # 环境变量模板
+├── 📄 ecosystem.config.js     # PM2 配置
+│
+├── 📄 setup.bat               # Windows 部署脚本
+├── 📄 setup.sh                # Linux/Mac 部署脚本
+│
+├── 📄 .eslintrc.json          # ESLint 配置
+├── 📄 eslint.config.js        # ESLint 新版配置
+├── 📄 .prettierrc             # Prettier 配置
+├── 📄 .editorconfig           # 编辑器配置
+│
+├── 📚 README.md               # 项目说明
+├── 📚 DEPLOYMENT.md           # 部署指南
+├── 📚 MAINTENANCE.md          # 维护手册
+├── 📚 PROJECT_GUIDE.md        # 项目指南（本文档）
+└── 📚 CHANGELOG.md            # 更新日志
+```
+
+---
+
+## 🎨 前端架构
+
+### 模块化设计
+
+前端采用模块化设计，每个模块职责单一、易于维护。
+
+#### 入口文件
+**`js/app-modular.js`** - 应用主入口
+- 导入所有模块
+- 初始化应用
+- 绑定全局事件
+- 处理登录流程
+
+#### 核心层（core/）
+- **`state.js`** - 全局状态管理
+- **`dom.js`** - DOM 元素的延迟加载（Proxy）
+- **`config.js`** - 应用配置常量
+
+#### UI 层（ui/）
+- **`navigation.js`** - 页面切换、视图管理
+- **`feedback.js`** - 弹窗、Toast、确认框
+- **`loading.js`** - 加载动画、骨架屏
+- **`toast.js`** - 消息提示系统
+
+#### 业务层（modules/）
+每个模块对应一个功能模块，结构一致：
+```javascript
+// 渲染函数
+export function renderModule() { }
+
+// CRUD 操作
+export async function createItem() { }
+export async function updateItem() { }
+export async function deleteItem() { }
+```
+
+#### 工具层（utils/）
+- **`api.js`** - 统一的 API 请求处理
+- **`helpers.js`** - 通用辅助函数
+
+### 状态管理
+
+```javascript
+// js/core/state.js
+export const state = {
+  session: null,        // 当前用户会话
+  bootstrap: null,      // 应用数据
+  activeView: 'overview', // 当前视图
+  // ... 各模块的状态
+};
+```
+
+### 数据流
+
+```
+用户操作
+  ↓
+事件处理
+  ↓
+API 请求 (utils/api.js)
+  ↓
+更新状态 (core/state.js)
+  ↓
+渲染 UI (modules/*)
+  ↓
+用户反馈 (ui/feedback.js)
+```
+
+---
+
+## ⚙️ 后端架构
+
+### 入口文件
+**`server/server.js`** - Express 应用主文件
+
+### 主要模块
+
+#### 配置（config/）
+- 环境变量加载
+- 应用配置
+
+#### 数据库（database/）
+- SQLite 初始化
+- 数据库操作封装
+- 持久化处理
+
+#### 中间件（middleware/）
+- 身份验证
+- 请求限流
+- 错误处理
+
+#### 路由（routes/）
+按功能模块组织 API 路由：
+- 媒体路由
+- 待办路由
+- 团队路由
+- 设备路由
+- 借出路由
+- 设置路由
+
+#### 服务（services/）
+业务逻辑处理：
+- 媒体处理
+- 文件管理
+- 数据验证
+
+#### 工具（utils/）
+- 加密工具
+- 日志工具
+- 验证工具
+- 辅助函数
+
+### 请求流程
+
+```
+HTTP 请求
+  ↓
+中间件（认证、限流）
+  ↓
+路由匹配
+  ↓
+业务服务
+  ↓
+数据库操作
+  ↓
+返回响应
+```
+
+---
+
+## 💾 数据库设计
+
+### 数据表结构
+
+#### media（素材表）
+```sql
+- id INTEGER PRIMARY KEY
+- filename TEXT
+- originalName TEXT
+- kind TEXT (image/video)
+- reviewState TEXT (pending/approved/rejected)
+- note TEXT
+- tags TEXT
+- uploadedAt INTEGER
+- reviewedAt INTEGER
+```
+
+#### todos（待办表）
+```sql
+- id INTEGER PRIMARY KEY
+- title TEXT
+- description TEXT
+- priority TEXT
+- dueDate TEXT
+- assignee TEXT
+- done INTEGER (0/1)
+- createdAt INTEGER
+```
+
+#### team（团队表）
+```sql
+- id INTEGER PRIMARY KEY
+- name TEXT
+- role TEXT
+- avatar TEXT
+- bio TEXT
+- email TEXT
+- phone TEXT
+- status TEXT
+- joinedAt INTEGER
+```
+
+#### devices（设备表）
+```sql
+- id INTEGER PRIMARY KEY
+- name TEXT
+- category TEXT
+- model TEXT
+- serialNumber TEXT
+- status TEXT
+- location TEXT
+- purchaseDate TEXT
+- note TEXT
+```
+
+#### borrow_requests（借出记录）
+```sql
+- id INTEGER PRIMARY KEY
+- deviceId INTEGER
+- borrower TEXT
+- purpose TEXT
+- borrowDate TEXT
+- expectedReturnDate TEXT
+- actualReturnDate TEXT
+- status TEXT
+```
+
+#### wishes（留言墙）
+```sql
+- id INTEGER PRIMARY KEY
+- author TEXT
+- content TEXT
+- mood TEXT
+- isAnonymous INTEGER
+- createdAt INTEGER
+```
+
+---
+
+## 🌐 API 说明
+
+### 认证 API
+- `POST /api/login` - 登录
+- `POST /api/logout` - 登出
+- `GET /api/session` - 获取会话
+
+### 数据 API
+- `GET /api/bootstrap` - 获取初始数据
+- `GET /api/backup` - 数据备份
+
+### 素材 API
+- `POST /api/media/upload` - 上传素材
+- `POST /api/media/:id/review` - 审核素材
+- `DELETE /api/media/:id` - 删除素材
+- `POST /api/media/sync` - 同步服务器素材
+
+### 待办 API
+- `POST /api/todos` - 创建待办
+- `PATCH /api/todos/:id` - 更新待办
+- `DELETE /api/todos/:id` - 删除待办
+
+### 设备 API
+- `POST /api/devices` - 创建设备
+- `PATCH /api/devices/:id` - 更新设备
+- `DELETE /api/devices/:id` - 删除设备
+
+### 借出 API
+- `POST /api/borrow-requests` - 创建借出
+- `POST /api/borrow-requests/:id/approve` - 审批
+- `POST /api/borrow-requests/:id/return` - 归还
+
+### 团队 API
+- `POST /api/team` - 添加成员
+- `PATCH /api/team/:id` - 更新成员
+- `DELETE /api/team/:id` - 删除成员
+
+### 设置 API
+- `GET /api/settings` - 获取设置
+- `PATCH /api/settings` - 更新设置
+
+### 个人资料 API
+- `PATCH /api/profile` - 更新资料
+- `POST /api/profile/avatar` - 上传头像
+- `POST /api/profile/password` - 修改密码
+
+---
+
+## 📝 开发规范
+
+### 代码风格
+
+#### JavaScript
+- 使用 **2 空格** 缩进
+- 使用**单引号**
+- 行尾添加**分号**
+- 使用 `const`/`let`，不使用 `var`
+- 优先使用箭头函数
+- 使用 `===` 而非 `==`
+
+#### 命名规范
+- **变量/函数**：camelCase（`userName`）
+- **常量**：UPPER_SNAKE_CASE（`MAX_SIZE`）
+- **类**：PascalCase（`UserManager`）
+- **文件**：kebab-case（`user-manager.js`）
+
+### 注释规范
+
+```javascript
+/**
+ * 函数说明
+ * @param {string} name - 参数说明
+ * @returns {boolean} 返回值说明
+ */
+function example(name) {
+  // 单行注释说明
+  return true;
+}
+```
+
+### Git 提交规范
 
 ```bash
-npm install
-npm run dev
+# 格式
+<类型>: <描述>
+
+# 类型
+feat:     新功能
+fix:      修复 bug
+docs:     文档更新
+style:    格式调整
+refactor: 重构
+perf:     性能优化
+test:     测试
+chore:    构建/工具
+
+# 示例
+feat: 添加素材批量删除功能
+fix: 修复登录密码显示按钮
+docs: 更新部署文档
 ```
 
-打开：
+### 模块开发流程
 
-```text
-http://127.0.0.1:3002
+#### 1. 创建模块文件
+```javascript
+// js/modules/example.js
+
+import { state } from '../core/state.js';
+import { els } from '../core/dom.js';
+import { request } from '../utils/api.js';
+
+// 渲染函数
+export function renderExample() {
+  // 渲染逻辑
+}
+
+// CRUD 函数
+export async function createExample(data) {
+  // 创建逻辑
+}
 ```
 
-如果 PowerShell 提示 `npm.ps1` 被禁止执行，直接改用：
-
-```bash
-npm.cmd run dev
+#### 2. 在主入口注册
+```javascript
+// js/app-modular.js
+import { renderExample, createExample } from './modules/example.js';
 ```
 
-### 生产启动
-
-```bash
-npm run start
+#### 3. 添加路由（后端）
+```javascript
+// server/routes/example.js
+router.get('/api/examples', async (req, res) => {
+  // 处理逻辑
+});
 ```
 
-也可以使用：
+#### 4. 测试
+- 功能测试
+- 错误处理
+- 边界情况
+- 性能测试
 
-```bash
-npm run prod
-npm run pm2:start
+### 错误处理
+
+```javascript
+// 前端
+try {
+  await request('/api/example');
+} catch (error) {
+  Toast.error(error.message);
+}
+
+// 后端
+app.get('/api/example', async (req, res) => {
+  try {
+    // 业务逻辑
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 ```
 
-默认监听：
+### 性能优化
 
-- `HOST=0.0.0.0`
-- `PORT=3002`
-
-### 访问地址
-
-- 本机访问：`http://127.0.0.1:3002`
-- 局域网访问：`http://<本机局域网IP>:3002`
-
-如果手机或另一台电脑访问失败，优先确认两台设备在同一个网络里。
+1. **使用骨架屏** - 提升感知性能
+2. **图片懒加载** - 减少初始加载
+3. **数据缓存** - 减少 API 请求
+4. **防抖/节流** - 优化高频事件
+5. **代码分割** - 按需加载
 
 ---
 
-## 2. 部署与数据
+## 🎯 最佳实践
 
-### 默认数据位置
+### 前端
+- ✅ 使用模块化组织代码
+- ✅ 状态集中管理
+- ✅ 错误统一处理
+- ✅ 用户反馈友好
+- ✅ 响应式设计
 
-- 数据库：`server/data/studio.sqlite`
-- 上传图片：`server/uploads/media`
-- 服务端收件箱：`server/uploads/inbox`
+### 后端
+- ✅ 路由按模块组织
+- ✅ 业务逻辑分层
+- ✅ 输入严格验证
+- ✅ 错误规范处理
+- ✅ 安全防护到位
 
-### 环境变量
-
-项目通过根目录 `.env` 配置运行路径：
-
-```env
-PORT=3002
-HOST=0.0.0.0
-DATABASE_PATH=server/data/studio.sqlite
-UPLOAD_DIR=server/uploads
-INBOX_DIR=server/uploads/inbox
-MAX_UPLOAD_MB=200
-MAX_UPLOAD_FILES=30
-```
-
-实际运行端口与路径以根目录 `.env` 为准（`.env.example` 仅为模板默认值）。
-
-### 外部磁盘部署
-
-数据库与上传目录的路径由 `resolvePath()` 解析：支持绝对路径、相对路径（相对项目根目录），会自动规范化，Windows / Linux / Mac 通用。如果你想把数据放到外部硬盘或独立数据盘，推荐使用绝对路径：
-
-```env
-DATABASE_PATH=D:/StudioData/database.sqlite
-UPLOAD_DIR=D:/StudioData/uploads
-INBOX_DIR=D:/StudioData/uploads/inbox
-```
-
-也可以使用相对路径，但要保证它们相对于项目根目录始终正确：
-
-```env
-DATABASE_PATH=../data/database.sqlite
-UPLOAD_DIR=../uploads
-INBOX_DIR=../uploads/inbox
-```
-
-### 迁移步骤
-
-1. 停止服务
-2. 备份 `server/data` 和 `server/uploads`
-3. 修改 `.env`
-4. 重启服务
-
-服务启动时会自动创建缺失目录，但不会替你修正错误路径。
-
-### 备份建议
-
-- 定期备份 `database.sqlite`
-- 同步 `uploads` 目录
-- 外部磁盘建议使用 SSD，减少频繁插拔
+### 通用
+- ✅ 代码注释清晰
+- ✅ 命名规范统一
+- ✅ 提交信息规范
+- ✅ 定期重构优化
+- ✅ 持续集成测试
 
 ---
 
-## 3. 安全机制
+## 📚 参考资源
 
-后端已内置以下防护，均在 `server/server.js` 中实现：
+### 内部文档
+- [README.md](README.md) - 项目入口
+- [DEPLOYMENT.md](DEPLOYMENT.md) - 部署指南
+- [MAINTENANCE.md](MAINTENANCE.md) - 维护手册
+- [CHANGELOG.md](CHANGELOG.md) - 更新日志
 
-- **Helmet 安全头**：设置 CSP、防点击劫持、禁用 MIME 嗅探等响应头。
-- **速率限制**：
-  - 全局：15 分钟内最多 1000 次请求
-  - 登录：15 分钟内最多 5 次尝试（防暴力破解）
-  - 上传：限制写操作频率
-- **密码加密**：用户密码使用 scrypt 加盐哈希存储，校验时用 timingSafeEqual 防时序攻击。
-- **CSRF 防护**：双提交校验（`ss_csrf` cookie + `X-CSRF-Token` 请求头），保护所有非 GET 的 `/api/*` 写操作。
-- **SQL 注入防护**：所有数据库写操作使用参数化查询。
-- **HSTS**：生产环境强制 HTTPS；开发环境自动关闭，方便局域网 HTTP 访问。
-
----
-
-## 4. 手机访问与排障
-
-### 当前状态
-
-项目的移动端支持已经内置，不需要再手工补 `index.html` 或 `server/server.js`：
-
-- `index.html` 已包含移动端 meta、汉堡菜单和移动端抽屉
-- `server/server.js` 在开发环境下会关闭 HSTS
-- 服务绑定在 `0.0.0.0`，可以被局域网设备访问
-
-### 手机访问步骤
-
-1. 确认电脑上的服务已经运行
-2. 手机和电脑连接同一个 Wi-Fi
-3. 在电脑上查询局域网 IP
-4. 在手机浏览器打开：
-
-```text
-http://<电脑局域网IP>:3002
-```
-
-### 常见问题
-
-- 如果打不开，先检查 Windows 防火墙是否拦截了 `3002` 端口
-- 如果页面强制跳 HTTPS，确认当前是开发模式还是反向代理后的生产模式
-- 如果浏览器显示旧页面，刷新缓存或重新确认当前运行的是这份源码
-
-### 适用提醒
-
-- `127.0.0.1` 只能在本机访问，手机不能直接用这个地址
-- 如果你改了 `PORT`，手机访问地址也要跟着改
+### 外部资源
+- [Express 文档](https://expressjs.com/)
+- [SQLite 文档](https://www.sqlite.org/)
+- [ESLint 规则](https://eslint.org/docs/rules/)
+- [JavaScript MDN](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 
 ---
 
-## 5. 代码导航
-
-### 前端核心文件
-
-- `config.js`
-  - 集中配置入口
-  - 通过 `window.shengshengConfig` 暴露 API、UI 常量、验证规则、排序器和视图标签
-- `app.js`
-  - 前端主逻辑入口
-  - 负责状态、请求封装、渲染、事件绑定、CRUD、登录与启动
-- `wish-wall.js`
-  - 独立的留言墙功能模块
-
-### 后端核心文件
-
-- `server/server.js`
-  - 单文件后端
-  - 负责数据库初始化、认证、路由、静态资源与启动逻辑
-
-### 常用函数定位
-
-#### 如果你要改登录或会话
-
-- `loadSession()`
-- `login()`
-- `logout()`
-- `start()`
-
-#### 如果你要改首页概览
-
-- `renderDashboard()`
-- `setActiveView()`
-- `refreshAll()`
-
-#### 如果你要改素材
-
-- `renderMedia()`
-- `reviewMedia()`
-- `syncMedia()`
-
-#### 如果你要改待办
-
-- `renderTodos()`
-- `createTodo()`
-- `toggleTodo()`
-- `deleteTodo()`
-
-#### 如果你要改设备
-
-- `renderDevices()`
-- `createDevice()`
-- `updateDevice()`
-- `deleteDevice()`
-
-#### 如果你要改借出
-
-- `renderBorrowRequests()`
-- `renderBorrowDeviceSelect()`
-- `createBorrowRequest()`
-- `updateBorrowRequest()`
-
-#### 如果你要改团队
-
-- `renderTeam()`
-
-#### 如果你要改设置
-
-- `renderSettings()`
-- `saveSettings()`
-
-#### 如果你要改通用层
-
-- `request()`
-- `requestJSON()`
-- `showToast()`
-- `showFeedback()`
-- `bindEvents()`
-
-### 后端常用搜索点
-
-如果你要定位 `server/server.js` 的某个功能，直接搜这些关键词最稳：
-
-- `initDatabase`
-- `/api/login`
-- `/api/bootstrap`
-- `/api/devices`
-- `/api/borrow-requests`
-- `/api/team`
-- `app.listen`
-
----
-
-## 6. 开发约定
-
-### 配置原则
-
-- 新增配置优先放到 `config.js`
-- 前端尽量从 `window.shengshengConfig` 读取，不要在 `app.js` 里重复定义常量
-
-### 渲染原则
-
-- `render*` 负责渲染 DOM
-- `refresh*` 负责拉数据并刷新视图
-- `sync*` 负责把缓存同步到视图
-- `load*` 负责首次加载
-
-### 事件原则
-
-- 所有事件监听优先集中在 `bindEvents()`
-- 动态卡片优先使用事件委托
-- 不要在 `render*()` 里给每张卡片重复绑定监听器
-
-### 网络原则
-
-- API 请求统一走 `request()` / `requestJSON()`
-- 需要写操作时，让封装自动带上 CSRF token
-- 失败提示优先走 `showToast()` 或 `showFeedback()`
-
-### 命名原则
-
-- `render*`：渲染
-- `refresh*`：刷新
-- `sync*`：同步
-- `load*`：首次加载
-- `create/update/delete*`：增删改
-- `validate*`：校验
-- `is*` / `has*`：判断
-- `get*`：获取
-- `set*`：设置
-
----
-
-## 7. 常见故障
-
-### 页面打不开
-
-- 确认服务是否已启动
-- 确认访问的是 `3002` 而不是旧端口
-- 确认 `.env` 里的 `PORT` 与实际一致
-- 确认防火墙没有拦截端口
-
-### 借出接口 404
-
-- 检查当前运行的进程是不是最新源码
-- 检查路由是否来自这份仓库
-- 确认访问的是 `POST /api/borrow-requests`
-
-### 未登录却能看到页面
-
-- 检查 session 是否过期
-- 检查登录状态是否正确写入 cookie
-- 检查浏览器是否缓存了旧状态
-
-### 数据目录异常
-
-- 检查 `DATABASE_PATH`
-- 检查 `UPLOAD_DIR`
-- 检查 `INBOX_DIR`
-- 检查目录写入权限
-
----
-
-## 8. 相关文件
-
-- `README.md` - 用户快速上手
-- `server/REFACTORING.md` - 后端重构说明
+**最后更新**：2026-06-01

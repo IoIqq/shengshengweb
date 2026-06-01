@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+package-lock.json
+
+# 构建产物
+dist/
+build/
+
+# 数据文件
+server/data/
+server/uploads/
+
+# 备份文件
+*.backup
+*.backup.*
+*.bak
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 最小化文件
+*.min.js
+*.min.css
+
+# 文档（保持原格式）
+CHANGELOG.md
+LICENSE

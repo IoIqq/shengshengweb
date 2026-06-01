@@ -1,50 +1,50 @@
-const express = require("express");
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
-const os = require("os");
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const os = require('os');
 
 // 导入所有依赖
-const { all, get, runWrite, transaction, persistDb, flushPersistSync } = require("../database");
-const { getSetting, setSetting, insertMediaRecord } = require("../database/seed");
-const { 
-  requireAuth, 
-  requireAdmin, 
-  getSession, 
-  createSession, 
-  destroySession, 
-  setSessionCookie, 
+const { all, get, runWrite, transaction, persistDb, flushPersistSync } = require('../database');
+const { getSetting, setSetting, insertMediaRecord } = require('../database/seed');
+const {
+  requireAuth,
+  requireAdmin,
+  getSession,
+  createSession,
+  destroySession,
+  setSessionCookie,
   clearSessionCookie,
-  sessionToPayload 
-} = require("../middleware/auth");
-const { 
-  loginLimiter, 
-  uploadLimiter, 
-  borrowLimiter, 
-  teamWriteLimiter, 
-  wishLimiter, 
-  clientLogLimiter 
-} = require("../middleware/rateLimiter");
-const { verifyPassword } = require("../utils/crypto");
-const { 
-  nowIso, 
-  nowLocalDateKey, 
-  randomId, 
-  createThumb, 
-  safeParse, 
-  countFilesRecursively 
-} = require("../utils/helpers");
-const { 
-  normalizePriority, 
-  normalizeDueDate, 
-  normalizeSearchValue 
-} = require("../utils/validators");
-const { 
-  logServerEvent, 
-  logLoginFailure, 
-  logUploadIssue, 
-  logAuthFailure 
-} = require("../utils/logger");
+  sessionToPayload
+} = require('../middleware/auth');
+const {
+  loginLimiter,
+  uploadLimiter,
+  borrowLimiter,
+  teamWriteLimiter,
+  wishLimiter,
+  clientLogLimiter
+} = require('../middleware/rateLimiter');
+const { verifyPassword } = require('../utils/crypto');
+const {
+  nowIso,
+  nowLocalDateKey,
+  randomId,
+  createThumb,
+  safeParse,
+  countFilesRecursively
+} = require('../utils/helpers');
+const {
+  normalizePriority,
+  normalizeDueDate,
+  normalizeSearchValue
+} = require('../utils/validators');
+const {
+  logServerEvent,
+  logLoginFailure,
+  logUploadIssue,
+  logAuthFailure
+} = require('../utils/logger');
 
 let config = null;
 let apiRouteCatalog = [];
@@ -61,15 +61,15 @@ function getRouteHealth() {
   return {
     apiRouteCount: apiRouteCatalog.length,
     criticalRoutes: {
-      getDevices: apiRouteCatalog.includes("GET /api/devices"),
-      getDeviceById: apiRouteCatalog.includes("GET /api/devices/:id"),
-      deleteDevice: apiRouteCatalog.includes("DELETE /api/devices/:id"),
-      getBorrowRequests: apiRouteCatalog.includes("GET /api/borrow-requests"),
-      postBorrowRequests: apiRouteCatalog.includes("POST /api/borrow-requests"),
-      getBorrowRequestById: apiRouteCatalog.includes("GET /api/borrow-requests/:id"),
-      deleteMedia: apiRouteCatalog.includes("DELETE /api/media/:id"),
-      bootstrap: apiRouteCatalog.includes("GET /api/bootstrap"),
-      login: apiRouteCatalog.includes("POST /api/login"),
+      getDevices: apiRouteCatalog.includes('GET /api/devices'),
+      getDeviceById: apiRouteCatalog.includes('GET /api/devices/:id'),
+      deleteDevice: apiRouteCatalog.includes('DELETE /api/devices/:id'),
+      getBorrowRequests: apiRouteCatalog.includes('GET /api/borrow-requests'),
+      postBorrowRequests: apiRouteCatalog.includes('POST /api/borrow-requests'),
+      getBorrowRequestById: apiRouteCatalog.includes('GET /api/borrow-requests/:id'),
+      deleteMedia: apiRouteCatalog.includes('DELETE /api/media/:id'),
+      bootstrap: apiRouteCatalog.includes('GET /api/bootstrap'),
+      login: apiRouteCatalog.includes('POST /api/login'),
     },
   };
 }
@@ -80,7 +80,7 @@ function getLanIpAddresses() {
 
   for (const infos of Object.values(os.networkInterfaces())) {
     for (const info of infos || []) {
-      if (!info || info.family !== "IPv4" || info.internal) continue;
+      if (!info || info.family !== 'IPv4' || info.internal) continue;
       if (seen.has(info.address)) continue;
       seen.add(info.address);
       addresses.push(info.address);
@@ -97,11 +97,11 @@ function setupRoutes(app) {
 
   // 导入原server.js中的所有路由处理函数
   // 这里保留原有的路由逻辑，只是将其模块化
-  
+
   // 注意：由于原server.js中的路由代码超过1500行
   // 为了保持可维护性，建议将路由按功能拆分到不同文件
   // 但为了快速完成重构，这里先创建一个统一的入口
-  
+
   return router;
 }
 

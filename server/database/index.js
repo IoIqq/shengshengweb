@@ -1,7 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const initSqlJs = require("sql.js");
-const { logServerEvent, logDbIssue } = require("../utils/logger");
+const fs = require('fs');
+const path = require('path');
+const initSqlJs = require('sql.js');
+const { logServerEvent, logDbIssue } = require('../utils/logger');
 
 let db = null;
 let DB_PATH = null;
@@ -22,8 +22,8 @@ function createDb(SQL) {
     try {
       return new SQL.Database(fs.readFileSync(DB_PATH));
     } catch (error) {
-      logServerEvent("error", "database_open_failed", {
-        databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
+      logServerEvent('error', 'database_open_failed', {
+        databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, '/'),
         error,
       });
     }
@@ -37,8 +37,8 @@ function persistDbSync() {
     fs.writeFileSync(tmp, Buffer.from(db.export()));
     fs.renameSync(tmp, DB_PATH);
   } catch (error) {
-    logServerEvent("error", "database_persist_failed", {
-      databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
+    logServerEvent('error', 'database_persist_failed', {
+      databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, '/'),
       error,
     });
     throw error;
@@ -51,9 +51,9 @@ function persistDbNow() {
     try {
       payload = Buffer.from(db.export());
     } catch (error) {
-      logServerEvent("error", "database_persist_failed", {
-        databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
-        stage: "export",
+      logServerEvent('error', 'database_persist_failed', {
+        databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, '/'),
+        stage: 'export',
         error,
       });
       return resolve();
@@ -61,18 +61,18 @@ function persistDbNow() {
     const tmp = `${DB_PATH}.tmp`;
     fs.writeFile(tmp, payload, (writeErr) => {
       if (writeErr) {
-        logServerEvent("error", "database_persist_failed", {
-          databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
-          stage: "write",
+        logServerEvent('error', 'database_persist_failed', {
+          databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, '/'),
+          stage: 'write',
           error: writeErr,
         });
         return resolve();
       }
       fs.rename(tmp, DB_PATH, (renameErr) => {
         if (renameErr) {
-          logServerEvent("error", "database_persist_failed", {
-            databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, "/"),
-            stage: "rename",
+          logServerEvent('error', 'database_persist_failed', {
+            databasePath: path.relative(ROOT_DIR, DB_PATH).replace(/\\/g, '/'),
+            stage: 'rename',
             error: renameErr,
           });
         }
@@ -119,9 +119,9 @@ function exitFlush() {
   } catch (_) { /* already logged */ }
 }
 
-process.on("SIGINT", () => { exitFlush(); process.exit(0); });
-process.on("SIGTERM", () => { exitFlush(); process.exit(0); });
-process.on("beforeExit", exitFlush);
+process.on('SIGINT', () => { exitFlush(); process.exit(0); });
+process.on('SIGTERM', () => { exitFlush(); process.exit(0); });
+process.on('beforeExit', exitFlush);
 
 function persistDb() {
   schedulePersist();
@@ -132,7 +132,7 @@ function runWrite(sql, params = []) {
   try {
     stmt.run(params);
   } catch (error) {
-    logServerEvent("error", "database_write_failed", { sql, params, error });
+    logServerEvent('error', 'database_write_failed', { sql, params, error });
     throw error;
   } finally {
     stmt.free();
@@ -149,7 +149,7 @@ function all(sql, params = []) {
     }
     return rows;
   } catch (error) {
-    logServerEvent("error", "database_read_failed", { sql, params, error });
+    logServerEvent('error', 'database_read_failed', { sql, params, error });
     throw error;
   } finally {
     stmt.free();
@@ -161,31 +161,31 @@ function get(sql, params = []) {
 }
 
 function transaction(fn) {
-  db.exec("BEGIN");
+  db.exec('BEGIN');
   try {
     const result = fn();
-    db.exec("COMMIT");
+    db.exec('COMMIT');
     persistDb();
     return result;
   } catch (error) {
     try {
-      db.exec("ROLLBACK");
+      db.exec('ROLLBACK');
     } catch {
       // ignore rollback failure
     }
-    logServerEvent("error", "database_transaction_failed", { error });
+    logServerEvent('error', 'database_transaction_failed', { error });
     throw error;
   }
 }
 
 async function setupDatabase() {
-  const sqlDir = path.dirname(require.resolve("sql.js/dist/sql-wasm.wasm"));
+  const sqlDir = path.dirname(require.resolve('sql.js/dist/sql-wasm.wasm'));
   const SQL = await initSqlJs({
     locateFile: (file) => path.join(sqlDir, file),
   });
 
   db = createDb(SQL);
-  
+
   // 创建表结构
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -302,51 +302,51 @@ async function setupDatabase() {
 
   // 扩展表字段（兼容已有数据库）
   try {
-    const teamColumns = all("PRAGMA table_info(team)").map(col => col.name);
-    if (!teamColumns.includes("email")) {
+    const teamColumns = all('PRAGMA table_info(team)').map(col => col.name);
+    if (!teamColumns.includes('email')) {
       db.exec("ALTER TABLE team ADD COLUMN email TEXT DEFAULT ''");
     }
-    if (!teamColumns.includes("phone")) {
+    if (!teamColumns.includes('phone')) {
       db.exec("ALTER TABLE team ADD COLUMN phone TEXT DEFAULT ''");
     }
-    if (!teamColumns.includes("status")) {
+    if (!teamColumns.includes('status')) {
       db.exec("ALTER TABLE team ADD COLUMN status TEXT DEFAULT 'active'");
     }
-    if (!teamColumns.includes("joined_at")) {
+    if (!teamColumns.includes('joined_at')) {
       db.exec("ALTER TABLE team ADD COLUMN joined_at TEXT DEFAULT ''");
     }
   } catch (error) {
-    logDbIssue("team_table_migration_failed", error);
+    logDbIssue('team_table_migration_failed', error);
   }
 
   try {
-    const todoColumns = all("PRAGMA table_info(todos)").map(col => col.name);
-    if (!todoColumns.includes("due_date")) {
-      db.exec("ALTER TABLE todos ADD COLUMN due_date TEXT");
+    const todoColumns = all('PRAGMA table_info(todos)').map(col => col.name);
+    if (!todoColumns.includes('due_date')) {
+      db.exec('ALTER TABLE todos ADD COLUMN due_date TEXT');
     }
-    if (!todoColumns.includes("assignee_id")) {
-      db.exec("ALTER TABLE todos ADD COLUMN assignee_id TEXT");
+    if (!todoColumns.includes('assignee_id')) {
+      db.exec('ALTER TABLE todos ADD COLUMN assignee_id TEXT');
     }
-    if (!todoColumns.includes("completed_at")) {
-      db.exec("ALTER TABLE todos ADD COLUMN completed_at TEXT");
+    if (!todoColumns.includes('completed_at')) {
+      db.exec('ALTER TABLE todos ADD COLUMN completed_at TEXT');
     }
   } catch (error) {
-    logDbIssue("todos_table_migration_failed", error);
+    logDbIssue('todos_table_migration_failed', error);
   }
 
   try {
-    const userColumns = all("PRAGMA table_info(users)").map((col) => col.name);
-    if (!userColumns.includes("display_name")) {
+    const userColumns = all('PRAGMA table_info(users)').map((col) => col.name);
+    if (!userColumns.includes('display_name')) {
       db.exec("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''");
     }
-    if (!userColumns.includes("signature")) {
+    if (!userColumns.includes('signature')) {
       db.exec("ALTER TABLE users ADD COLUMN signature TEXT DEFAULT ''");
     }
-    if (!userColumns.includes("avatar_url")) {
+    if (!userColumns.includes('avatar_url')) {
       db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''");
     }
   } catch (error) {
-    logDbIssue("users_table_migration_failed", error);
+    logDbIssue('users_table_migration_failed', error);
   }
 
   try {
@@ -355,7 +355,7 @@ async function setupDatabase() {
       CREATE INDEX IF NOT EXISTS idx_media_review_state ON media(review_state);
     `);
   } catch (error) {
-    logDbIssue("media_index_migration_failed", error);
+    logDbIssue('media_index_migration_failed', error);
   }
 
   return db;

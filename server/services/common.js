@@ -1,10 +1,10 @@
-const path = require("path");
-const fs = require("fs");
-const os = require("os");
-const { all, get } = require("../database");
-const { getSetting } = require("../database/seed");
-const { countFilesRecursively } = require("../utils/helpers");
-const config = require("../config");
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const { all, get } = require('../database');
+const { getSetting } = require('../database/seed');
+const { countFilesRecursively } = require('../utils/helpers');
+const config = require('../config');
 
 // 数据转换函数
 function mediaRowToItem(row) {
@@ -17,7 +17,7 @@ function mediaRowToItem(row) {
     duration: row.duration,
     status: row.status,
     note: row.note,
-    tags: JSON.parse(row.tags_json || "[]"),
+    tags: JSON.parse(row.tags_json || '[]'),
     thumb: row.thumb,
     url: row.url,
     reviewState: row.review_state,
@@ -93,10 +93,10 @@ function teamRowToItem(row) {
     role: row.role,
     note: row.note,
     badge: row.badge,
-    email: row.email || "",
-    phone: row.phone || "",
-    status: row.status || "active",
-    joinedAt: row.joined_at || "",
+    email: row.email || '',
+    phone: row.phone || '',
+    status: row.status || 'active',
+    joinedAt: row.joined_at || '',
     orderIndex: row.order_index,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -108,7 +108,7 @@ function wishRowToItem(row) {
     id: row.id,
     content: row.content,
     author: row.author,
-    mood: row.mood || "",
+    mood: row.mood || '',
     anonymous: Boolean(row.anonymous),
     createdAt: row.created_at,
   };
@@ -116,23 +116,23 @@ function wishRowToItem(row) {
 
 // 获取所有数据
 function getAllMedia() {
-  return all("SELECT * FROM media ORDER BY datetime(created_at) DESC").map(mediaRowToItem);
+  return all('SELECT * FROM media ORDER BY datetime(created_at) DESC').map(mediaRowToItem);
 }
 
 function getAllTodos() {
-  return all("SELECT * FROM todos ORDER BY datetime(created_at) DESC").map(todoRowToItem);
+  return all('SELECT * FROM todos ORDER BY datetime(created_at) DESC').map(todoRowToItem);
 }
 
 function getAllActivity() {
-  return all("SELECT * FROM activity ORDER BY datetime(created_at) DESC").map(activityRowToItem);
+  return all('SELECT * FROM activity ORDER BY datetime(created_at) DESC').map(activityRowToItem);
 }
 
 function getAllTeam() {
-  return all("SELECT * FROM team ORDER BY order_index ASC, datetime(created_at) ASC").map(teamRowToItem);
+  return all('SELECT * FROM team ORDER BY order_index ASC, datetime(created_at) ASC').map(teamRowToItem);
 }
 
 function getAllDevices() {
-  return all("SELECT * FROM devices ORDER BY datetime(created_at) DESC").map(deviceRowToItem);
+  return all('SELECT * FROM devices ORDER BY datetime(created_at) DESC').map(deviceRowToItem);
 }
 
 function getAllBorrowRequests() {
@@ -146,44 +146,44 @@ function getAllBorrowRequests() {
 
 // Dashboard 数据
 function getDashboard() {
-  const deviceCount = get("SELECT COUNT(*) AS count FROM devices").count;
+  const deviceCount = get('SELECT COUNT(*) AS count FROM devices').count;
   const borrowOpenCount = get("SELECT COUNT(*) AS count FROM borrow_requests WHERE status = 'pending'").count;
   return {
     counts: {
-      all: get("SELECT COUNT(*) AS count FROM media").count,
+      all: get('SELECT COUNT(*) AS count FROM media').count,
       pending: get("SELECT COUNT(*) AS count FROM media WHERE review_state = 'pending'").count,
       approved: get("SELECT COUNT(*) AS count FROM media WHERE review_state = 'approved'").count,
       photo: get("SELECT COUNT(*) AS count FROM media WHERE kind = 'photo'").count,
       video: get("SELECT COUNT(*) AS count FROM media WHERE kind = 'video'").count,
-      todoOpen: get("SELECT COUNT(*) AS count FROM todos WHERE done = 0").count,
+      todoOpen: get('SELECT COUNT(*) AS count FROM todos WHERE done = 0').count,
       devices: deviceCount,
       borrowOpen: borrowOpenCount,
     },
-    recent: all("SELECT * FROM activity ORDER BY datetime(created_at) DESC LIMIT 8").map(activityRowToItem),
-    syncMessage: getSetting("syncMessage", "等待同步"),
-    lastSyncAt: getSetting("lastSyncAt", ""),
+    recent: all('SELECT * FROM activity ORDER BY datetime(created_at) DESC LIMIT 8').map(activityRowToItem),
+    syncMessage: getSetting('syncMessage', '等待同步'),
+    lastSyncAt: getSetting('lastSyncAt', ''),
   };
 }
 
 // 设置数据
 function getSettings() {
   return {
-    siteTitle: getSetting("siteTitle", config.SITE_TITLE),
-    siteSubtitle: getSetting("siteSubtitle", config.SITE_SUBTITLE),
-    homeHeroMessage: getSetting("homeHeroMessage", "首页只保留最关键的摘要，方便快速进入工作状态。"),
-    publicUrl: getSetting("publicUrl", config.PUBLIC_URL),
-    adminUsername: getSetting("adminUsername", config.ADMIN_USERNAME),
-    syncMessage: getSetting("syncMessage", "等待同步"),
-    lastSyncAt: getSetting("lastSyncAt", ""),
+    siteTitle: getSetting('siteTitle', config.SITE_TITLE),
+    siteSubtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
+    homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
+    publicUrl: getSetting('publicUrl', config.PUBLIC_URL),
+    adminUsername: getSetting('adminUsername', config.ADMIN_USERNAME),
+    syncMessage: getSetting('syncMessage', '等待同步'),
+    lastSyncAt: getSetting('lastSyncAt', ''),
   };
 }
 
 // 系统信息
 function getSystemInfo() {
   return {
-    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, "/"),
-    uploadDir: "server/uploads",
-    inboxDir: "server/uploads/inbox",
+    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, '/'),
+    uploadDir: 'server/uploads',
+    inboxDir: 'server/uploads/inbox',
     inboxAutoScanSeconds: config.AUTO_SCAN_SECONDS,
     maxUploadMb: config.MAX_UPLOAD_MB,
   };
@@ -194,15 +194,15 @@ function buildBootstrap(user) {
   return {
     user,
     publicConfig: {
-      siteTitle: getSetting("siteTitle", config.SITE_TITLE),
-      siteSubtitle: getSetting("siteSubtitle", config.SITE_SUBTITLE),
-      homeHeroMessage: getSetting("homeHeroMessage", "首页只保留最关键的摘要，方便快速进入工作状态。"),
-      publicUrl: getSetting("publicUrl", config.PUBLIC_URL),
+      siteTitle: getSetting('siteTitle', config.SITE_TITLE),
+      siteSubtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
+      homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
+      publicUrl: getSetting('publicUrl', config.PUBLIC_URL),
     },
     site: {
-      title: getSetting("siteTitle", config.SITE_TITLE),
-      subtitle: getSetting("siteSubtitle", config.SITE_SUBTITLE),
-      homeHeroMessage: getSetting("homeHeroMessage", "首页只保留最关键的摘要，方便快速进入工作状态。"),
+      title: getSetting('siteTitle', config.SITE_TITLE),
+      subtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
+      homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
     },
     system: getSystemInfo(),
     settings: getSettings(),
@@ -220,14 +220,14 @@ function buildBootstrap(user) {
 function buildBackupSummary() {
   const databaseExists = fs.existsSync(config.DB_PATH);
   const uploadFiles = countFilesRecursively(config.UPLOAD_DIR);
-  const mediaCount = get("SELECT COUNT(*) AS count FROM media").count;
-  const todoCount = get("SELECT COUNT(*) AS count FROM todos").count;
-  const activityCount = get("SELECT COUNT(*) AS count FROM activity").count;
+  const mediaCount = get('SELECT COUNT(*) AS count FROM media').count;
+  const todoCount = get('SELECT COUNT(*) AS count FROM todos').count;
+  const activityCount = get('SELECT COUNT(*) AS count FROM activity').count;
   return {
     generatedAt: new Date().toISOString(),
-    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, "/"),
+    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, '/'),
     databaseExists,
-    uploadDir: "server/uploads",
+    uploadDir: 'server/uploads',
     uploadFiles,
     counts: {
       media: mediaCount,
@@ -251,7 +251,7 @@ function buildFullBackup() {
       activity: getAllActivity(),
       devices: getAllDevices(),
       borrowRequests: getAllBorrowRequests(),
-      wishes: all("SELECT * FROM wishes ORDER BY datetime(created_at) DESC").map(wishRowToItem),
+      wishes: all('SELECT * FROM wishes ORDER BY datetime(created_at) DESC').map(wishRowToItem),
     },
   };
 }
@@ -263,7 +263,7 @@ function getLanIpAddresses() {
 
   for (const infos of Object.values(os.networkInterfaces())) {
     for (const info of infos || []) {
-      if (!info || info.family !== "IPv4" || info.internal) continue;
+      if (!info || info.family !== 'IPv4' || info.internal) continue;
       if (seen.has(info.address)) continue;
       seen.add(info.address);
       addresses.push(info.address);

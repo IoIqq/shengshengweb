@@ -11,54 +11,64 @@
 - 管理员登录：保护写操作
 - 运行状态：展示同步状态、登录状态和基础运行信息
 
-## 本地运行
+## 快速开始
+
+### 🚀 一键部署（推荐）
+
+**Windows**：
+```cmd
+setup.bat
+```
+
+**Linux/Mac**：
+```bash
+chmod +x setup.sh && ./setup.sh
+```
+
+脚本会自动完成：
+- ✅ 检查环境
+- ✅ 安装依赖
+- ✅ 配置环境变量
+- ✅ 创建目录
+- ✅ 初始化数据库
+
+### 📝 手动部署
 
 1. 安装依赖
-
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 2. 配置环境变量
-
-```bash
-copy .env.example .env
-```
+   ```bash
+   copy .env.example .env  # Windows
+   cp .env.example .env    # Linux/Mac
+   ```
 
 3. 启动项目
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm run dev
-```
+4. 访问网站
+   - 本地：http://localhost:3002
+   - 局域网：http://你的IP:3002
 
-4. 打开站点
+## 📚 文档导航
 
-```text
-http://127.0.0.1:3002
-```
-
-如果需要让同一局域网里的手机或电脑访问，请直接打开：
-
-```text
-http://<本机局域网IP>:3002
-```
-
-默认服务监听 `0.0.0.0`。如果外部设备访问失败，优先检查系统防火墙是否放行 `3002` 端口。
-
-## 部署
-
-- Node.js 18+
-- 安装生产依赖：`npm install --omit=dev`
-- 启动服务：`npm run start`
-- 使用 PM2：`npm run pm2:start`
+| 文档 | 用途 |
+|------|------|
+| [README.md](README.md) | 项目入口（本文档） |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | 部署与迁移指南 |
+| [MAINTENANCE.md](MAINTENANCE.md) | 维护手册（含 ESLint、故障排查） |
+| [PROJECT_GUIDE.md](PROJECT_GUIDE.md) | 项目架构指南 |
+| [CHANGELOG.md](CHANGELOG.md) | 更新日志 |
 
 ## 数据目录
 
 - 数据库：`server/data/studio.sqlite`
 - 上传图片：`server/uploads/media`
 - 服务端收件箱：`server/uploads/inbox`
-
-外部硬盘部署、安全机制、代码导航等完整说明见 `PROJECT_GUIDE.md`。
 
 ## 默认账号
 
@@ -67,15 +77,20 @@ http://<本机局域网IP>:3002
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
-上线前请务必修改默认密码。
+⚠️ **上线前请务必修改默认密码**
 
-## 排障提示
+## 维护命令
 
-如果页面无法正常打开，可以优先检查下面几项：
+```bash
+npm run maintenance   # 运行完整维护
+npm run lint          # 代码检查
+npm run lint:fix      # 自动修复
+```
 
-- 服务是否已经启动
-- `.env` 里的 `PORT` 是否仍然是 `3002`
-- 数据库文件 `server/data/studio.sqlite` 是否存在
-- `server/uploads/` 目录是否有写入权限
+详见 [MAINTENANCE.md](MAINTENANCE.md)
 
-如果 GitHub 页面上还看到旧内容，刷新页面或确认最新提交已经推送成功即可。
+## 遇到问题？
+
+- **部署问题** → [DEPLOYMENT.md](DEPLOYMENT.md)
+- **使用问题** → [MAINTENANCE.md](MAINTENANCE.md)
+- **开发问题** → [PROJECT_GUIDE.md](PROJECT_GUIDE.md)

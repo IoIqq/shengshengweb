@@ -1,6 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-const { nowIso, nowLocalDateKey } = require("./helpers");
+const fs = require('fs');
+const path = require('path');
+const { nowIso, nowLocalDateKey } = require('./helpers');
 
 let LOG_DIR = null;
 let LOG_MAX_BYTES = 5 * 1024 * 1024;
@@ -14,13 +14,13 @@ function initLogger(config) {
 
 function formatErrorForLog(error) {
   if (!error) {
-    return { message: "Unknown error" };
+    return { message: 'Unknown error' };
   }
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return { message: error };
   }
   const payload = {
-    name: error.name || "Error",
+    name: error.name || 'Error',
     message: error.message || String(error),
   };
   if (error.code !== undefined) payload.code = error.code;
@@ -38,7 +38,7 @@ function serializeLogValue(value) {
   if (Array.isArray(value)) {
     return value.map(serializeLogValue);
   }
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => [key, serializeLogValue(entry)]),
     );
@@ -68,7 +68,7 @@ function cleanupOldLogs() {
     if (err) return;
     const cutoff = Date.now() - LOG_RETENTION_MS;
     files.forEach((name) => {
-      if (!name.endsWith(".log")) return;
+      if (!name.endsWith('.log')) return;
       const full = path.join(LOG_DIR, name);
       fs.stat(full, (statErr, stat) => {
         if (statErr || !stat) return;
@@ -92,7 +92,7 @@ function appendServerLog(level, event, details = {}) {
   fs.appendFile(filePath, `${line}\n`, (error) => {
     if (error) {
       // 写日志的失败不再走日志，避免循环
-      console.error("日志写入失败：", error.message || error);
+      console.error('日志写入失败：', error.message || error);
     }
   });
 }
@@ -102,29 +102,29 @@ function logServerEvent(level, event, details = {}) {
 }
 
 function logRequest(req, res, durationMs) {
-  logServerEvent("info", "http_request", {
+  logServerEvent('info', 'http_request', {
     method: req.method,
     path: req.originalUrl || req.url,
     statusCode: res.statusCode,
     durationMs: Number(durationMs.toFixed(2)),
     ip: req.ip,
-    role: req.user?.role || req.session?.user?.role || "guest",
+    role: req.user?.role || req.session?.user?.role || 'guest',
   });
 }
 
 function logAuthFailure(req, reason, details = {}) {
-  logServerEvent("warn", "auth_failure", {
+  logServerEvent('warn', 'auth_failure', {
     reason,
     method: req.method,
     path: req.originalUrl || req.url,
     ip: req.ip,
-    role: req.user?.role || req.session?.user?.role || "guest",
+    role: req.user?.role || req.session?.user?.role || 'guest',
     ...details,
   });
 }
 
 function logLoginFailure(req, username) {
-  logServerEvent("warn", "login_failure", {
+  logServerEvent('warn', 'login_failure', {
     username,
     method: req.method,
     path: req.originalUrl || req.url,
@@ -133,29 +133,29 @@ function logLoginFailure(req, username) {
 }
 
 function logUploadIssue(req, error, details = {}) {
-  logServerEvent("error", "upload_error", {
+  logServerEvent('error', 'upload_error', {
     method: req.method,
     path: req.originalUrl || req.url,
     ip: req.ip,
-    role: req.user?.role || req.session?.user?.role || "guest",
+    role: req.user?.role || req.session?.user?.role || 'guest',
     error,
     ...details,
   });
 }
 
 function logDbIssue(event, error, details = {}) {
-  logServerEvent("error", event, {
+  logServerEvent('error', event, {
     error,
     ...details,
   });
 }
 
 function logStartupInfo(extra = {}) {
-  logServerEvent("info", "startup", extra);
+  logServerEvent('info', 'startup', extra);
 }
 
 function logProcessFailure(type, error) {
-  logServerEvent("fatal", type, {
+  logServerEvent('fatal', type, {
     error,
     pid: process.pid,
     nodeVersion: process.version,

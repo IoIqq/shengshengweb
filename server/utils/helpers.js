@@ -1,5 +1,5 @@
-const crypto = require("crypto");
-const fs = require("fs");
+const crypto = require('crypto');
+const fs = require('fs');
 
 function nowIso() {
   return new Date().toISOString();
@@ -7,8 +7,8 @@ function nowIso() {
 
 function nowLocalDateKey(date = new Date()) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -18,17 +18,17 @@ function randomId(prefix) {
 
 function escapeXml(value) {
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function createThumb(label, colorA, colorB, kind) {
   const icon =
-    kind === "video"
-      ? `<rect x="23" y="18" width="50" height="36" rx="8" fill="rgba(255,255,255,0.14)"/><polygon points="44,26 44,46 60,36" fill="#fffdf6"/>`
-      : `<circle cx="31" cy="26" r="6" fill="#fffdf6"/><path d="M8 58l18-18 12 11 12-14 18 21H8Z" fill="rgba(255,255,255,0.85)"/>`;
+    kind === 'video'
+      ? '<rect x="23" y="18" width="50" height="36" rx="8" fill="rgba(255,255,255,0.14)"/><polygon points="44,26 44,46 60,36" fill="#fffdf6"/>'
+      : '<circle cx="31" cy="26" r="6" fill="#fffdf6"/><path d="M8 58l18-18 12 11 12-14 18 21H8Z" fill="rgba(255,255,255,0.85)"/>';
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
@@ -45,8 +45,8 @@ function createThumb(label, colorA, colorB, kind) {
       </g>
       ${icon}
       <text x="26" y="166" fill="#fffdf6" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="22" font-weight="700">${escapeXml(
-        label,
-      )}</text>
+    label,
+  )}</text>
       <text x="26" y="186" fill="rgba(255,255,255,0.82)" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="12">声声网络思政工作室</text>
     </svg>
   `;
@@ -70,7 +70,7 @@ function countFilesRecursively(dir) {
   if (!fs.existsSync(dir)) return 0;
   let total = 0;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = require("path").join(dir, entry.name);
+    const full = require('path').join(dir, entry.name);
     if (entry.isDirectory()) {
       total += countFilesRecursively(full);
     } else {
