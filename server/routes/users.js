@@ -1,0 +1,213 @@
+const express = require('express');
+const router = express.Router();
+const { user: userModel, session: sessionModel, audit: auditModel } = require('../models');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
+
+/**
+ * 获取所有用户（管理员）
+ */
+router.get('/', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const users = userModel.getAllUsers();
+    res.json({ ok: true, users });
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    res.status(500).json({ error: '获取用户列表失败。' });
+  }
+});
+
+/**
+ * 创建用户（管理员）
+ */
+router.post('/', requireAuth, requireAdmin, (req, res) => {
+  const { username, password, role = 'guest', displayName = '' } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: '请输入用户名和密码。' });
+  }
+  if (password.length < 6 || password.length > 100) {
+    return res.status(400).json({ error: '密码长度需为 6-100 个字符。' });
+  }
+  if (!['admin', 'editor', 'guest'].includes(role)) {
+    return res.status(400).json({ error: '用户角色不合法。' });
+  }
+
+  // 检查用户名是否已存在
+  if (userModel.usernameExists(username)) {
+    return res.status(400).json({ error: '用户名已存在。' });
+  }
+
+  try {
+    const newUser = userModel.createUser(username, password, role, req.user.id);
+
+    // 如果有显示名称，更新它
+    if (displayName) {
+      userModel.updateUser(newUser.id, { display_name: displayName });
+    }
+
+    // 记录审计日志
+    auditModel.createAuditLog({
+      userId: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      action: 'create',
+      resourceType: 'user',
+      resourceId: String(newUser.id),
+      details: JSON.stringify({ username, role }),
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent')
+    });
+
+    res.json({ ok: true, user: userModel.getUserById(newUser.id) });
+  } catch (error) {
+    console.error('创建用户失败:', error);
+    res.status(500).json({ error: '创建用户失败。' });
+  }
+});
+
+/**
+ * 更新用户信息（管理员）
+ */
+router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const updates = {};
+
+  if (req.body.displayName !== undefined) {
+    updates.display_name = String(req.body.displayName).trim();
+  }
+  if (req.body.signature !== undefined) {
+    updates.signature = String(req.body.signature).trim();
+  }
+  if (req.body.role !== undefined) {
+    const role = String(req.body.role).trim();
+    if (!['admin', 'editor', 'guest'].includes(role)) {
+      return res.status(400).json({ error: '用户角色不合法。' });
+    }
+    updates.role = role;
+  }
+  if (req.body.password !== undefined) {
+    const password = String(req.body.password);
+    if (password.length < 6 || password.length > 100) {
+      return res.status(400).json({ error: '密码长度需为 6-100 个字符。' });
+    }
+    updates.password = password;
+  }
+
+  try {
+    const updatedUser = userModel.updateUser(userId, updates);
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: '用户不存在。' });
+    }
+
+    // 记录审计日志
+    auditModel.createAuditLog({
+      userId: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      action: 'update',
+      resourceType: 'user',
+      resourceId: String(userId),
+      details: JSON.stringify(Object.keys(updates)),
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent')
+    });
+
+    res.json({ ok: true, user: updatedUser });
+  } catch (error) {
+    console.error('更新用户失败:', error);
+    res.status(500).json({ error: '更新用户失败。' });
+  }
+});
+
+/**
+ * 删除用户（管理员）
+ */
+router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+
+  // 不能删除自己
+  if (userId === req.user.id) {
+    return res.status(400).json({ error: '不能删除自己的账号。' });
+  }
+
+  const user = userModel.getUserById(userId);
+  if (!user) {
+    return res.status(404).json({ error: '用户不存在。' });
+  }
+
+  try {
+    // 删除用户的所有会话
+    sessionModel.deleteUserSessions(userId);
+
+    // 删除用户
+    userModel.deleteUser(userId);
+
+    // 记录审计日志
+    auditModel.createAuditLog({
+      userId: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      action: 'delete',
+      resourceType: 'user',
+      resourceId: String(userId),
+      details: JSON.stringify({ username: user.username }),
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent')
+    });
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('删除用户失败:', error);
+    res.status(500).json({ error: '删除用户失败。' });
+  }
+});
+
+/**
+ * 更新用户状态（启用/禁用）
+ */
+router.patch('/:id/status', requireAuth, requireAdmin, (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { status } = req.body;
+
+  if (!['active', 'disabled'].includes(status)) {
+    return res.status(400).json({ error: '状态值不合法。' });
+  }
+
+  // 不能禁用自己
+  if (userId === req.user.id && status === 'disabled') {
+    return res.status(400).json({ error: '不能禁用自己的账号。' });
+  }
+
+  try {
+    const updatedUser = userModel.updateUser(userId, { status });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: '用户不存在。' });
+    }
+
+    // 如果禁用用户，删除其所有会话
+    if (status === 'disabled') {
+      sessionModel.deleteUserSessions(userId);
+    }
+
+    // 记录审计日志
+    auditModel.createAuditLog({
+      userId: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      action: status === 'active' ? 'enable' : 'disable',
+      resourceType: 'user',
+      resourceId: String(userId),
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent')
+    });
+
+    res.json({ ok: true, user: updatedUser });
+  } catch (error) {
+    console.error('更新用户状态失败:', error);
+    res.status(500).json({ error: '更新用户状态失败。' });
+  }
+});
+
+module.exports = router;

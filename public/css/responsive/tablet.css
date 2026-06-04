@@ -1,0 +1,493 @@
+/**
+ * Tablet Responsive Styles
+ * Breakpoints: 1200px, 900px, 768px
+ * ~350 lines
+ */
+
+/* 1200px - Tablet Landscape */
+@media (max-width: 1200px) {
+  .hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workspace-shell {
+    padding: 16px;
+  }
+
+  .view-panel {
+    padding: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* 900px - Tablet Portrait */
+@media (max-width: 900px) {
+  /* Login Page */
+  .login-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  .login-brand-panel {
+    min-height: auto;
+    padding: 32px;
+    text-align: center;
+  }
+
+  .brand-points {
+    grid-template-columns: 1fr;
+    justify-content: center;
+  }
+
+  /* Topbar */
+  .topbar-shell {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .topbar-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .topnav {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  /* Overview */
+  .hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-hero-actions {
+    justify-content: flex-start;
+  }
+
+  .overview-focus,
+  .overview-shortcuts {
+    grid-template-columns: 1fr;
+  }
+
+  /* Review Items */
+  .review-item {
+    grid-template-columns: 1fr;
+  }
+
+  .review-item img {
+    height: 220px;
+  }
+
+  .review-actions {
+    position: sticky;
+    bottom: 0;
+    padding-top: 8px;
+    background: linear-gradient(180deg, transparent, var(--surface-strong) 24%);
+  }
+
+  .review-note-input {
+    min-height: 72px;
+  }
+
+  /* Media Grid */
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Team Grid */
+  .team-grid {
+    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  /* Workspace */
+  .workspace-shell {
+    padding: 12px;
+  }
+
+  .view-panel {
+    padding: 16px;
+  }
+
+  /* Card Grids */
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  /* Stats */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Audit Logs */
+  .audit-log-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .audit-time,
+  .audit-user,
+  .audit-action,
+  .audit-details,
+  .audit-ip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .audit-log-item > div:last-child {
+    border-bottom: none;
+  }
+
+  .audit-time::before {
+    content: '时间：';
+    font-weight: 500;
+    color: var(--text);
+    margin-right: 8px;
+  }
+
+  .audit-user::before {
+    content: '用户：';
+    font-weight: 500;
+    color: var(--text);
+    margin-right: 8px;
+  }
+
+  .audit-action::before {
+    content: '操作：';
+    font-weight: 500;
+    color: var(--text);
+    margin-right: 8px;
+  }
+
+  .audit-ip::before {
+    content: 'IP：';
+    font-weight: 500;
+    color: var(--text);
+    margin-right: 8px;
+  }
+
+  .audit-details {
+    white-space: normal;
+    text-align: right;
+  }
+}
+
+/* 768px - Large Phone / Small Tablet */
+@media (max-width: 768px) {
+  /* Global Typography */
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  /* Prevent iOS Auto-Zoom */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Login Page */
+  .login-card {
+    padding: 28px 20px;
+  }
+
+  .login-card h2 {
+    font-size: 24px;
+  }
+
+  /* Forms - Single Column */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  .todo-form,
+  .device-form,
+  .borrow-form,
+  .settings-form {
+    grid-template-columns: 1fr;
+    max-height: 80dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .todo-form .field:first-child,
+  .device-form .field:nth-child(5),
+  .device-form .field:nth-child(7),
+  .device-form button[type="submit"],
+  .borrow-form .field:nth-child(3),
+  .borrow-form .field:nth-child(6),
+  .borrow-form button[type="submit"],
+  .settings-form .field:nth-child(3),
+  .settings-form .field:nth-child(4),
+  .settings-form .field:nth-child(6),
+  .settings-form .settings-actions {
+    grid-column: 1;
+  }
+
+  .search-field {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  /* Buttons - Minimum Touch Target */
+  button,
+  .btn,
+  .primary-btn,
+  .ghost-btn {
+    min-height: 44px;
+    padding: 0 20px;
+    font-size: 15px;
+  }
+
+  /* Topbar */
+  .topbar {
+    height: auto;
+    min-height: 60px;
+    padding: 8px 12px;
+  }
+
+  .topbar-shell {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .topbar-brand {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .brand-text {
+    display: none;
+    max-width: 200px;
+  }
+
+  .brand-text span {
+    display: none;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Navigation - Hide, Use Hamburger */
+  .topnav {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Avatar */
+  .avatar-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Panels */
+  .view-panel {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .workspace-panel {
+    margin-bottom: 16px;
+  }
+
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Cards */
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  /* Media Grid */
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .media-card {
+    border-radius: 10px;
+  }
+
+  .media-thumb-wrapper {
+    aspect-ratio: 4 / 3;
+  }
+
+  .media-title {
+    font-size: 15px;
+  }
+
+  .media-action-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .batch-actions-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .batch-actions {
+    width: 100%;
+  }
+
+  .batch-actions button {
+    flex: 1;
+  }
+
+  /* Todo Forms */
+  .todo-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Lists */
+  .todo-list,
+  .device-list,
+  .borrow-list {
+    gap: 12px;
+  }
+
+  .todo-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .todo-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  /* Device Forms */
+  .device-form {
+    grid-template-columns: 1fr;
+  }
+
+  /* Team */
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Field Labels */
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label,
+  .field > span {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  /* Modals */
+  .profile-popover {
+    width: 90vw;
+    max-width: 400px;
+    max-height: 85vh;
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .profile-popover-inner {
+    max-height: 100vh;
+  }
+
+  /* Wish Drawer */
+  .wish-drawer-content {
+    width: 90vw;
+    max-width: 400px;
+  }
+
+  .wish-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .wish-fab svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Safe Areas */
+  .workspace-main {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .toast-container {
+    bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));
+  }
+
+  .wish-fab {
+    bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
+  }
+
+  /* Audit Toolbar */
+  .audit-toolbar {
+    flex-direction: column;
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100%;
+  }
+
+  /* User Actions */
+  .user-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .user-actions .ghost-btn {
+    width: 100%;
+  }
+}

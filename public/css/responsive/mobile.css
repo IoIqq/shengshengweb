@@ -1,0 +1,678 @@
+/**
+ * Mobile Responsive Styles
+ * Breakpoints: 900px, 768px, 640px, 480px, 360px
+ * ~605 lines
+ */
+
+/* 900px - iPad Portrait */
+@media (max-width: 900px) {
+  .workspace-panel {
+    padding: clamp(10px, 1.8vw, 18px);
+  }
+  .media-grid {
+    gap: clamp(8px, 1.5vw, 14px);
+  }
+}
+
+/* 768px - Large Mobile (iPhone 12+) */
+@media (max-width: 768px) {
+  .workspace-panel {
+    padding: clamp(10px, 1.5vw, 16px);
+  }
+  .overview-hero {
+    padding: clamp(16px, 3vw, 24px);
+    gap: clamp(12px, 2vw, 20px);
+    margin-bottom: clamp(16px, 3vw, 24px);
+  }
+  .media-grid {
+    gap: clamp(8px, 1.5vw, 12px);
+  }
+}
+
+/* 640px - Standard Mobile */
+@media (max-width: 640px) {
+  :root {
+    --container: calc(100vw - 20px);
+  }
+
+  /* Login */
+  .login-layout {
+    padding: 16px;
+    gap: 24px;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+  }
+
+  .login-brand-panel h1 {
+    font-size: 24px;
+  }
+
+  .brand-points {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .brand-copy-block span {
+    display: none;
+  }
+
+  /* Topbar */
+  .topbar-shell {
+    padding: 8px 10px;
+    border-radius: 16px;
+  }
+
+  .topbar-brand {
+    gap: 8px;
+  }
+
+  .topbar-actions .ghost-btn {
+    display: none;
+  }
+
+  /* Panels */
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .panel-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .panel-actions .primary-btn,
+  .panel-actions .ghost-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Stats */
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  /* 优化：改进工作区间距 */
+  .workspace-panel {
+    padding: 12px;
+  }
+
+  .overview-hero {
+    padding: 16px;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .media-grid {
+    gap: 10px;
+  }
+
+  .field {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  /* Workspace */
+  .workspace-shell {
+    padding: 8px;
+  }
+
+  .workspace-panel[data-panel="overview"] {
+    padding: 14px;
+  }
+
+  /* Device/Borrow Meta */
+  .device-meta,
+  .borrow-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Batch Actions */
+  .batch-actions-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .batch-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .batch-actions button {
+    flex: 1;
+  }
+
+  /* Media Grid - 2 Columns */
+  .media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .media-card {
+    border-radius: 12px;
+  }
+
+  .media-thumb {
+    height: 140px;
+  }
+
+  /* Team */
+  .team-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Todo/Device/Borrow Cards */
+  .todo-item,
+  .device-card,
+  .borrow-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  /* Forms */
+  .field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .field > span {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-field {
+    width: 100%;
+  }
+
+  /* Filters - Horizontal Scroll */
+  .filter-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Overview */
+  .overview-hero {
+    padding: 20px;
+  }
+
+  .overview-hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .overview-hero-actions button {
+    width: 100%;
+  }
+
+  .overview-shortcuts {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Review Center */
+  .review-item {
+    padding: 16px;
+  }
+
+  .review-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .review-actions button {
+    width: 100%;
+  }
+
+  /* Activity */
+  .activity-item {
+    padding: 12px;
+  }
+
+  /* Summary Cards */
+  .summary-card {
+    padding: 16px;
+  }
+
+  /* Toast */
+  .toast {
+    width: calc(100vw - 32px);
+    max-width: 400px;
+  }
+
+  /* Wish Modal */
+  .wish-drawer-content {
+    width: 100vw;
+    border-left: none;
+  }
+
+  .wish-drawer-header,
+  .wish-drawer .wish-form,
+  .wish-drawer .wish-list-section {
+    padding: 16px 20px;
+  }
+
+  /* Profile Popover */
+  .profile-popover {
+    width: calc(100vw - 24px);
+    right: 12px;
+    top: 70px;
+  }
+
+  .profile-popover-inner {
+    padding: 16px;
+    max-height: calc(100vh - 90px);
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .topbar-actions .ghost-btn {
+    display: none;
+  }
+
+  /* Wish Form Row */
+  .wish-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .wish-anonymous {
+    justify-self: start;
+  }
+}
+
+/* 480px - Small Mobile */
+@media (max-width: 480px) {
+  /* Global */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  /* Login */
+  .login-layout {
+    padding: 12px;
+  }
+
+  .login-card {
+    padding: 20px 12px;
+  }
+
+  .login-card h2 {
+    font-size: 20px;
+  }
+
+  .login-text {
+    font-size: 13px;
+  }
+
+  .login-brand-panel h1 {
+    font-size: 36px;
+  }
+
+  /* Buttons */
+  button,
+  .btn {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+
+  .primary-btn,
+  .ghost-btn,
+  .topbar-cta {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .topbar-cta {
+    padding: 0 12px;
+    font-size: 14px;
+    min-height: 38px;
+  }
+
+  /* Topbar */
+  .topbar {
+    min-height: 56px;
+    padding: 6px;
+  }
+
+  .hamburger-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatar-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Workspace */
+  .workspace-shell {
+    padding: 6px;
+  }
+
+  .view-panel {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .panel-header h2 {
+    font-size: 18px;
+  }
+
+  .panel-head h2 {
+    font-size: 22px;
+  }
+
+  /* 优化：改进间距 */
+  .workspace-panel {
+    padding: 12px;
+  }
+
+  .overview-hero {
+    padding: 14px;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .media-grid {
+    gap: 10px;
+  }
+
+  .field {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  /* Navigation Chips */
+  .nav-chip {
+    font-size: 13px;
+    padding-inline: 10px;
+  }
+
+  /* Input Fields */
+  .field input,
+  .field select,
+  .search-field input {
+    min-height: 42px;
+    font-size: 15px;
+  }
+
+  /* Cards */
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  /* Media Grid */
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+  }
+
+  .media-card {
+    border-radius: 8px;
+  }
+
+  /* Todo Items */
+  .todo-item {
+    padding: 12px;
+  }
+
+  /* Team Cards */
+  .team-card {
+    padding: 14px;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Device Items */
+  .device-item {
+    padding: 12px;
+  }
+
+  /* Modals */
+  .profile-popover {
+    width: 95vw;
+    max-height: 90vh;
+    padding: 16px;
+  }
+
+  .profile-header {
+    padding: 12px;
+  }
+
+  /* Wish Drawer */
+  .wish-drawer-content {
+    width: 95vw;
+    padding: 16px;
+  }
+
+  .wish-drawer-header h2 {
+    font-size: 18px;
+  }
+
+  /* Forms */
+  .field {
+    margin-bottom: 14px;
+  }
+
+  input,
+  textarea,
+  select {
+    padding: 10px 12px;
+  }
+
+  /* Toast */
+  .toast {
+    width: calc(100vw - 24px);
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  /* FAB */
+  .wish-fab {
+    width: 52px;
+    height: 52px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  /* Todo Form */
+  .todo-form,
+  .device-form,
+  .borrow-form,
+  .settings-form {
+    gap: 8px;
+  }
+}
+
+/* 360px - Extra Small Mobile */
+@media (max-width: 360px) {
+  :root {
+    --container: calc(100vw - 16px);
+    --radius-lg: 12px;
+    --radius-md: 8px;
+  }
+
+  /* Login */
+  .login-card {
+    padding: 16px 10px;
+  }
+
+  .login-brand-panel {
+    padding: 28px;
+  }
+
+  .login-brand-panel h1 {
+    font-size: 28px;
+  }
+
+  /* Topbar */
+  .topbar-shell {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-text strong {
+    font-size: 13px;
+  }
+
+  .brand-text span {
+    font-size: 11px;
+  }
+
+  /* Buttons */
+  .primary-btn,
+  .ghost-btn,
+  .topbar-cta {
+    min-height: 38px;
+    font-size: 13px;
+    padding: 0 12px;
+  }
+
+  /* Input Fields */
+  .field input,
+  .field select,
+  .field textarea,
+  .search-field input {
+    min-height: 40px;
+    font-size: 14px;
+  }
+
+  /* 优化：改进工作区间距（从8px改为12px） */
+  .workspace-panel {
+    padding: 12px;
+  }
+
+  .overview-hero {
+    padding: 12px;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .panel-head h2 {
+    font-size: 18px;
+  }
+
+  .view-panel {
+    padding: 12px;
+  }
+
+  /* Media Grid - 优化：从4px改为10px */
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  /* Buttons */
+  button,
+  .btn {
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  /* Stats */
+  .stat-value {
+    font-size: 20px;
+  }
+
+  /* 优化：改进表单间距 */
+  .field {
+    gap: 6px;
+    margin-top: 10px;
+  }
+}
+
+/* Landscape Mode (Height < 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 12px;
+  }
+
+  .login-brand-panel {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 16px;
+  }
+
+  .brand-points {
+    display: none;
+  }
+
+  .topbar {
+    min-height: 50px;
+  }
+
+  .profile-popover,
+  .wish-drawer-content {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+}

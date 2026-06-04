@@ -1,0 +1,550 @@
+/* ========== Layout: Navigation ========== */
+/* 导航组件、菜单和标签页 */
+
+/* 导航芯片和筛选芯片基础 */
+.nav-chip,
+.filter-chip {
+  min-height: 44px;
+  padding: 10px 16px;
+  color: var(--text-soft);
+  background: transparent;
+  border-color: transparent;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background-color 220ms var(--motion-ease),
+    color 220ms var(--motion-ease),
+    border-color 220ms var(--motion-ease);
+}
+
+.nav-chip::before,
+.filter-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+  pointer-events: none;
+}
+
+.nav-chip:hover::before,
+.filter-chip:hover::before {
+  opacity: 1;
+}
+
+.nav-chip:hover,
+.filter-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(23, 24, 26, 0.16);
+  background: rgba(47, 97, 255, 0.05);
+  color: var(--text);
+}
+
+.nav-chip:active,
+.filter-chip:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.nav-chip:focus-visible,
+.filter-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(23, 24, 26, 0.08);
+}
+
+/* 导航芯片激活状态 */
+.nav-chip.is-active,
+.filter-chip.is-active {
+  background: rgba(47, 97, 255, 0.08);
+  color: var(--text);
+  border-color: rgba(47, 97, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.nav-chip.is-active::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(47, 97, 255, 0.2), #2f61ff, rgba(47, 97, 255, 0.2));
+}
+
+.nav-chip:hover {
+  background: rgba(47, 97, 255, 0.05);
+  color: var(--text);
+}
+
+.nav-chip:active {
+  transform: translateY(0);
+}
+
+/* 导航滑动指示器 */
+.nav-indicator {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(47, 97, 255, 0.2), #2f61ff, rgba(47, 97, 255, 0.2));
+  border-radius: 999px;
+  opacity: 0;
+  transition:
+    transform 320ms var(--motion-ease),
+    width 320ms var(--motion-ease),
+    opacity 220ms var(--motion-ease);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 筛选行 */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 提醒徽章 */
+.alert-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.alert-chip:hover {
+  border-color: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.12);
+}
+
+.alert-chip:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.alert-chip[data-active="true"] {
+  border-color: #4f46e5;
+  background: rgba(79,70,229,0.06);
+}
+
+.alert-chip[data-tone="pending"][data-active="true"],
+.alert-chip[data-tone="pending"]:hover {
+  background: rgba(124, 100, 47, 0.1);
+  border-color: rgba(124, 100, 47, 0.22);
+  color: var(--warning);
+}
+
+.alert-chip[data-tone="todo"][data-active="true"],
+.alert-chip[data-tone="todo"]:hover {
+  background: rgba(47, 97, 255, 0.08);
+  border-color: rgba(47, 97, 255, 0.18);
+  color: #2f61ff;
+}
+
+.alert-chip[data-tone="danger"][data-active="true"],
+.alert-chip[data-tone="danger"]:hover {
+  background: rgba(154, 62, 62, 0.1);
+  border-color: rgba(154, 62, 62, 0.24);
+  color: var(--danger);
+}
+
+.alert-chip[data-tone="pending"] .alert-value { color: #f59e0b; }
+.alert-chip[data-tone="todo"] .alert-value { color: #3b82f6; }
+.alert-chip[data-tone="danger"] .alert-value { color: #ef4444; }
+
+.alert-value {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: inherit;
+}
+
+.alert-label {
+  letter-spacing: 0.02em;
+}
+
+.alert-pulse {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  animation: alert-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* 概览提醒区域 */
+.overview-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.overview-alerts:empty {
+  display: none;
+}
+
+/* 设置标签页 */
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 24px;
+}
+
+.settings-tab {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--motion-fast);
+  color: var(--text-soft);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.settings-tab:hover {
+  color: var(--accent);
+  background: var(--surface-soft);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.settings-tab.active {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.settings-content {
+  animation: fadeIn var(--motion-medium);
+}
+
+.settings-content.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 快捷操作按钮 */
+.shortcut-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 12px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcut-btn:hover {
+  border-color: #4f46e5;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.10);
+}
+
+.shortcut-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.shortcut-icon {
+  font-size: 28px;
+}
+
+.shortcut-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* 搜索字段 */
+.search-field {
+  display: grid;
+  gap: 6px;
+  flex: 0 1 400px;
+  max-width: 400px;
+}
+
+.search-field span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.06em;
+}
+
+/* 审计工具栏 */
+.audit-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-select,
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--text);
+  transition: all var(--motion-fast);
+}
+
+.filter-select:hover,
+.filter-input:hover {
+  border-color: var(--line-strong);
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45, 49, 55, 0.1);
+}
+
+.filter-select {
+  min-width: 140px;
+}
+
+.filter-input {
+  min-width: 140px;
+}
+
+/* 分页 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 16px 0;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--motion-fast);
+  font-size: 14px;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination .page-info {
+  padding: 0 12px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+/* 响应式布局 - 导航 */
+@media (max-width: 900px) {
+  .overview-focus,
+  .overview-shortcuts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-toolbar {
+    flex-direction: column;
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-field {
+    flex: 1 1 100%;
+    max-width: none;
+    width: 100%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .overview-shortcuts {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .shortcut-btn {
+    padding: 14px 10px;
+  }
+
+  .shortcut-icon {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-chip {
+    font-size: 13px;
+    padding-inline: 10px;
+  }
+
+  .filter-chip {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .overview-shortcuts {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .shortcut-btn {
+    padding: 14px 10px;
+  }
+
+  .shortcut-icon {
+    font-size: 22px;
+  }
+}
+
+/* 移动端触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .nav-chip:hover,
+  .filter-chip:hover {
+    transform: none;
+  }
+
+  .nav-chip:active,
+  .filter-chip:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+}
+
+/* 移动端滚动优化 */
+@media (max-width: 768px) {
+  .filter-row,
+  .overview-shortcuts {
+    scroll-snap-type: x proximity;
+  }
+
+  .filter-chip {
+    scroll-snap-align: start;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .nav-chip,
+  .filter-chip,
+  .alert-chip,
+  .shortcut-btn {
+    transition: none !important;
+  }
+
+  .alert-pulse {
+    animation: none !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .nav-chip,
+  .filter-chip {
+    border-width: 2px;
+  }
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .alert-chip {
+    background: rgba(45, 49, 55, 0.6);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .shortcut-btn {
+    background: rgba(45, 49, 55, 0.6);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+}

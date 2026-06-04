@@ -1,0 +1,283 @@
+/* ========== Base: Typography ========== */
+/* 字体排版和文本样式 */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.brand-copy-block strong,
+.login-brand-panel h1,
+.login-card h2,
+.panel-head h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* 统一行高和字间距的复合选择器 */
+.brand-copy,
+.login-text,
+.hero-text,
+.activity-item p,
+.media-meta,
+.media-note,
+.review-copy p,
+.review-copy small,
+.todo-body p,
+.team-card small,
+.panel-badge,
+.login-hint,
+.brand-points span,
+.form-message,
+.panel-feedback,
+.activity-item small,
+.profile-popover-head span,
+.profile-meta span {
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.brand-copy,
+.login-text,
+.hero-text,
+.activity-item p,
+.media-meta,
+.media-note,
+.review-copy p,
+.review-copy small,
+.todo-body p,
+.team-card small,
+.panel-badge,
+.login-hint {
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.login-card h2,
+.panel-head h2 {
+  letter-spacing: -0.05em;
+}
+
+.login-card h2 {
+  margin-top: 10px;
+  font-size: clamp(30px, 3vw, 44px);
+  line-height: 1.01;
+  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-brand-panel h1 {
+  font-size: clamp(42px, 4.8vw, 78px);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  max-width: 7.5ch;
+  margin-top: 16px;
+  color: var(--text);
+}
+
+.brand-text strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.brand-text span {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.panel-head h2 {
+  margin-top: 8px;
+  font-size: clamp(25px, 2.4vw, 36px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  padding-left: 14px;
+}
+
+.panel-head h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 28px;
+  background: linear-gradient(180deg, var(--accent-vermilion) 0%, var(--accent-gold) 100%);
+  border-radius: 999px;
+}
+
+.workspace-panel[data-panel="overview"] .panel-head h2 {
+  font-size: clamp(28px, 2.8vw, 42px);
+}
+
+.hero-stats strong {
+  display: block;
+  font-size: 42px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.hero-stats span {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.login-hint code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(23, 24, 26, 0.08);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 38px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat-card span {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.profile-section-title {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.profile-meta span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.profile-meta strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.char-count {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.system-row strong {
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+/* 响应式字体 */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+}

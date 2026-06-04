@@ -1,0 +1,466 @@
+/* ========================================
+   提示框组件 (Tooltips Component)
+   工具提示、悬停提示、弹出提示
+   ======================================== */
+
+/* Tooltip Enhanced */
+.tooltip-enhanced {
+  position: relative;
+}
+
+.tooltip-enhanced::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  padding: 6px 12px;
+  background: rgba(23, 24, 26, 0.95);
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.tooltip-enhanced::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(23, 24, 26, 0.95);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.tooltip-enhanced:hover::after,
+.tooltip-enhanced:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* Avatar Tooltip */
+.avatar-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  box-shadow: 0 12px 26px rgba(17, 18, 20, 0.08);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Toast Container */
+.toast-container {
+  position: fixed;
+  top: max(84px, calc(env(safe-area-inset-top) + 16px));
+  right: max(20px, env(safe-area-inset-right));
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: min(420px, calc(100vw - 40px));
+}
+
+/* Toast */
+.toast {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 24, 26, 0.1);
+  box-shadow: 0 16px 38px rgba(17, 18, 20, 0.12);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+  transform: translateX(calc(100% + 30px));
+  opacity: 0;
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-medium) var(--motion-ease);
+}
+
+.toast.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.toast[data-tone="success"] .toast-icon {
+  background: rgba(44, 107, 79, 0.15);
+  color: var(--success);
+}
+
+.toast[data-tone="error"] .toast-icon {
+  background: rgba(154, 62, 62, 0.15);
+  color: var(--danger);
+}
+
+.toast[data-tone="info"] .toast-icon {
+  background: rgba(47, 97, 255, 0.15);
+  color: #2f61ff;
+}
+
+.toast[data-tone="warning"] .toast-icon {
+  background: rgba(124, 100, 47, 0.15);
+  color: var(--warning);
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.toast-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all var(--motion-fast) var(--motion-ease);
+}
+
+.toast-close:hover {
+  background: rgba(23, 24, 26, 0.06);
+  color: var(--text);
+}
+
+/* Popover Base (for future use) */
+.popover {
+  position: absolute;
+  z-index: 1000;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(17, 18, 20, 0.12);
+  backdrop-filter: blur(16px);
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popover.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hint Text */
+.hint {
+  display: inline-block;
+  position: relative;
+  color: var(--text-muted);
+  cursor: help;
+  border-bottom: 1px dotted var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.hint:hover {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* Status Tooltip */
+.status-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 6px 10px;
+  background: rgba(17, 18, 20, 0.95);
+  color: white;
+  font-size: 11px;
+  white-space: nowrap;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.status-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(17, 18, 20, 0.95);
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 2px solid var(--surface-strong, #fff);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Info Tooltip */
+.info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  background: rgba(47, 97, 255, 0.1);
+  color: #2f61ff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.info-tooltip:hover {
+  background: rgba(47, 97, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Help Text */
+.help-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.help-text.is-error {
+  color: var(--danger);
+}
+
+.help-text.is-success {
+  color: var(--success);
+}
+
+.help-text.is-warning {
+  color: var(--warning);
+}
+
+/* Dropdown Hint */
+.dropdown-hint {
+  padding: 8px 12px;
+  background: rgba(47, 97, 255, 0.08);
+  border-left: 3px solid #2f61ff;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-soft);
+  margin-top: 8px;
+}
+
+/* Inline Tooltip */
+.inline-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.inline-tooltip-text {
+  visibility: hidden;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  background: rgba(17, 18, 20, 0.95);
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.inline-tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(17, 18, 20, 0.95);
+}
+
+.inline-tooltip:hover .inline-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toast-container {
+    bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));
+  }
+}
+
+@media (max-width: 640px) {
+  .toast {
+    width: calc(100vw - 32px);
+    max-width: 400px;
+  }
+
+  .toast {
+    width: calc(100vw - 24px);
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .tooltip-enhanced::after {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toast {
+    width: calc(100vw - 24px);
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .popover {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* Touch Devices - Remove Hover Tooltips */
+@media (hover: none) and (pointer: coarse) {
+  .tooltip-enhanced::after,
+  .tooltip-enhanced::before {
+    display: none;
+  }
+
+  .inline-tooltip:hover .inline-tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* Keep important tooltips visible on touch */
+  .tooltip-enhanced:active::after,
+  .tooltip-enhanced:active::before {
+    display: block;
+    opacity: 1;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .toast {
+    background: rgba(45, 49, 55, 0.98);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .toast-title {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .toast-message {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .popover {
+    background: rgba(45, 49, 55, 0.98);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown-hint {
+    background: rgba(47, 97, 255, 0.15);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+    transition: opacity 0.01ms;
+  }
+
+  .notification-badge {
+    animation: none;
+  }
+
+  .tooltip-enhanced::after,
+  .tooltip-enhanced::before,
+  .inline-tooltip-text {
+    transition: none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .toast {
+    border-width: 2px;
+  }
+
+  .tooltip-enhanced::after {
+    border: 1px solid currentColor;
+  }
+}

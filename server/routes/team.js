@@ -1,152 +1,152 @@
-aconst express = require("express");
+const express = require('express');
 const router = express.Router();
+const { team: teamModel } = require('../models');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
-// 导入数据库操作
-const { get, runWrite, transaction, all } = require("../database");
-
-// 导入中间件
-const { requireAuth, requireAdmin } = require("../middleware/auth");
-const { teamWriteLimiter } = require("../middleware/rateLimiter");
-
-// 导入工具函数
-const { nowIso, randomId } = require("../utils/helpers");
-
-// 导入服务
-const { teamRowToItem } = require("../services/common");
-
-// ========== 团队路由 ==========
-
-// 获取团队成员列表（通过 bootstrap 返回，这里保留接口以备扩展）
-router.get("/team", requireAuth, (req, res) => {
-  const items = all("SELECT * FROM team ORDER BY order_index ASC, datetime(created_at) ASC")
-    .map(teamRowToItem);
-  res.json({ ok: true, items });
+// Rate limiter for team writes
+const rateLimit = require('express-rate-limit');
+const teamWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: '团队成员变更过于频繁,请稍后再试。' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false },
 });
 
-// 添加团队成员
-router.post("/team", teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
-  const body = req.body || {};
-  const name = String(body.name || "").trim();
-  const role = String(body.role || "").trim();
-  const note = String(body.note || "").trim();
-  const badge = String(body.badge || "").trim().slice(0, 2);
-  const email = String(body.email || "").trim();
-  const phone = String(body.phone || "").trim();
-  const status = String(body.status || "active");
-  const joinedAt = String(body.joinedAt || nowIso());
-  if (!name || !role) {
-    return res.status(400).json({ error: "请输入成员姓名和角色。" });
-  }
+function normalizeGroups(value) {
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
+  return String(value || '').split(',').map((v) => v.trim()).filter(Boolean);
+}
 
-  const maxOrder = get("SELECT MAX(order_index) AS max FROM team");
-  const nextOrder = (maxOrder?.max || 0) + 1;
-
-  const item = {
-    id: randomId("team"),
+function buildMemberPayload(body, name = '') {
+  return {
     name,
-    role,
-    note,
-    badge: badge || name.slice(0, 1),
-    email,
-    phone,
-    status: ["active", "inactive"].includes(status) ? status : "active",
-    joined_at: joinedAt,
-    order_index: nextOrder,
-    created_at: nowIso(),
-    updated_at: nowIso(),
+    role: String(body.role || '').trim(),
+    note: String(body.note || '').trim(),
+    badge: String(body.badge || '').trim() || (name ? name.charAt(0) : ''),
+    email: String(body.email || '').trim(),
+    phone: String(body.phone || '').trim(),
+    studentId: String(body.studentId || '').trim(),
+    grade: String(body.grade || '').trim(),
+    major: String(body.major || '').trim(),
+    skills: String(body.skills || '').trim(),
+    groups: normalizeGroups(body.groups),
+    bio: String(body.bio || '').trim(),
+    partyJoinAt: String(body.partyJoinAt || '').trim(),
+    status: ['active', 'leave', 'inactive'].includes(body.status) ? body.status : 'active',
+    joinedAt: String(body.joinedAt || '').trim(),
   };
-  transaction(() => {
-    runWrite(
-      `INSERT INTO team (id, name, role, note, badge, email, phone, status, joined_at, order_index, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [item.id, item.name, item.role, item.note, item.badge, item.email, item.phone, item.status, item.joined_at, item.order_index, item.created_at, item.updated_at],
-    );
-  });
-  res.json({ ok: true, item: teamRowToItem(item) });
+}
+
+// GET /api/team - Get team member list with filters
+router.get('/', requireAuth, (req, res) => {
+  try {
+    const items = teamModel.getTeamList(req.query || {});
+    res.json({ ok: true, items });
+  } catch (error) {
+    res.status(500).json({ error: '获取团队成员列表失败。' });
+  }
 });
 
-// 更新团队成员
-router.patch("/team/:id", teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
-  const id = String(req.params.id || "");
-  const existing = get("SELECT * FROM team WHERE id = ? LIMIT 1", [id]);
-  if (!existing) {
-    return res.status(404).json({ error: "成员不存在。" });
-  }
-
-  const body = req.body || {};
-  const name = body.name !== undefined ? String(body.name || "").trim() : existing.name;
-  const role = body.role !== undefined ? String(body.role || "").trim() : existing.role;
-  const note = body.note !== undefined ? String(body.note || "").trim() : existing.note;
-  const badge = body.badge !== undefined ? String(body.badge || "").trim().slice(0, 2) : existing.badge;
-  const email = body.email !== undefined ? String(body.email || "").trim() : existing.email;
-  const phone = body.phone !== undefined ? String(body.phone || "").trim() : existing.phone;
-  const status = body.status !== undefined ? String(body.status || "").trim() : existing.status;
-  const joinedAt = body.joinedAt !== undefined ? String(body.joinedAt || "").trim() : existing.joined_at;
-  const nextStatus = ["active", "inactive"].includes(status) ? status : existing.status;
-
-  transaction(() => {
-    runWrite(
-      `UPDATE team
-       SET name = ?, role = ?, note = ?, badge = ?, email = ?, phone = ?, status = ?, joined_at = ?, updated_at = ?
-       WHERE id = ?`,
-      [name, role, note, badge, email, phone, nextStatus, joinedAt, nowIso(), id],
-    );
-  });
-
-  const updated = get("SELECT * FROM team WHERE id = ? LIMIT 1", [id]);
-  res.json({ ok: true, item: teamRowToItem(updated) });
-});
-
-// 删除团队成员
-router.delete("/team/:id", teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
-  const id = String(req.params.id || "");
-  const existing = get("SELECT * FROM team WHERE id = ? LIMIT 1", [id]);
-  if (!existing) {
-    return res.status(404).json({ error: "成员不存在。" });
-  }
-
-  transaction(() => {
-    runWrite("DELETE FROM team WHERE id = ?", [id]);
-  });
-
-  res.json({ ok: true });
-});
-
-// 调整成员顺序
-router.patch("/team/:id/order", teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
-  const id = String(req.params.id || "");
-  const body = req.body || {};
-  const newOrder = Number(body.orderIndex);
-  if (!Number.isInteger(newOrder) || newOrder < 1) {
-    return res.status(400).json({ error: "顺序值必须是正整数。" });
-  }
-
-  const existing = get("SELECT * FROM team WHERE id = ? LIMIT 1", [id]);
-  if (!existing) {
-    return res.status(404).json({ error: "成员不存在。" });
-  }
-
-  transaction(() => {
-    const oldOrder = existing.order_index;
-    if (newOrder === oldOrder) return;
-
-    if (newOrder < oldOrder) {
-      runWrite(
-        "UPDATE team SET order_index = order_index + 1 WHERE order_index >= ? AND order_index < ?",
-        [newOrder, oldOrder],
-      );
-    } else {
-      runWrite(
-        "UPDATE team SET order_index = order_index - 1 WHERE order_index > ? AND order_index <= ?",
-        [oldOrder, newOrder],
-      );
+// GET /api/team/:id/contribution - Get member contribution stats
+router.get('/:id/contribution', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    const stats = teamModel.getMemberContributionStats(id);
+    if (!stats) {
+      return res.status(404).json({ error: '团队成员不存在。' });
     }
-    runWrite("UPDATE team SET order_index = ?, updated_at = ? WHERE id = ?", [newOrder, nowIso(), id]);
-  });
+    res.json({ ok: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ error: '获取成员贡献统计失败。' });
+  }
+});
 
-  const items = all("SELECT * FROM team ORDER BY order_index ASC, datetime(created_at) ASC")
-    .map(teamRowToItem);
-  res.json({ ok: true, items });
+// POST /api/team - Create team member
+router.post('/', teamWriteLimiter, requireAuth, requireAdmin, (req, res) => {
+  try {
+    const body = req.body || {};
+    const name = String(body.name || '').trim();
+    const role = String(body.role || '').trim();
+
+    if (!name || !role) {
+      return res.status(400).json({ error: '请填写成员姓名和角色。' });
+    }
+
+    const member = teamModel.createTeamMember(buildMemberPayload({ ...body, role }, name));
+    res.json({ ok: true, item: teamModel.teamRowToItem(member) });
+  } catch (error) {
+    res.status(500).json({ error: '创建团队成员失败。' });
+  }
+});
+
+// PATCH /api/team/:id - Update team member
+router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    const body = req.body || {};
+
+    const updates = {};
+    if (body.name !== undefined) updates.name = String(body.name || '').trim();
+    if (body.role !== undefined) updates.role = String(body.role || '').trim();
+    if (body.note !== undefined) updates.note = String(body.note || '').trim();
+    if (body.badge !== undefined) updates.badge = String(body.badge || '').trim();
+    if (body.email !== undefined) updates.email = String(body.email || '').trim();
+    if (body.phone !== undefined) updates.phone = String(body.phone || '').trim();
+    if (body.studentId !== undefined) updates.studentId = String(body.studentId || '').trim();
+    if (body.grade !== undefined) updates.grade = String(body.grade || '').trim();
+    if (body.major !== undefined) updates.major = String(body.major || '').trim();
+    if (body.skills !== undefined) updates.skills = String(body.skills || '').trim();
+    if (body.groups !== undefined) updates.groups = normalizeGroups(body.groups);
+    if (body.bio !== undefined) updates.bio = String(body.bio || '').trim();
+    if (body.partyJoinAt !== undefined) updates.partyJoinAt = String(body.partyJoinAt || '').trim();
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.joinedAt !== undefined) updates.joinedAt = String(body.joinedAt || '').trim();
+
+    const updated = teamModel.updateTeamMember(id, updates);
+
+    if (!updated) {
+      return res.status(404).json({ error: '团队成员不存在。' });
+    }
+
+    res.json({ ok: true, item: teamModel.teamRowToItem(updated) });
+  } catch (error) {
+    res.status(500).json({ error: '更新团队成员失败。' });
+  }
+});
+
+// DELETE /api/team/:id - Delete team member
+router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    teamModel.deleteTeamMember(id);
+    res.json({ ok: true });
+  } catch (error) {
+    if (error.message.includes('不存在')) {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).json({ error: '删除团队成员失败。' });
+  }
+});
+
+// PATCH /api/team/:id/order - Update team member order
+router.patch('/:id/order', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    const newOrder = Number(req.body?.orderIndex);
+
+    const items = teamModel.updateTeamOrder(id, newOrder);
+    res.json({ ok: true, items });
+  } catch (error) {
+    if (error.message.includes('不存在')) {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message.includes('排序值')) {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: '更新排序失败。' });
+  }
 });
 
 module.exports = router;

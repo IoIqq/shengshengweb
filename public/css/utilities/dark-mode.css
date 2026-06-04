@@ -1,0 +1,326 @@
+/**
+ * Dark Mode Styles
+ * Dark color scheme preferences and overrides
+ * ~130 lines
+ */
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #121316;
+    --surface: rgba(24, 26, 30, 0.92);
+    --surface-strong: #1c1f24;
+    --surface-soft: #252930;
+    --text: #f2f3f5;
+    --text-soft: #b4bac3;
+    --text-muted: #8d95a1;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.25);
+    --shadow-strong: 0 18px 48px rgba(0, 0, 0, 0.45);
+
+    --gradient-text-start: #f2f3f5;
+    --gradient-text-end: #d5d9e0;
+    --gradient-success-start: #4ade80;
+    --gradient-success-end: #22c55e;
+    --gradient-warning-start: #fbbf24;
+    --gradient-warning-end: #d97706;
+    --surface-gradient: linear-gradient(135deg, rgba(30, 33, 38, 0.96), rgba(28, 31, 36, 0.94));
+    --surface-gradient-soft: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(22, 25, 29, 0.94));
+    --accent-blue: #6b8cff;
+    --accent-blue-hover: #8ba5ff;
+  }
+
+  body::before {
+    background: radial-gradient(circle at center, rgba(47, 97, 255, 0.12), transparent 70%);
+  }
+
+  .login-card,
+  .workspace-panel,
+  .profile-popover,
+  .wish-drawer-panel {
+    border-color: var(--line);
+  }
+
+  /* Skeleton in Dark Mode */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+  }
+
+  .skeleton-card,
+  .skeleton-list-item,
+  .skeleton-stat {
+    background: rgba(45, 49, 55, 0.6);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .loading-placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .empty-state-title {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .empty-state-description {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* 渐变文字暗色修复 */
+  .panel-head h2,
+  .login-card h2,
+  .hero-stats strong,
+  .stat-card strong {
+    background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* 面板编号装饰 */
+  .workspace-panel[data-panel="media"]::after,
+  .workspace-panel[data-panel="review"]::after,
+  .workspace-panel[data-panel="todo"]::after,
+  .workspace-panel[data-panel="device"]::after,
+  .workspace-panel[data-panel="borrow"]::after,
+  .workspace-panel[data-panel="team"]::after,
+  .workspace-panel[data-panel="settings"]::after,
+  .overview-hero::before {
+    color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* 卡片和面板背景 */
+  .stat-card {
+    background: linear-gradient(135deg, rgba(30, 33, 38, 0.96), rgba(28, 31, 36, 0.94));
+    border-color: var(--line);
+  }
+
+  .workspace-panel[data-panel="overview"] {
+    background: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(22, 25, 29, 0.94));
+    border-color: rgba(107, 140, 255, 0.12);
+  }
+
+  .overview-hero {
+    background: linear-gradient(135deg, rgba(35, 39, 45, 0.9), rgba(24, 27, 32, 0.95));
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .login-card {
+    background: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(24, 27, 32, 0.94));
+  }
+
+  .login-brand-panel {
+    background: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(24, 27, 32, 0.94));
+  }
+
+  .focus-card {
+    background: rgba(28, 31, 36, 0.9);
+    border-color: var(--line);
+  }
+
+  .focus-row {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .focus-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .shortcut-btn {
+    background: rgba(28, 31, 36, 0.9);
+    border-color: var(--line);
+  }
+
+  .alert-chip {
+    background: rgba(28, 31, 36, 0.9);
+    border-color: var(--line);
+  }
+
+  .section-title {
+    border-bottom-color: var(--line);
+  }
+
+  .overview-date-badge {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .team-card {
+    background: linear-gradient(135deg, rgba(30, 33, 38, 0.96), rgba(28, 31, 36, 0.94));
+  }
+
+  .device-form,
+  .borrow-form,
+  .team-form {
+    background: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(24, 27, 32, 0.94));
+  }
+
+  /* 逾期项目暗色强化 */
+  .focus-row[data-overdue="true"],
+  .borrow-item[data-overdue="true"] {
+    background: rgba(239, 68, 68, 0.12);
+    border-left-color: rgba(239, 68, 68, 0.6);
+  }
+
+  /* Ripple Effect in Dark Mode */
+  .ripple {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Mobile Dark Mode Optimizations */
+  @media (max-width: 768px) {
+    body {
+      background: #0d0e0f;
+    }
+
+    .view-panel {
+      background: rgba(23, 24, 26, 0.95);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-card,
+    .media-card,
+    .team-card {
+      background: rgba(45, 49, 55, 0.6);
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --line: rgba(23, 24, 26, 0.2);
+    --line-strong: rgba(23, 24, 26, 0.4);
+  }
+
+  .primary-btn {
+    border: 2px solid var(--text);
+  }
+
+  .ghost-btn,
+  .topbar-cta,
+  .nav-chip,
+  .filter-chip {
+    border-width: 2px;
+  }
+
+  .stat-card,
+  .media-card,
+  .team-card,
+  .device-item {
+    border-width: 2px;
+  }
+
+  button,
+  .btn {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion Mode */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .workspace-shell {
+    opacity: 1;
+    transform: none;
+  }
+
+  .skeleton,
+  .loading-bar-progress,
+  .btn-spinner,
+  .ripple,
+  .stagger-item,
+  .pulse,
+  .bounce,
+  .spin,
+  .shake,
+  .scale-in,
+  .scale-out,
+  .slide-in-right,
+  .slide-in-left,
+  .slide-in-up,
+  .slide-in-down,
+  .fade-in,
+  .fade-out,
+  .page-enter,
+  .page-exit {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  img[data-src] {
+    opacity: 1;
+  }
+
+  .mobile-nav-overlay,
+  .mobile-nav-content {
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-title-text,
+  .wish-modal-overlay,
+  .wish-modal-content,
+  .wish-item {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .wish-fab,
+  .wish-drawer-overlay,
+  .wish-drawer-content {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .mobile-nav-overlay,
+  .mobile-nav-content,
+  .wish-drawer-overlay,
+  .wish-drawer-content {
+    transition: none !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .topbar,
+  .profile-popover,
+  .skip-link,
+  .auth-shell,
+  .panel-actions,
+  .media-actions,
+  .review-actions,
+  .todo-actions,
+  .device-actions,
+  .borrow-actions,
+  .settings-actions,
+  .batch-actions-bar,
+  button {
+    display: none !important;
+  }
+
+  .workspace-panel {
+    display: block !important;
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  body {
+    background: white;
+  }
+}

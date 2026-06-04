@@ -1,0 +1,145 @@
+/* ========== Base: Variables ========== */
+/* CSS变量定义 - 全局设计令牌 */
+
+:root {
+  color-scheme: light;
+
+  /* 字体族 */
+  --font-sans:
+    "DM Sans",
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft YaHei",
+    "Noto Sans SC",
+    "Source Han Sans SC",
+    system-ui,
+    sans-serif;
+  --font-display:
+    "Noto Serif SC",
+    "Source Han Serif SC",
+    "Songti SC",
+    "STSong",
+    serif;
+  --font-mono:
+    "JetBrains Mono",
+    "SFMono-Regular",
+    "Cascadia Mono",
+    "Consolas",
+    "Liberation Mono",
+    monospace;
+
+  /* 颜色 */
+  --bg: #f5f6f7;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-strong: #ffffff;
+  --surface-soft: #f0f1f3;
+  --text: #17181a;
+  --text-soft: #666b72;
+  --text-muted: #8a9098;
+  --line: rgba(23, 24, 26, 0.08);
+  --line-strong: rgba(23, 24, 26, 0.16);
+  --accent: #2d3137;
+  --accent-vermilion: #c8392c;
+  --accent-gold: #c8a55a;
+  --success: #2c6b4f;
+  --warning: #7c642f;
+  --danger: #9a3e3e;
+
+  /* 渐变文字令牌 */
+  --gradient-text-angle: 180deg;
+  --gradient-text-start: #17181a;
+  --gradient-text-end: #3a3d42;
+  --gradient-success-start: #2c6b4f;
+  --gradient-success-end: #1e4d38;
+  --gradient-warning-start: #7c642f;
+  --gradient-warning-end: #5a4822;
+
+  /* 表面渐变令牌 */
+  --surface-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
+  --surface-gradient-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.96));
+
+  /* 统一强调色 */
+  --accent-blue: #2f61ff;
+  --accent-blue-hover: #4f46e5;
+
+  /* 阴影 */
+  --shadow: 0 12px 30px rgba(17, 18, 20, 0.06);
+  --shadow-soft: 0 8px 20px rgba(17, 18, 20, 0.04);
+  --shadow-strong: 0 18px 48px rgba(17, 18, 20, 0.08);
+
+  /* 圆角 */
+  --radius-xl: 14px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* 8px 基础网格间距系统 */
+  --spacing-xs: 4px;    /* 仅用于超小细节 */
+  --spacing-sm: 8px;    /* 最小间距阈值 */
+  --spacing-md: 12px;   /* 标准间距 */
+  --spacing-lg: 16px;   /* 主要间距 */
+  --spacing-xl: 24px;   /* 组之间间距 */
+  --spacing-2xl: 32px;  /* 大块区分 */
+
+  /* 流体间距（使用clamp） */
+  --spacing-panel: clamp(10px, 2vw, 22px);    /* 面板padding */
+  --spacing-card-gap: clamp(8px, 1.5vw, 16px); /* 卡片间距 */
+  --spacing-grid-gap: clamp(10px, 2vw, 18px);  /* 网格间距 */
+  --spacing-form-gap: clamp(6px, 1vw, 10px);   /* 表单字段间距 */
+
+  /* 布局 */
+  --container: min(1440px, calc(100vw - 32px));
+
+  /* 动画速度 */
+  --motion-fast: 160ms;
+  --motion-medium: 260ms;
+  --motion-slow: 520ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.15, 1);
+}
+
+/* ========== 基础重置 ========== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ========== 通用样式 ========== */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

@@ -1,0 +1,161 @@
+/**
+ * Touch Device Optimizations
+ * Touch interactions, hover alternatives, safe areas
+ * ~120 lines
+ */
+
+/* Base Touch Optimizations */
+* {
+  /* Remove click delay */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+  touch-action: manipulation;
+}
+
+/* Touch Devices Only (no hover support) */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase Touch Targets */
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Enhanced Touch Feedback */
+  button:active,
+  .nav-chip:active,
+  .filter-chip:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+
+  /* Card Touch Feedback */
+  .media-card:active,
+  .todo-item:active,
+  .team-card:active,
+  .device-card:active,
+  .borrow-card:active,
+  .activity-item:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow);
+  }
+
+  /* Remove Hover Effects (prevents sticky states) */
+  .media-card:hover .media-overlay,
+  .team-card:hover,
+  .device-item:hover {
+    opacity: 1;
+    transform: none;
+  }
+
+  button:hover,
+  .nav-chip:hover,
+  .filter-chip:hover {
+    transform: none;
+  }
+
+  /* Link Touch Feedback */
+  a:active {
+    opacity: 0.7;
+  }
+
+  /* Input Focus Enhancement */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transform: scale(1.01);
+  }
+
+  /* Optimize Scrolling */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Touch Feedback for Buttons */
+  button:active,
+  .btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+/* Mobile Safe Areas */
+@media (max-width: 768px) {
+  /* Workspace Bottom Padding */
+  .workspace-main {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  /* Toast Positioning */
+  .toast-container {
+    bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));
+  }
+
+  /* FAB Positioning */
+  .wish-fab {
+    bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
+  }
+
+  /* Smooth Scrolling */
+  .workspace-main,
+  .media-grid,
+  .todo-list,
+  .device-list,
+  .borrow-list,
+  .team-grid {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Horizontal Scroll Containers */
+  .filter-row,
+  .overview-shortcuts {
+    scroll-snap-type: x proximity;
+  }
+
+  .filter-chip {
+    scroll-snap-align: start;
+  }
+
+  /* Prevent Accidental Text Selection */
+  .nav-chip,
+  .filter-chip,
+  .media-card,
+  .todo-item,
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow Text Selection in Content */
+  .todo-body,
+  .device-card p,
+  .borrow-card p,
+  .review-copy,
+  .activity-item p {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* GPU Acceleration for Smooth Animations */
+  .media-card,
+  .todo-item,
+  .team-card,
+  .device-card,
+  .borrow-card,
+  .nav-chip,
+  .filter-chip,
+  button {
+    will-change: transform;
+  }
+}
+
+/* Reduce Animation Complexity on Mobile */
+@media (max-width: 768px) {
+  @media (prefers-reduced-motion: no-preference) {
+    * {
+      transition-duration: 0.2s !important;
+    }
+  }
+}

@@ -1,0 +1,473 @@
+/* ========================================
+   徽章组件 (Badges Component)
+   状态标签、角标、标签芯片
+   ======================================== */
+
+/* Panel Badge */
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(47, 97, 255, 0.06);
+  border: 1px solid rgba(47, 97, 255, 0.08);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pill[data-status="pending"] {
+  background: rgba(124, 100, 47, 0.12);
+  color: var(--warning);
+}
+
+.status-pill[data-status="approved"] {
+  background: rgba(44, 107, 79, 0.12);
+  color: var(--success);
+}
+
+.status-pill[data-status="rejected"] {
+  background: rgba(154, 62, 62, 0.12);
+  color: var(--danger);
+}
+
+.status-pill[data-status="available"] {
+  background: rgba(44, 107, 79, 0.12);
+  color: var(--success);
+}
+
+.status-pill[data-status="borrowed"] {
+  background: rgba(124, 100, 47, 0.12);
+  color: var(--warning);
+}
+
+.status-pill[data-status="maintenance"] {
+  background: rgba(154, 62, 62, 0.12);
+  color: var(--danger);
+}
+
+/* Status Pill Enhanced */
+.status-pill--success {
+  background: rgba(44, 107, 79, 0.12);
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-pill--danger {
+  background: rgba(154, 62, 62, 0.12);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.status-pill--warning {
+  background: rgba(124, 100, 47, 0.12);
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* User Badge */
+.user-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.user-badge.admin {
+  background: rgba(200, 57, 44, 0.1);
+  color: var(--danger);
+}
+
+.user-badge.editor {
+  background: rgba(47, 97, 255, 0.1);
+  color: #2f61ff;
+}
+
+.user-badge.guest {
+  background: rgba(138, 144, 152, 0.1);
+  color: var(--text-muted);
+}
+
+/* User Role Badge */
+.user-role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.user-role-badge.admin {
+  background: rgba(200, 57, 44, 0.1);
+  color: var(--danger);
+}
+
+.user-role-badge.editor {
+  background: rgba(47, 97, 255, 0.1);
+  color: #2f61ff;
+}
+
+.user-role-badge.guest {
+  background: rgba(138, 144, 152, 0.1);
+  color: var(--text-muted);
+}
+
+/* User Status Badge */
+.user-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.user-status-badge.active {
+  background: rgba(44, 107, 79, 0.1);
+  color: var(--success);
+}
+
+.user-status-badge.disabled {
+  background: rgba(154, 62, 62, 0.1);
+  color: var(--danger);
+}
+
+/* Action Badge */
+.action-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-badge.create {
+  background: rgba(44, 107, 79, 0.1);
+  color: var(--success);
+}
+
+.action-badge.delete {
+  background: rgba(154, 62, 62, 0.1);
+  color: var(--danger);
+}
+
+.action-badge.update {
+  background: rgba(47, 97, 255, 0.1);
+  color: #2f61ff;
+}
+
+.action-badge.login {
+  background: rgba(138, 144, 152, 0.1);
+  color: var(--text-muted);
+}
+
+/* Team Status Dot */
+.team-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+  transition: all var(--motion-fast) var(--motion-ease);
+  position: relative;
+}
+
+.team-status-dot::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.team-status-dot[data-status="active"] {
+  background: var(--success);
+  color: var(--success);
+}
+
+.team-status-dot[data-status="active"]::before {
+  opacity: 0.3;
+}
+
+.team-status-dot[data-status="leave"] {
+  background: var(--warning);
+  color: var(--warning);
+}
+
+.team-status-dot[data-status="inactive"] {
+  background: var(--text-muted);
+  color: var(--text-muted);
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Stat Dot */
+.stat-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: alert-pulse 2s ease-in-out infinite;
+}
+
+/* Eyebrow */
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* Overview Date Badge */
+.overview-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.6));
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2, #4a5568);
+}
+
+.date-day {
+  color: var(--primary, #4f46e5);
+  font-weight: 600;
+}
+
+.date-day {
+  color: var(--text);
+}
+
+.date-md {
+  color: var(--text-1, #1a202c);
+}
+
+.date-md {
+  opacity: 0.7;
+}
+
+.date-time {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-3, #718096);
+}
+
+.date-time {
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+/* Avatar Tooltip */
+.avatar-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  box-shadow: 0 12px 26px rgba(17, 18, 20, 0.08);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* User Avatar */
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Status Icon */
+.status-icon {
+  display: inline-block;
+  margin-right: 4px;
+  font-style: normal;
+}
+
+/* Login Hint Code */
+.login-hint code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(23, 24, 26, 0.08);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* Brand Points Badge */
+.brand-points div {
+  padding: 17px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 245, 247, 0.86));
+  border: 1px solid rgba(23, 24, 26, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.brand-points div:hover {
+  transform: translateY(-2px);
+  border-color: rgba(200, 57, 44, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 22px rgba(23, 24, 26, 0.08);
+}
+
+.brand-points strong {
+  display: block;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.brand-points span {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+/* Hero Stats Badge */
+.hero-stats li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(47, 97, 255, 0.4), transparent);
+  border-radius: 0 0 999px 999px;
+}
+
+.hero-stats li[data-tone="warning"]::before {
+  background: linear-gradient(90deg, transparent, rgba(124, 100, 47, 0.55), transparent);
+}
+
+.hero-stats li[data-tone="success"]::before {
+  background: linear-gradient(90deg, transparent, rgba(44, 107, 79, 0.55), transparent);
+}
+
+.hero-stats li[data-tone="primary"]::before {
+  background: linear-gradient(90deg, transparent, rgba(47, 97, 255, 0.6), transparent);
+}
+
+.hero-stats li[data-tone="warning"] .stat-dot {
+  background: rgba(124, 100, 47, 0.7);
+  box-shadow: 0 0 0 3px rgba(124, 100, 47, 0.14);
+}
+
+.hero-stats li[data-tone="warning"] strong {
+  color: #f59e0b;
+}
+
+.hero-stats li[data-tone="success"] strong {
+  color: #10b981;
+}
+
+.hero-stats li[data-tone="info"] strong {
+  color: #3b82f6;
+}
+
+.hero-stats li[data-tone="primary"] strong {
+  color: #4f46e5;
+}
+
+/* Focus Card Badge */
+.focus-card[data-tone="warning"] {
+  border-left: 4px solid #f59e0b;
+}
+
+.focus-card[data-tone="info"] {
+  border-left: 4px solid #3b82f6;
+}
+
+.focus-card[data-tone="primary"] {
+  border-left: 4px solid #4f46e5;
+}
+
+.focus-card[data-tone="danger"] {
+  border-left: 4px solid #c8392c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .panel-badge {
+    font-size: 11px;
+    padding: 0 10px;
+    min-height: 30px;
+  }
+
+  .status-pill {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .user-badge,
+  .action-badge {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  .overview-date-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-points strong {
+    font-size: 15px;
+  }
+
+  .brand-points span {
+    font-size: 12px;
+  }
+}

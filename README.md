@@ -1,96 +1,147 @@
-# shengshengweb
+# 声声网络思政工作室网站
 
-这是一个面向工作室日常协作的轻量级站点，提供素材管理、审片、待办、团队和设备借出等能力。后端基于 `Node.js + Express`，数据使用 `SQLite` 本地落盘，图片和视频直接保存在服务器磁盘上。
+> 轻量级工作室协作管理系统 - 素材管理、审核、待办、团队协作、设备借用
 
-## 功能
+## ⚠️ 重要提示
 
-- 素材库：浏览、筛选和搜索图片与视频
-- 审片中心：通过、退回、备注
-- 待办事项：新增、完成、删除
-- 服务器照片同步：自动扫描 `server/uploads/inbox`
-- 管理员登录：保护写操作
-- 运行状态：展示同步状态、登录状态和基础运行信息
+**项目已完成模块化重构（2026-06-04 + UI优化 2026-06-04）**
 
-## 快速开始
+- ❌ **禁止修改** ~~`server/server.js`~~ 和 ~~`public/styles.css`~~ （已归档）
+- ✅ **使用** `server/server-new.js` 作为入口（208行 vs 旧版3,469行）
+- ✅ **使用** `public/css/` 模块化CSS（27个模块 + 8px网格系统）
+- 📖 **开发规范** [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)
 
-### 🚀 一键部署（推荐）
+---
 
-**Windows**：
-```cmd
-setup.bat
-```
+## 🚀 快速开始
 
-**Linux/Mac**：
+### Windows 一键启动
+
 ```bash
-chmod +x setup.sh && ./setup.sh
+scripts/启动.bat
 ```
 
-脚本会自动完成：
-- ✅ 检查环境
-- ✅ 安装依赖
-- ✅ 配置环境变量
-- ✅ 创建目录
-- ✅ 初始化数据库
+### 手动启动
 
-### 📝 手动部署
+```bash
+npm install        # 安装依赖
+npm run dev        # 开发模式
+npm start          # 生产模式
+```
 
-1. 安装依赖
-   ```bash
-   npm install
-   ```
+### 手机访问
 
-2. 配置环境变量
-   ```bash
-   copy .env.example .env  # Windows
-   cp .env.example .env    # Linux/Mac
-   ```
+```bash
+npm run network    # 显示局域网地址和二维码
+```
 
-3. 启动项目
-   ```bash
-   npm run dev
-   ```
+**默认账号**
+- 管理员: `admin` / `ShengSheng@2026`
+- 访客: `guest` / `guest123`
 
-4. 访问网站
-   - 本地：http://localhost:3002
-   - 局域网：http://你的IP:3002
+---
+
+## 📁 项目结构
+
+```
+shengsheng-ideology-studio-site/
+├── server/                     # 后端（模块化）
+│   ├── server-new.js           # 入口 208行
+│   ├── config/                 # 配置层
+│   ├── middleware/             # 中间件（认证/CSRF/日志）
+│   ├── models/                 # 数据模型（9个）
+│   ├── routes/                 # 路由模块（10个，34个API）
+│   └── utils/                  # 工具函数
+│
+├── public/                     # 前端
+│   ├── css/                    # 27个CSS模块
+│   │   ├── base/               # 基础层（变量/重置/排版/动画）
+│   │   ├── layout/             # 布局层（网格/工作区/面板/导航）
+│   │   ├── components/         # 组件层（按钮/表单/卡片/模态框等）
+│   │   ├── pages/              # 页面层
+│   │   ├── responsive/         # 响应式（平板/手机/触摸）
+│   │   └── utilities/          # 工具类
+│   ├── js/                     # JavaScript模块
+│   └── index.html
+│
+├── docs/                       # 文档
+│   ├── CODE_STANDARDS.md       # 开发规范 ⚠️必读
+│   └── GUIDE.md                # 完整开发指南
+│
+└── _archive/                   # 归档代码（历史参考）
+```
+
+---
+
+## 🛠️ 技术栈
+
+**前端**
+- HTML5/CSS3 模块化架构（27个CSS模块）
+- JavaScript ES6+ 模块化
+- 8px基础网格系统 + clamp()流体响应式
+- Service Worker 离线支持
+
+**后端**
+- Node.js >= 18 + Express
+- SQLite（sql.js）数据库
+- 模块化架构（27个模块，208行入口）
+- 登录限流（1分钟5次）+ CSRF防护
+
+---
+
+## 📱 响应式设计
+
+- ✅ **360px** - 超小屏手机（间距优化+150%）
+- ✅ **480px** - 小屏手机
+- ✅ **640px** - 标准手机
+- ✅ **768px** - 大屏手机/小平板
+- ✅ **900px** - iPad竖屏
+- ✅ **1200px+** - 桌面端
+
+触摸目标 ≥ 44px，符合WCAG标准
+
+---
 
 ## 📚 文档导航
 
-| 文档 | 用途 |
-|------|------|
-| [README.md](README.md) | 项目入口（本文档） |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | 部署与迁移指南 |
-| [MAINTENANCE.md](MAINTENANCE.md) | 维护手册（含 ESLint、故障排查） |
-| [PROJECT_GUIDE.md](PROJECT_GUIDE.md) | 项目架构指南 |
-| [CHANGELOG.md](CHANGELOG.md) | 更新日志 |
+- **[开发指南](docs/GUIDE.md)** - 架构、部署、API文档
+- **[开发规范](docs/CODE_STANDARDS.md)** - 模块化规范 ⚠️必读
+- **[重构报告](REFACTORING_SUMMARY.md)** - 模块化重构详情
+- **[UI优化报告](UI_OPTIMIZATION_P2_COMPLETE.md)** - 间距系统优化
 
-## 数据目录
+---
 
-- 数据库：`server/data/studio.sqlite`
-- 上传图片：`server/uploads/media`
-- 服务端收件箱：`server/uploads/inbox`
+## ⚡ 核心功能
 
-## 默认账号
+- 🖼️ **素材库** - 图片/视频管理、批量上传
+- ✅ **审片中心** - 素材审核、通过/拒绝
+- 📋 **待办事项** - 任务管理、状态跟踪
+- 👥 **团队协作** - 成员管理、在线状态
+- 🔧 **设备管理** - 库存管理、借用申请
+- ⚙️ **系统设置** - 配置管理、用户管理
+- 💬 **留言墙** - 匿名/实名留言
 
-项目的管理员账号由 `.env` 里的这两个变量控制：
+---
 
-- `ADMIN_USERNAME`
-- `ADMIN_PASSWORD`
+## 🔐 安全特性
 
-⚠️ **上线前请务必修改默认密码**
+- PBKDF2密码加密（100,000轮迭代）
+- 登录速率限制（1分钟5次）
+- CSRF令牌保护
+- Helmet安全头
+- 审计日志（90天自动清理）
+- 角色权限控制（admin/editor/guest）
 
-## 维护命令
+---
 
-```bash
-npm run maintenance   # 运行完整维护
-npm run lint          # 代码检查
-npm run lint:fix      # 自动修复
-```
+## 📄 许可证
 
-详见 [MAINTENANCE.md](MAINTENANCE.md)
+MIT License
 
-## 遇到问题？
+---
 
-- **部署问题** → [DEPLOYMENT.md](DEPLOYMENT.md)
-- **使用问题** → [MAINTENANCE.md](MAINTENANCE.md)
-- **开发问题** → [PROJECT_GUIDE.md](PROJECT_GUIDE.md)
+## 🙋 获取帮助
+
+- 开发问题：查看 [docs/GUIDE.md](docs/GUIDE.md)
+- 规范问题：查看 [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)
+- 部署问题：查看 GUIDE.md 部署章节
