@@ -284,138 +284,69 @@ function showEditUserDialog(user) {
  */
 function showUserDialog({ title, user, onSubmit }) {
   const isEdit = !!user;
-  const titleId = `user-dialog-title-${Date.now()}`;
-  const previousFocusElement = document.activeElement;
 
-  const dialog = document.createElement('div');
-  dialog.className = 'user-dialog';
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-labelledby', titleId);
-  dialog.innerHTML = `
-    <div class="user-dialog-content">
-      <div class="user-dialog-header">
-        <h3 id="${titleId}">${title}</h3>
-        <button class="user-dialog-close" type="button" aria-label="关闭${title}">&times;</button>
-      </div>
-      <form class="user-dialog-form" id="user-dialog-form">
-        <label class="field">
-          <span>用户名</span>
-          <input name="username" type="text" value="${escapeHtml(user?.username || '')}" required ${isEdit ? 'readonly' : ''} />
-        </label>
-        ${
-          !isEdit
-            ? `
-          <label class="field">
-            <span>密码</span>
-            <input name="password" type="password" required minlength="6" maxlength="100" />
-          </label>
-        `
-            : ''
-        }
-        <label class="field">
-          <span>显示名称</span>
-          <input name="displayName" type="text" value="${escapeHtml(user?.display_name || '')}" />
-        </label>
-        <label class="field">
-          <span>角色</span>
-          <select name="role" required>
-            <option value="guest" ${user?.role === 'guest' ? 'selected' : ''}>访客</option>
-            <option value="editor" ${user?.role === 'editor' ? 'selected' : ''}>编辑</option>
-            <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>管理员</option>
-          </select>
-        </label>
-        ${
-          isEdit
-            ? `
-          <label class="field">
-            <span>状态</span>
-            <select name="status">
-              <option value="active" ${user?.status === 'active' ? 'selected' : ''}>启用</option>
-              <option value="disabled" ${user?.status === 'disabled' ? 'selected' : ''}>禁用</option>
-            </select>
-          </label>
-        `
-            : ''
-        }
-        ${
-          isEdit
-            ? `
-          <label class="field">
-            <span>重置密码</span>
-            <input name="password" type="password" minlength="6" maxlength="100" placeholder="不修改请留空" autocomplete="new-password" />
-            <small>保存后，该用户需要使用新密码重新登录。</small>
-          </label>
-        `
-            : ''
-        }
-        <div class="user-dialog-actions">
-          <button class="ghost-btn" type="button" data-action="cancel">取消</button>
-          <button class="primary-btn" type="submit">保存</button>
-        </div>
-      </form>
-    </div>
+  const bodyHtml = `
+    <label class="field">
+      <span>用户名</span>
+      <input name="username" type="text" value="${escapeHtml(user?.username || '')}" required ${isEdit ? 'readonly' : ''} />
+    </label>
+    ${
+  !isEdit
+    ? `
+      <label class="field">
+        <span>密码</span>
+        <input name="password" type="password" required minlength="6" maxlength="100" />
+      </label>
+    `
+    : ''
+}
+    <label class="field">
+      <span>显示名称</span>
+      <input name="displayName" type="text" value="${escapeHtml(user?.display_name || '')}" />
+    </label>
+    <label class="field">
+      <span>角色</span>
+      <select name="role" required>
+        <option value="guest" ${user?.role === 'guest' ? 'selected' : ''}>访客</option>
+        <option value="editor" ${user?.role === 'editor' ? 'selected' : ''}>编辑</option>
+        <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>管理员</option>
+      </select>
+    </label>
+    ${
+  isEdit
+    ? `
+      <label class="field">
+        <span>状态</span>
+        <select name="status">
+          <option value="active" ${user?.status === 'active' ? 'selected' : ''}>启用</option>
+          <option value="disabled" ${user?.status === 'disabled' ? 'selected' : ''}>禁用</option>
+        </select>
+      </label>
+    `
+    : ''
+}
+    ${
+  isEdit
+    ? `
+      <label class="field">
+        <span>重置密码</span>
+        <input name="password" type="password" minlength="6" maxlength="100" placeholder="不修改请留空" autocomplete="new-password" />
+        <small>保存后，该用户需要使用新密码重新登录。</small>
+      </label>
+    `
+    : ''
+}
   `;
 
-  document.body.appendChild(dialog);
-
-  const form = dialog.querySelector('#user-dialog-form');
-  const closeBtn = dialog.querySelector('.user-dialog-close');
-  const cancelBtn = dialog.querySelector('[data-action="cancel"]');
-  const firstField = form.querySelector('input:not([readonly]), select, textarea, button');
-
-  const closeDialog = () => {
-    dialog.remove();
-    if (previousFocusElement && typeof previousFocusElement.focus === 'function') {
-      previousFocusElement.focus();
-    }
-  };
-
-  const handleKeydown = (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeDialog();
-      return;
-    }
-
-    if (event.key !== 'Tab') return;
-    const focusable = dialog.querySelectorAll('button, input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    if (!focusable.length) return;
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
-  closeBtn.addEventListener('click', closeDialog);
-  cancelBtn.addEventListener('click', closeDialog);
-  dialog.addEventListener('keydown', handleKeydown);
-  dialog.addEventListener('click', (e) => {
-    if (e.target === dialog) closeDialog();
-  });
-
-  requestAnimationFrame(() => firstField?.focus());
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-    if (isEdit && !data.password) delete data.password;
-
-    try {
+  Dialog.form({
+    title,
+    formId: 'user-dialog-form',
+    bodyHtml,
+    onSubmit: async (data) => {
+      if (isEdit && !data.password) delete data.password;
       await onSubmit(data);
-      closeDialog();
       loadUsers();
-    } catch (error) {
-      console.error('操作失败：', error);
-      Toast.error(error.message || '操作失败');
-    }
+    },
   });
 }
 
@@ -428,84 +359,38 @@ function escapeHtml(text) {
     .replaceAll("'", '&#39;');
 }
 
-function showRegistrationApprovalDialog(request) {
-  const titleId = `registration-approval-title-${Date.now()}`;
-  const previousFocusElement = document.activeElement;
-
-  const dialog = document.createElement('div');
-  dialog.className = 'user-dialog';
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-labelledby', titleId);
-  dialog.innerHTML = `
-    <div class="user-dialog-content">
-      <div class="user-dialog-header">
-        <h3 id="${titleId}">通过注册申请</h3>
-        <button class="user-dialog-close" type="button" aria-label="关闭通过注册申请">&times;</button>
-      </div>
-      <form class="user-dialog-form" id="registration-approval-form">
-        <label class="field">
-          <span>用户名</span>
-          <input name="username" type="text" value="${escapeHtml(request.username)}" readonly />
-        </label>
-        <label class="field">
-          <span>显示名称</span>
-          <input name="displayName" type="text" value="${escapeHtml(request.displayName || request.username)}" maxlength="50" />
-        </label>
-        <label class="field">
-          <span>角色</span>
-          <select name="role" required>
-            <option value="guest" selected>访客</option>
-            <option value="editor">编辑</option>
-            <option value="admin">管理员</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>初始密码</span>
-          <input name="password" type="password" required minlength="6" maxlength="100" autocomplete="new-password" />
-          <small>通过后，请把初始密码线下告知申请人。</small>
-        </label>
-        <div class="user-dialog-actions">
-          <button class="ghost-btn" type="button" data-action="cancel">取消</button>
-          <button class="primary-btn" type="submit">通过并创建账号</button>
-        </div>
-      </form>
-    </div>
+function showRegistrationApprovalDialog(registrationRequest) {
+  const bodyHtml = `
+    <label class="field">
+      <span>用户名</span>
+      <input name="username" type="text" value="${escapeHtml(registrationRequest.username)}" readonly />
+    </label>
+    <label class="field">
+      <span>显示名称</span>
+      <input name="displayName" type="text" value="${escapeHtml(registrationRequest.displayName || registrationRequest.username)}" maxlength="50" />
+    </label>
+    <label class="field">
+      <span>角色</span>
+      <select name="role" required>
+        <option value="guest" selected>访客</option>
+        <option value="editor">编辑</option>
+        <option value="admin">管理员</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>初始密码</span>
+      <input name="password" type="password" required minlength="6" maxlength="100" autocomplete="new-password" />
+      <small>通过后，请把初始密码线下告知申请人。</small>
+    </label>
   `;
 
-  document.body.appendChild(dialog);
-
-  const form = dialog.querySelector('#registration-approval-form');
-  const closeBtn = dialog.querySelector('.user-dialog-close');
-  const cancelBtn = dialog.querySelector('[data-action="cancel"]');
-  const firstField = form.querySelector('input:not([readonly]), select, textarea, button');
-
-  const closeDialog = () => {
-    dialog.remove();
-    previousFocusElement?.focus?.();
-  };
-
-  closeBtn.addEventListener('click', closeDialog);
-  cancelBtn.addEventListener('click', closeDialog);
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) closeDialog();
-  });
-  dialog.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeDialog();
-    }
-  });
-
-  requestAnimationFrame(() => firstField?.focus());
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-
-    try {
-      await request(`/api/registration-requests/${request.id}`, {
+  Dialog.form({
+    title: '通过注册申请',
+    formId: 'registration-approval-form',
+    bodyHtml,
+    submitText: '通过并创建账号',
+    onSubmit: async (data) => {
+      await request(`/api/registration-requests/${registrationRequest.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           action: 'approve',
@@ -515,13 +400,9 @@ function showRegistrationApprovalDialog(request) {
         }),
       });
       Toast.success('注册申请已通过，账号已创建');
-      closeDialog();
       loadRegistrationRequests();
       loadUsers();
-    } catch (error) {
-      console.error('通过注册申请失败：', error);
-      Toast.error(error.message || '通过注册申请失败');
-    }
+    },
   });
 }
 
