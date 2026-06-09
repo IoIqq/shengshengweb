@@ -21,8 +21,19 @@ export function renderSettings() {
     if (form.siteSubtitle) form.siteSubtitle.value = settings.siteSubtitle || '';
     if (form.homeHeroMessage) form.homeHeroMessage.value = settings.homeHeroMessage || '';
     if (form.publicUrl) form.publicUrl.value = settings.publicUrl || '';
-    if (form.adminUsername) form.adminUsername.value = settings.adminUsername || '';
-    if (form.adminPassword) form.adminPassword.value = '';
+  }
+
+  const showcaseForm = document.getElementById('showcase-settings-form');
+  if (showcaseForm) {
+    const showcase = settings.showcase || {};
+    if (showcaseForm.showcaseEnabled) showcaseForm.showcaseEnabled.value = showcase.enabled === false ? '0' : '1';
+    if (showcaseForm.showcaseBrand) showcaseForm.showcaseBrand.value = showcase.brand || '';
+    if (showcaseForm.showcaseHeroLabel) showcaseForm.showcaseHeroLabel.value = showcase.heroLabel || '';
+    if (showcaseForm.showcaseTitle) showcaseForm.showcaseTitle.value = showcase.title || '';
+    if (showcaseForm.showcaseSubtitle) showcaseForm.showcaseSubtitle.value = showcase.subtitle || '';
+    if (showcaseForm.showcaseLimit) showcaseForm.showcaseLimit.value = showcase.limit || 50;
+    if (showcaseForm.showcaseKindFilter) showcaseForm.showcaseKindFilter.value = showcase.kindFilter || 'all';
+    if (showcaseForm.showcaseFooterText) showcaseForm.showcaseFooterText.value = showcase.footerText || '';
   }
 
   if (els.systemCard) {
@@ -55,10 +66,10 @@ export async function updateSettings(formData) {
   const siteSubtitle = formData.get('siteSubtitle')?.trim();
   const homeHeroMessage = formData.get('homeHeroMessage')?.trim();
   const publicUrl = formData.get('publicUrl')?.trim();
-  const adminUsername = formData.get('adminUsername')?.trim();
-  const adminPassword = formData.get('adminPassword')?.trim();
 
-  if (!siteTitle) {
+  const isShowcaseForm = formData.has('showcaseTitle') || formData.has('showcaseEnabled');
+
+  if (!isShowcaseForm && !siteTitle) {
     Toast.warning('请输入站点标题');
     return;
   }
@@ -67,20 +78,23 @@ export async function updateSettings(formData) {
     setPending(true);
     showFeedback('正在保存设置...', 'info', 'settings');
 
-    const updates = {
-      siteTitle,
-      siteSubtitle,
-      homeHeroMessage,
-      publicUrl,
-    };
-
-    // 如果提供了管理员账号信息，一起更新
-    if (adminUsername) {
-      updates.adminUsername = adminUsername;
-      if (adminPassword) {
-        updates.adminPassword = adminPassword;
+    const updates = isShowcaseForm
+      ? {
+        showcaseEnabled: formData.get('showcaseEnabled') === '1',
+        showcaseBrand: formData.get('showcaseBrand')?.trim(),
+        showcaseHeroLabel: formData.get('showcaseHeroLabel')?.trim(),
+        showcaseTitle: formData.get('showcaseTitle')?.trim(),
+        showcaseSubtitle: formData.get('showcaseSubtitle')?.trim(),
+        showcaseLimit: formData.get('showcaseLimit'),
+        showcaseKindFilter: formData.get('showcaseKindFilter'),
+        showcaseFooterText: formData.get('showcaseFooterText')?.trim(),
       }
-    }
+      : {
+        siteTitle,
+        siteSubtitle,
+        homeHeroMessage,
+        publicUrl,
+      };
 
     const result = await requestJSON('/api/settings', {
       method: 'PATCH',
@@ -93,22 +107,17 @@ export async function updateSettings(formData) {
     }
 
     // 更新页面标题
-    if (els.siteTitle) {
+    if (!isShowcaseForm && els.siteTitle) {
       els.siteTitle.textContent = siteTitle;
     }
 
     // 更新首页消息
-    if (els.homeHeroMessage) {
+    if (!isShowcaseForm && els.homeHeroMessage) {
       els.homeHeroMessage.textContent = homeHeroMessage || '这里显示管理员配置的首页说明。';
     }
 
     Toast.success('设置已保存');
     showFeedback('设置已保存', 'success', 'settings');
-
-    // 清空密码字段
-    if (els.settingsForm?.adminPassword) {
-      els.settingsForm.adminPassword.value = '';
-    }
 
     renderSettings();
     return result;

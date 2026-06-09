@@ -238,17 +238,6 @@
   animation: alert-pulse 2s ease-in-out infinite;
 }
 
-/* Eyebrow */
-.eyebrow {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
 /* Overview Date Badge */
 .overview-date-badge {
   display: flex;
@@ -260,49 +249,6 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-2, #4a5568);
-}
-
-.date-day {
-  color: var(--primary, #4f46e5);
-  font-weight: 600;
-}
-
-.date-day {
-  color: var(--text);
-}
-
-.date-md {
-  color: var(--text-1, #1a202c);
-}
-
-.date-md {
-  opacity: 0.7;
-}
-
-.date-time {
-  font-family: "JetBrains Mono", monospace;
-  color: var(--text-3, #718096);
-}
-
-.date-time {
-  opacity: 0.6;
-  font-size: 12px;
-}
-
-/* Avatar Tooltip */
-.avatar-tooltip {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(23, 24, 26, 0.08);
-  box-shadow: 0 12px 26px rgba(17, 18, 20, 0.08);
-  color: var(--text);
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
 }
 
 /* User Avatar */
@@ -325,16 +271,6 @@
   display: inline-block;
   margin-right: 4px;
   font-style: normal;
-}
-
-/* Login Hint Code */
-.login-hint code {
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(23, 24, 26, 0.08);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text);
 }
 
 /* Brand Points Badge */
@@ -371,7 +307,7 @@
 
 /* Hero Stats Badge */
 .hero-stats li::before {
-  content: "";
+
   position: absolute;
   top: 0;
   left: 50%;
@@ -382,37 +318,9 @@
   border-radius: 0 0 999px 999px;
 }
 
-.hero-stats li[data-tone="warning"]::before {
-  background: linear-gradient(90deg, transparent, rgba(124, 100, 47, 0.55), transparent);
-}
-
-.hero-stats li[data-tone="success"]::before {
-  background: linear-gradient(90deg, transparent, rgba(44, 107, 79, 0.55), transparent);
-}
-
-.hero-stats li[data-tone="primary"]::before {
-  background: linear-gradient(90deg, transparent, rgba(47, 97, 255, 0.6), transparent);
-}
-
 .hero-stats li[data-tone="warning"] .stat-dot {
   background: rgba(124, 100, 47, 0.7);
   box-shadow: 0 0 0 3px rgba(124, 100, 47, 0.14);
-}
-
-.hero-stats li[data-tone="warning"] strong {
-  color: #f59e0b;
-}
-
-.hero-stats li[data-tone="success"] strong {
-  color: #10b981;
-}
-
-.hero-stats li[data-tone="info"] strong {
-  color: #3b82f6;
-}
-
-.hero-stats li[data-tone="primary"] strong {
-  color: #4f46e5;
 }
 
 /* Focus Card Badge */

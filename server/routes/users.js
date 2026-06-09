@@ -94,10 +94,24 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   }
 
   try {
+    const existing = userModel.getUserById(userId);
+    if (!existing) {
+      return res.status(404).json({ error: '用户不存在。' });
+    }
+    if (existing.role === 'admin' && existing.status === 'active') {
+      if (updates.role && updates.role !== 'admin' && !userModel.hasOtherActiveAdmin(userId)) {
+        return res.status(400).json({ error: '不能降级最后一个启用中的管理员。' });
+      }
+      if (updates.status === 'disabled' && !userModel.hasOtherActiveAdmin(userId)) {
+        return res.status(400).json({ error: '不能禁用最后一个启用中的管理员。' });
+      }
+    }
+
+    const passwordChanged = Boolean(updates.password);
     const updatedUser = userModel.updateUser(userId, updates);
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: '用户不存在。' });
+    if (passwordChanged) {
+      sessionModel.deleteUserSessions(userId);
     }
 
     // 记录审计日志
@@ -137,6 +151,10 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   }
 
   try {
+    if (user.role === 'admin' && user.status === 'active' && !userModel.hasOtherActiveAdmin(userId)) {
+      return res.status(400).json({ error: '不能删除最后一个启用中的管理员。' });
+    }
+
     // 删除用户的所有会话
     sessionModel.deleteUserSessions(userId);
 
@@ -180,6 +198,14 @@ router.patch('/:id/status', requireAuth, requireAdmin, (req, res) => {
   }
 
   try {
+    const existing = userModel.getUserById(userId);
+    if (!existing) {
+      return res.status(404).json({ error: '用户不存在。' });
+    }
+    if (existing.role === 'admin' && existing.status === 'active' && status === 'disabled' && !userModel.hasOtherActiveAdmin(userId)) {
+      return res.status(400).json({ error: '不能禁用最后一个启用中的管理员。' });
+    }
+
     const updatedUser = userModel.updateUser(userId, { status });
 
     if (!updatedUser) {

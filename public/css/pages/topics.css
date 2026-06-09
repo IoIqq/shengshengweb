@@ -1,0 +1,171 @@
+/* ========================================
+   选题库
+   ======================================== */
+
+/* Form */
+.topic-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.topic-form .field { margin-top: 0; }
+
+.topic-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.topic-form-actions .primary-btn {
+  min-height: var(--touch-target-min);
+  min-width: 140px;
+}
+
+/* Toolbar */
+.topics-toolbar {
+  margin-bottom: var(--spacing-lg);
+}
+
+.topics-toolbar .search-field {
+  min-width: min(100%, 300px);
+}
+
+.topics-toolbar .search-field input {
+  height: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+}
+
+.topics-toolbar .filter-chip {
+  min-height: var(--touch-target-min);
+}
+
+/* Topic Card */
+.workspace-panel[data-panel="topics"] .media-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: clamp(16px, 2vw, 22px);
+}
+
+.topic-card {
+  border-left: 3px solid rgba(47, 97, 255, 0.18);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
+}
+
+.topic-card[data-platform="bilibili"] { border-left-color: rgba(251, 114, 153, 0.6); }
+.topic-card[data-platform="youtube"] { border-left-color: rgba(255, 0, 0, 0.5); }
+.topic-card[data-platform="vimeo"] { border-left-color: rgba(26, 183, 234, 0.6); }
+.topic-card[data-platform="douyin"] { border-left-color: rgba(22, 24, 35, 0.5); }
+
+/* Preview */
+.topic-thumb-wrap.media-thumb-wrapper {
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  border-radius: calc(var(--radius-xl) - 2px);
+  background:
+    radial-gradient(circle at 24% 0%, rgba(47, 97, 255, 0.2), transparent 34%),
+    #0b1020;
+}
+
+.topic-preview-box,
+.topic-no-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.topic-preview-box {
+  background: #0f0f0f;
+}
+
+.topic-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.topic-no-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg);
+  background:
+    linear-gradient(135deg, rgba(47, 97, 255, 0.12), rgba(15, 23, 42, 0.88)),
+    var(--surface-soft);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.topic-no-preview svg {
+  opacity: 0.78;
+}
+
+.topic-no-preview strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.topic-no-preview span {
+  max-width: 220px;
+}
+
+/* Status pill inside topic */
+.topic-status-pill[data-topic-status="idea"] { background: rgba(100, 100, 100, 0.1); color: var(--text-soft); }
+.topic-status-pill[data-topic-status="researching"] { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+.topic-status-pill[data-topic-status="selected"] { background: rgba(16, 185, 129, 0.1); color: #047857; }
+.topic-status-pill[data-topic-status="archived"] { background: rgba(100, 100, 100, 0.08); color: var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .topic-form {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-panel[data-panel="topics"] .media-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  }
+
+  .workspace-panel[data-panel="topics"] .topic-thumb-wrap.media-thumb-wrapper {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 520px) {
+  .workspace-panel[data-panel="topics"] .media-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-card {
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .topic-card .media-actions {
+    flex-direction: column;
+  }
+
+  .topic-card .media-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-card,
+  .topic-iframe,
+  .topic-no-preview {
+    animation: none;
+    transition-duration: 0.01ms;
+  }
+}

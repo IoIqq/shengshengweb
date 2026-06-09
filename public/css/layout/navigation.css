@@ -4,13 +4,7 @@
 /* 导航芯片和筛选芯片基础 */
 .nav-chip,
 .filter-chip {
-  min-height: 44px;
-  padding: 10px 16px;
-  color: var(--text-soft);
-  background: transparent;
-  border-color: transparent;
-  border-radius: 999px;
-  letter-spacing: 0.01em;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,16 +50,15 @@
 
 .nav-chip:focus-visible,
 .filter-chip:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(23, 24, 26, 0.08);
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 /* 导航芯片激活状态 */
 .nav-chip.is-active,
 .filter-chip.is-active {
-  background: rgba(47, 97, 255, 0.08);
-  color: var(--text);
-  border-color: rgba(47, 97, 255, 0.12);
+
   transform: translateY(-1px);
 }
 
@@ -83,10 +76,6 @@
 .nav-chip:hover {
   background: rgba(47, 97, 255, 0.05);
   color: var(--text);
-}
-
-.nav-chip:active {
-  transform: translateY(0);
 }
 
 /* 导航滑动指示器 */
@@ -115,26 +104,6 @@
 }
 
 /* 提醒徽章 */
-.alert-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.alert-chip:hover {
-  border-color: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(79,70,229,0.12);
-}
 
 .alert-chip:active {
   transform: translateY(0) scale(0.98);
@@ -169,36 +138,6 @@
 .alert-chip[data-tone="pending"] .alert-value { color: #f59e0b; }
 .alert-chip[data-tone="todo"] .alert-value { color: #3b82f6; }
 .alert-chip[data-tone="danger"] .alert-value { color: #ef4444; }
-
-.alert-value {
-  display: inline-grid;
-  place-items: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: inherit;
-}
-
-.alert-label {
-  letter-spacing: 0.02em;
-}
-
-.alert-pulse {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.5;
-  animation: alert-pulse 1.6s ease-in-out infinite;
-}
 
 @keyframes alert-pulse {
   0%, 100% {
@@ -274,24 +213,6 @@
 }
 
 /* 快捷操作按钮 */
-.shortcut-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 18px 12px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.shortcut-btn:hover {
-  border-color: #4f46e5;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(79,70,229,0.10);
-}
 
 .shortcut-btn:active {
   transform: translateY(0) scale(0.97);
@@ -339,17 +260,6 @@
   flex-wrap: wrap;
 }
 
-.filter-select,
-.filter-input {
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  font-size: 14px;
-  color: var(--text);
-  transition: all var(--motion-fast);
-}
-
 .filter-select:hover,
 .filter-input:hover {
   border-color: var(--line-strong);
@@ -360,14 +270,6 @@
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(45, 49, 55, 0.1);
-}
-
-.filter-select {
-  min-width: 140px;
-}
-
-.filter-input {
-  min-width: 140px;
 }
 
 /* 分页 */
@@ -381,7 +283,9 @@
 }
 
 .pagination button {
-  padding: 6px 12px;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -410,73 +314,28 @@
 
 /* 响应式布局 - 导航 */
 @media (max-width: 900px) {
-  .overview-focus,
-  .overview-shortcuts {
-    grid-template-columns: 1fr;
-  }
+
 }
 
 @media (max-width: 768px) {
-  .audit-toolbar {
-    flex-direction: column;
-  }
 
-  .filter-select,
-  .filter-input {
-    width: 100%;
-  }
 }
 
 @media (max-width: 640px) {
   .search-field {
     flex: 1 1 100%;
     max-width: none;
-    width: 100%;
+
   }
 
-  .toolbar {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .filter-row {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-  }
-
-  .filter-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .overview-shortcuts {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .shortcut-btn {
-    padding: 14px 10px;
-  }
-
-  .shortcut-icon {
-    font-size: 22px;
-  }
 }
 
 @media (max-width: 480px) {
-  .nav-chip {
-    font-size: 13px;
-    padding-inline: 10px;
-  }
 
   .filter-chip {
-    padding: 6px 12px;
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-sm) var(--spacing-md);
     font-size: 13px;
-  }
-
-  .overview-shortcuts {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 
   .shortcut-btn {
@@ -504,14 +363,7 @@
 
 /* 移动端滚动优化 */
 @media (max-width: 768px) {
-  .filter-row,
-  .overview-shortcuts {
-    scroll-snap-type: x proximity;
-  }
 
-  .filter-chip {
-    scroll-snap-align: start;
-  }
 }
 
 /* 减少动画模式 */
@@ -538,13 +390,5 @@
 
 /* 深色模式 */
 @media (prefers-color-scheme: dark) {
-  .alert-chip {
-    background: rgba(45, 49, 55, 0.6);
-    border-color: rgba(255, 255, 255, 0.06);
-  }
 
-  .shortcut-btn {
-    background: rgba(45, 49, 55, 0.6);
-    border-color: rgba(255, 255, 255, 0.06);
-  }
 }

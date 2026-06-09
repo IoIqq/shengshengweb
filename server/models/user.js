@@ -27,6 +27,12 @@ function createUser(username, password, role = 'editor', createdBy = null) {
   return get('SELECT * FROM users WHERE username = ?', [username]);
 }
 
+function ensureUserExists(username, password, role = 'editor', createdBy = null) {
+  const existing = getUserByUsername(username);
+  if (existing) return existing;
+  return createUser(username, password, role, createdBy);
+}
+
 /**
  * 验证用户密码
  */
@@ -208,8 +214,14 @@ function updateAvatar(userId, avatarUrl) {
   return getUserById(userId);
 }
 
+function hasOtherActiveAdmin(id) {
+  const row = get("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' AND status = 'active' AND id != ?", [id]);
+  return Number(row?.count || 0) > 0;
+}
+
 module.exports = {
   createUser,
+  ensureUserExists,
   verifyUser,
   getAllUsers,
   getUserById,
@@ -222,4 +234,5 @@ module.exports = {
   updateUserProfile,
   changePassword,
   updateAvatar,
+  hasOtherActiveAdmin,
 };

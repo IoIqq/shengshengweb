@@ -1,0 +1,226 @@
+<article class="workspace-panel reveal" data-panel="settings" id="settings-panel" data-admin-only="true">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">设置 / 备份</p>
+      <h2>站点与运维</h2>
+    </div>
+    <span class="panel-badge">系统面板</span>
+  </div>
+
+  <!-- 标签页导航 -->
+  <div class="settings-tabs">
+    <button class="settings-tab active" data-tab="general" type="button">站点设置</button>
+    <button class="settings-tab" data-tab="showcase" type="button">展示页内容</button>
+    <button class="settings-tab" data-tab="users" type="button">用户管理</button>
+    <button class="settings-tab" data-tab="storage" type="button">存储管理</button>
+    <button class="settings-tab" data-tab="audit" type="button">操作日志</button>
+  </div>
+
+  <!-- 常规设置内容 -->
+  <div class="settings-content" data-content="general">
+    <form class="settings-form" id="settings-form">
+      <label class="field">
+        <span>站点名称</span>
+        <input name="siteTitle" type="text" />
+      </label>
+      <label class="field">
+        <span>站点副标题</span>
+        <input name="siteSubtitle" type="text" />
+      </label>
+      <label class="field">
+        <span>首页说明文案</span>
+        <input name="homeHeroMessage" type="text" placeholder="首页顶部说明文字" />
+      </label>
+      <label class="field">
+        <span>公开地址</span>
+        <input name="publicUrl" type="text" placeholder="可留空" />
+      </label>
+      <div class="settings-account-note">
+        <div>
+          <strong>账号管理已集中到用户管理</strong>
+          <p>管理员、编辑和访客账号请在用户管理中添加、禁用、删除或重置密码。</p>
+        </div>
+        <button class="ghost-btn" data-settings-tab="users" type="button">前往用户管理</button>
+      </div>
+      <div class="settings-actions">
+        <button class="primary-btn" type="submit">保存设置</button>
+        <a class="ghost-btn" href="/api/backup" target="_blank" rel="noreferrer">下载数据备份</a>
+        <a class="ghost-btn" href="/api/backup/database" target="_blank" rel="noreferrer">下载数据库</a>
+      </div>
+    </form>
+
+    <div class="system-card" id="system-card"></div>
+  </div>
+
+  <!-- 展示页内容设置 -->
+  <div class="settings-content hidden" data-content="showcase">
+    <form class="settings-form showcase-settings-form" id="showcase-settings-form">
+      <div class="settings-section-head">
+        <div>
+          <h3>展示页内容</h3>
+          <p>配置登录前公开展示页的文案、展示状态和素材筛选规则。</p>
+        </div>
+        <span class="panel-badge">公开页面</span>
+      </div>
+
+      <label class="field settings-toggle-field">
+        <span>展示页开关</span>
+        <select name="showcaseEnabled">
+          <option value="1">开启公开展示页</option>
+          <option value="0">关闭公开展示页</option>
+        </select>
+        <small>关闭后公开页会显示维护状态，不展示素材列表。</small>
+      </label>
+      <label class="field">
+        <span>导航品牌文字</span>
+        <input name="showcaseBrand" type="text" maxlength="40" />
+      </label>
+      <label class="field">
+        <span>Hero 标签</span>
+        <input name="showcaseHeroLabel" type="text" maxlength="40" />
+      </label>
+      <label class="field">
+        <span>Hero 主标题</span>
+        <input name="showcaseTitle" type="text" maxlength="80" />
+      </label>
+      <label class="field">
+        <span>Hero 副标题</span>
+        <textarea name="showcaseSubtitle" rows="3" maxlength="180"></textarea>
+      </label>
+      <div class="settings-form-grid">
+        <label class="field">
+          <span>展示数量</span>
+          <input name="showcaseLimit" type="number" min="1" max="100" />
+          <small>最多展示 100 条已通过素材。</small>
+        </label>
+        <label class="field">
+          <span>展示类型</span>
+          <select name="showcaseKindFilter">
+            <option value="all">全部素材</option>
+            <option value="photo">仅图片</option>
+            <option value="video">仅视频</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span>页脚文案</span>
+        <input name="showcaseFooterText" type="text" maxlength="80" />
+      </label>
+      <div class="settings-actions">
+        <button class="primary-btn" type="submit">保存展示页设置</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 用户管理内容 -->
+  <div class="settings-content hidden" data-content="users">
+    <div class="panel-head">
+      <h3>用户管理</h3>
+      <button class="primary-btn" id="add-user-btn" type="button">+ 添加用户</button>
+    </div>
+    <section class="registration-review-section" aria-labelledby="registration-review-title">
+      <div class="settings-section-head">
+        <div>
+          <h4 id="registration-review-title">注册申请</h4>
+          <p>审核新成员账号申请，通过后创建可登录账号。</p>
+        </div>
+        <button class="ghost-btn" id="registration-request-refresh" type="button">刷新申请</button>
+      </div>
+      <div class="registration-request-list" id="registration-request-list">
+        <p class="empty-state">暂无待审核申请</p>
+      </div>
+    </section>
+
+    <div class="user-list" id="user-list">
+      <!-- 用户卡片将动态加载 -->
+    </div>
+  </div>
+
+  <!-- 操作日志内容 -->
+  <div class="settings-content hidden" data-content="audit">
+    <div class="panel-head">
+      <h3>操作日志</h3>
+      <button class="ghost-btn" id="export-logs-btn" type="button">导出日志</button>
+    </div>
+
+    <div class="audit-toolbar">
+      <select id="audit-user-filter" class="filter-select">
+        <option value="">所有用户</option>
+      </select>
+      <select id="audit-action-filter" class="filter-select">
+        <option value="">所有操作</option>
+        <option value="login">登录</option>
+        <option value="create">创建</option>
+        <option value="update">更新</option>
+        <option value="delete">删除</option>
+      </select>
+      <input type="date" id="audit-start-date" class="filter-input" placeholder="开始日期" />
+      <input type="date" id="audit-end-date" class="filter-input" placeholder="结束日期" />
+      <button class="ghost-btn" id="audit-filter-btn" type="button">筛选</button>
+      <button class="ghost-btn" id="audit-reset-btn" type="button">重置</button>
+    </div>
+
+    <div class="audit-log-list" id="audit-log-list">
+      <!-- 审计日志将动态加载 -->
+    </div>
+
+    <div class="pagination" id="audit-pagination"></div>
+  </div>
+
+  <!-- 存储管理内容 -->
+  <div class="settings-content hidden" data-content="storage" id="storage-content">
+    <div class="panel-head">
+      <div>
+        <h3>服务器素材存储</h3>
+        <p>指定素材存放空间，查看本机硬盘用量；保存后重启服务生效。</p>
+      </div>
+      <button class="ghost-btn" id="storage-refresh-btn" type="button">刷新状态</button>
+    </div>
+
+    <div class="storage-layout">
+      <section class="storage-section" aria-labelledby="storage-current-title">
+        <h4 id="storage-current-title">当前素材存储</h4>
+        <div class="system-card storage-status-card" id="storage-status-card">
+          <div class="storage-empty">切换到本页后读取服务器存储状态。</div>
+        </div>
+      </section>
+
+      <section class="storage-section" aria-labelledby="storage-form-title">
+        <h4 id="storage-form-title">指定素材存放空间</h4>
+        <form class="settings-form storage-form" id="storage-form">
+          <label class="field">
+            <span>素材根目录</span>
+            <input name="uploadDir" type="text" placeholder="例如 D:/ShengshengStorage/uploads" autocomplete="off" />
+            <small>系统会在此目录下存放 media、avatars、devices 等素材文件。</small>
+          </label>
+          <label class="field">
+            <span>Inbox 同步目录</span>
+            <input name="inboxDir" type="text" placeholder="例如 D:/ShengshengStorage/uploads/inbox" autocomplete="off" />
+            <small>建议放在素材根目录内，方便通过现有 /uploads/inbox 访问。</small>
+          </label>
+          <div class="settings-actions">
+            <button class="ghost-btn" id="storage-validate-btn" type="button">验证路径</button>
+            <button class="primary-btn" id="storage-save-btn" type="button">保存配置</button>
+          </div>
+        </form>
+        <div id="storage-validation-result" hidden></div>
+      </section>
+    </div>
+
+    <section class="storage-section" aria-labelledby="storage-volume-title">
+      <div class="storage-section-head">
+        <h4 id="storage-volume-title">硬盘用量</h4>
+        <p>点击“用作素材盘”会自动填入推荐素材目录，不会立即修改硬盘内容。</p>
+      </div>
+      <div class="storage-volume-list" id="storage-volume-list"></div>
+    </section>
+
+    <section class="storage-section" aria-labelledby="storage-lan-title">
+      <div class="storage-section-head">
+        <h4 id="storage-lan-title">局域网测试地址</h4>
+        <p>另一台电脑连接同一路由器或交换机网络后，可使用下方地址访问。</p>
+      </div>
+      <div class="storage-lan-list" id="storage-lan-list"></div>
+    </section>
+  </div>
+</article>

@@ -1,0 +1,267 @@
+/* ========================================
+   存储管理页面
+   ======================================== */
+
+.storage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: var(--spacing-grid-gap);
+  margin-top: var(--spacing-lg);
+}
+
+.storage-section {
+  min-width: 0;
+  margin-top: var(--spacing-lg);
+}
+
+.storage-section > h4,
+.storage-section-head h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.storage-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.storage-section-head p,
+.storage-status-card p,
+.storage-volume-head p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.storage-status-card,
+.storage-validation-card,
+.storage-volume-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.storage-status-card,
+.storage-validation-card {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-lg);
+}
+
+.storage-card-head,
+.storage-volume-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.storage-card-head h3,
+.storage-volume-head h4,
+.storage-validation-card h4 {
+  margin: 0;
+  color: var(--text);
+}
+
+.storage-source-badge {
+  flex-shrink: 0;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(47, 97, 255, 0.08);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.storage-path-list {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.storage-path-row,
+.storage-lan-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(23, 24, 26, 0.06);
+}
+
+.storage-path-row code,
+.storage-lan-row code,
+.storage-validation-card textarea {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: Consolas, "SFMono-Regular", monospace;
+}
+
+.storage-path-row strong {
+  color: var(--success);
+  white-space: nowrap;
+}
+
+.storage-path-row[data-ok="false"] strong {
+  color: var(--warning);
+}
+
+.storage-notice,
+.storage-pending-config {
+  margin-top: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--text);
+}
+
+.storage-notice p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.storage-notice p + p {
+  margin-top: var(--spacing-xs);
+}
+
+.storage-pending-config {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.storage-pending-config code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: Consolas, "SFMono-Regular", monospace;
+}
+
+.storage-pending-config strong {
+  white-space: nowrap;
+  color: var(--warning);
+}
+
+.storage-summary-line,
+.storage-volume-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.storage-volume-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-card-gap);
+}
+
+.storage-volume-card {
+  padding: var(--spacing-lg);
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.storage-volume-card[data-current="true"] {
+  border-color: rgba(47, 97, 255, 0.24);
+  box-shadow: 0 0 0 3px rgba(47, 97, 255, 0.08);
+}
+
+.storage-usage-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(23, 24, 26, 0.08);
+}
+
+.storage-usage-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(47, 97, 255, 0.8), rgba(31, 90, 73, 0.8));
+}
+
+.storage-use-volume,
+.storage-copy-lan {
+  min-height: var(--touch-target-min);
+}
+
+.storage-form small {
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.storage-validation-card[data-ok="true"] {
+  border-color: rgba(31, 90, 73, 0.22);
+}
+
+.storage-validation-card[data-ok="false"] {
+  border-color: rgba(200, 57, 44, 0.24);
+}
+
+.storage-validation-card ul {
+  margin: var(--spacing-md) 0 0;
+  padding-left: var(--spacing-xl);
+  color: var(--danger);
+}
+
+.storage-validation-card textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.storage-lan-list {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.storage-empty {
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .storage-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .storage-section-head {
+    display: grid;
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .storage-path-row,
+  .storage-lan-row,
+  .storage-pending-config {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .storage-card-head,
+  .storage-volume-head {
+    display: grid;
+  }
+}

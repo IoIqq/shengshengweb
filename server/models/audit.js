@@ -25,6 +25,13 @@ function createAuditLog(data) {
   saveDatabase();
 }
 
+function normalizeAuditLog(row) {
+  return {
+    ...row,
+    details: row.details ? JSON.parse(row.details) : null,
+  };
+}
+
 /**
  * 获取审计日志（支持筛选和分页）
  */
@@ -58,7 +65,11 @@ function getAuditLogs(filters = {}) {
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
 
-  return all(sql, params);
+  return all(sql, params).map(normalizeAuditLog);
+}
+
+function getAuditLogsForExport(filters = {}) {
+  return getAuditLogs({ ...filters, limit: 10000, offset: 0 });
 }
 
 /**
@@ -107,6 +118,7 @@ function cleanupOldAuditLogs(retentionDays = 90) {
 module.exports = {
   createAuditLog,
   getAuditLogs,
+  getAuditLogsForExport,
   getAuditLogCount,
   cleanupOldAuditLogs
 };

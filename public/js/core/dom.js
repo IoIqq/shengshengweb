@@ -3,9 +3,16 @@
  * 缓存所有常用的 DOM 元素引用，避免重复查询
  */
 
+// 缓存清理钩子：由 createDOMProxy 注册，clearDOMCache() 调用
+let resetCache = () => {};
+
 // 创建一个代理对象，延迟查询 DOM 元素
 function createDOMProxy() {
-  const cache = {};
+  let cache = {};
+  // 注册重置入口，供 clearDOMCache() 在动态挂载面板后失效旧的 null 缓存
+  resetCache = () => {
+    cache = {};
+  };
   const elementIds = {
     // 认证相关
     authShell: 'auth-shell',
@@ -15,8 +22,12 @@ function createDOMProxy() {
     loginUsername: 'login-username',
     loginPassword: 'login-password',
     loginPasswordToggle: 'login-password-toggle',
+    loginGuest: 'login-guest',
     capsLockHint: 'caps-lock-hint',
     loginRemember: 'login-remember',
+    registrationToggle: 'registration-toggle',
+    registrationForm: 'registration-form',
+    registrationSubmit: 'registration-submit',
     // 顶部导航
     logoutBtn: 'logout-btn',
     refreshBtn: 'refresh-btn',
@@ -39,6 +50,9 @@ function createDOMProxy() {
     // 审片中心
     reviewStack: 'review-stack',
     reviewCount: 'review-count',
+    reviewSearch: 'review-search',
+    reviewFilters: 'review-filters',
+    reviewSort: 'review-sort',
     // 待办事项
     todoForm: 'todo-form',
     todoList: 'todo-list',
@@ -88,6 +102,12 @@ function createDOMProxy() {
     settingsPanel: 'settings-panel',
     settingsForm: 'settings-form',
     systemCard: 'system-card',
+    storageContent: 'storage-content',
+    storageStatusCard: 'storage-status-card',
+    storageVolumeList: 'storage-volume-list',
+    storageForm: 'storage-form',
+    storageValidationResult: 'storage-validation-result',
+    storageLanList: 'storage-lan-list',
     // 工具栏
     uploadBtn: 'upload-btn',
     syncBtn: 'sync-btn',
@@ -124,6 +144,14 @@ function createDOMProxy() {
     profileRoleBadge: 'profile-role-badge',
     teamLeaderboard: 'team-leaderboard',
     teamBanner: 'team-banner',
+    // 选题库
+    topicsForm: 'topics-form',
+    topicsList: 'topics-list',
+    topicsBadge: 'topics-badge',
+    topicsSearch: 'topics-search',
+    topicsFilters: 'topics-filters',
+    topicsStatusFilter: 'topics-status-filter',
+    topicsSubmitBtn: 'topics-submit-btn',
   };
 
   // 特殊查询选择器
@@ -173,12 +201,12 @@ export function initDOMRefs() {
 
 /**
  * 清除 DOM 缓存
- * 用于动态内容更新后强制重新查询
+ * 用于动态内容更新后强制重新查询（例如异步挂载工作台面板模板之后，
+ * 需要让之前缓存的 null 失效，使 els 重新命中新挂载的节点）。
  */
 export function clearDOMCache() {
   console.log('🗑️ 清除 DOM 缓存');
-  // 通过重新创建 proxy 来清除缓存
-  // 注意：这会影响所有已导入的引用
+  resetCache();
 }
 
 /**

@@ -182,9 +182,9 @@ export function renderTeam() {
                 ${item.joinedAt ? `<span>加入 ${escapeHtml(formatDatetime(item.joinedAt).split(' ')[0])}</span>` : ''}
               </div>
               <div class="team-actions">
-                ${isAdmin ? `<button class="ghost-btn" data-team-move-up="${escapeHtml(item.id)}" type="button" title="上移">↑</button><button class="ghost-btn" data-team-move-down="${escapeHtml(item.id)}" type="button" title="下移">↓</button>` : ''}
-                <button class="ghost-btn" data-team-edit="${escapeHtml(item.id)}" type="button">编辑</button>
-                <button class="ghost-btn" data-team-delete="${escapeHtml(item.id)}" type="button">删除</button>
+                ${isAdmin ? `<button class="ghost-btn" data-team-move-up="${escapeHtml(item.id)}" type="button" aria-label="上移 ${escapeHtml(item.name)}">↑</button><button class="ghost-btn" data-team-move-down="${escapeHtml(item.id)}" type="button" aria-label="下移 ${escapeHtml(item.name)}">↓</button>` : ''}
+                <button class="ghost-btn" data-team-edit="${escapeHtml(item.id)}" type="button" aria-label="编辑成员 ${escapeHtml(item.name)}">编辑</button>
+                <button class="ghost-btn" data-team-delete="${escapeHtml(item.id)}" type="button" aria-label="删除成员 ${escapeHtml(item.name)}">删除</button>
               </div>
             </article>
           `;

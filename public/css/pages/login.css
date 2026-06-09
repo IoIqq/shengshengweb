@@ -1,16 +1,4 @@
-/**
- * Login Page Styles
- * Authentication and login interface
- * ~230 lines
- */
 
-/* Auth Shell */
-.auth-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 22px;
-}
 
 .login-layout {
   width: min(1120px, 100%);
@@ -30,9 +18,7 @@
   flex-direction: column;
   justify-content: space-between;
   min-height: 580px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 247, 249, 0.86));
-  box-shadow: var(--shadow-strong);
+
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -65,15 +51,6 @@
   background: radial-gradient(circle at center, rgba(23, 24, 26, 0.06), transparent 68%);
 }
 
-.login-brand-panel h1 {
-  font-size: clamp(42px, 4.8vw, 78px);
-  line-height: 0.92;
-  letter-spacing: -0.06em;
-  max-width: 7.5ch;
-  margin-top: 16px;
-  color: var(--text);
-}
-
 .brand-copy,
 .login-text {
   color: var(--text-soft);
@@ -86,43 +63,11 @@
   gap: 14px;
 }
 
-.brand-points div {
-  padding: 17px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 245, 247, 0.86));
-  border: 1px solid rgba(23, 24, 26, 0.05);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition:
-    transform var(--motion-fast) var(--motion-ease),
-    box-shadow var(--motion-fast) var(--motion-ease),
-    border-color var(--motion-fast) var(--motion-ease);
-}
-
-.brand-points div:hover {
-  transform: translateY(-2px);
-  border-color: rgba(200, 57, 44, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 22px rgba(23, 24, 26, 0.08);
-}
-
-.brand-points strong {
-  display: block;
-  font-size: 17px;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-
-.brand-points span {
-  display: block;
-  margin-top: 6px;
-  font-size: 13px;
-}
-
 /* Login Card */
 .login-card {
   padding: 36px;
   align-self: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 250, 251, 0.96));
-  box-shadow: var(--shadow-strong);
+
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -139,37 +84,6 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.05em;
-}
-
-/* Login Form Enhancements */
-.login-field {
-  position: relative;
-}
-
-.input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-  z-index: 1;
-  transition: color var(--motion-fast) var(--motion-ease);
-}
-
-.input-wrap input {
-  padding-left: 44px;
-  padding-right: 44px;
-}
-
-.input-wrap:focus-within .input-icon {
-  color: var(--text);
 }
 
 .input-action {
@@ -192,15 +106,6 @@
   z-index: 2;
 }
 
-.input-action:hover {
-  background: rgba(23, 24, 26, 0.06);
-  color: var(--text);
-}
-
-.input-action:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
 .input-action .icon-eye-off {
   display: none;
 }
@@ -211,23 +116,6 @@
 
 .input-action[aria-pressed="true"] .icon-eye-off {
   display: block;
-}
-
-.caps-lock-hint {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--warning);
-  font-weight: 600;
-  animation: shake 0.4s ease-in-out;
-}
-
-/* Login Options */
-.login-options {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .login-remember {
@@ -242,84 +130,8 @@
   transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
-.login-remember:hover {
-  background-color: rgba(47, 97, 255, 0.04);
-}
-
-.login-remember input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.login-remember-box {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(23, 24, 26, 0.2);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--motion-fast) var(--motion-ease);
-  flex-shrink: 0;
-}
-
-.login-remember-box svg {
-  opacity: 0;
-  transform: scale(0.5);
-  transition: all var(--motion-fast) var(--motion-ease);
-  color: #fff;
-}
-
-.login-remember input:checked + .login-remember-box {
-  background: linear-gradient(135deg, #2b3036 0%, #17181a 100%);
-  border-color: #17181a;
-}
-
-.login-remember input:checked + .login-remember-box svg {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.login-remember:hover .login-remember-box {
-  border-color: rgba(23, 24, 26, 0.4);
-  transform: translateY(-1px);
-}
-
-.login-remember-text {
-  font-size: 13px;
-  color: var(--text-soft);
-  font-weight: 500;
-}
-
-/* Login Submit Button */
-.login-submit {
-  position: relative;
+.login-guest {
   width: 100%;
-}
-
-.login-submit-spinner {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  opacity: 0;
-  animation: spin 0.6s linear infinite;
-  pointer-events: none;
-}
-
-.login-submit[disabled] .login-submit-text {
-  opacity: 0.7;
-}
-
-.login-submit[disabled] .login-submit-spinner {
-  opacity: 1;
 }
 
 .login-hint {
@@ -327,15 +139,6 @@
   line-height: 1.6;
   letter-spacing: 0.01em;
   color: var(--text-soft);
-}
-
-.login-hint code {
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(23, 24, 26, 0.08);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text);
 }
 
 .login-actions {
@@ -346,19 +149,49 @@
   margin-top: 22px;
 }
 
-/* Login Card Input Focus Enhancement */
-.login-card .field input:focus {
-  border-color: rgba(200, 57, 44, 0.45);
-  box-shadow: 0 0 0 4px rgba(200, 57, 44, 0.1);
+.registration-form {
+  grid-column: 2;
+  width: 100%;
+  margin-top: calc(var(--spacing-md) * -1);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
-/* Keyboard Accessibility */
-.input-action:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(200, 57, 44, 0.28);
+.registration-form.hidden {
+  display: none;
 }
 
-.login-remember input[type="checkbox"]:focus-visible + .login-remember-box {
-  border-color: rgba(200, 57, 44, 0.45);
-  box-shadow: 0 0 0 3px rgba(200, 57, 44, 0.18);
+.registration-form-head {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.registration-form-head strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.registration-form-head small {
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.registration-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.registration-form .primary-btn {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .registration-form {
+    grid-column: 1;
+    margin-top: 0;
+  }
 }

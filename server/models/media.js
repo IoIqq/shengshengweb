@@ -282,6 +282,39 @@ function scanInbox() {
   return { imported: imported.map(mediaRowToItem) };
 }
 
+function safeParseTags(raw) {
+  try {
+    const tags = JSON.parse(raw || '[]');
+    return Array.isArray(tags) ? tags : [];
+  } catch {
+    return [];
+  }
+}
+
+function getShowcaseItems(options = {}) {
+  const limit = Math.min(100, Math.max(1, Number.parseInt(options.limit, 10) || 50));
+  const kindFilter = ['photo', 'video'].includes(options.kindFilter) ? options.kindFilter : '';
+  let sql = "SELECT title, kind, thumb, url, author, tags_json, created_at FROM media WHERE review_state = 'approved'";
+  const params = [];
+  if (kindFilter) {
+    sql += ' AND kind = ?';
+    params.push(kindFilter);
+  }
+  sql += ' ORDER BY datetime(updated_at) DESC LIMIT ?';
+  params.push(limit);
+
+  const rows = all(sql, params);
+  return rows.map((row) => ({
+    title: row.title,
+    kind: row.kind,
+    thumb: row.thumb,
+    url: row.url,
+    author: row.author,
+    tags: safeParseTags(row.tags_json),
+    createdAt: row.created_at,
+  }));
+}
+
 module.exports = {
   getAllMedia,
   getMediaById,
@@ -292,4 +325,5 @@ module.exports = {
   mediaRowToItem,
   insertMediaRecord,
   scanInbox,
+  getShowcaseItems,
 };

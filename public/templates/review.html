@@ -1,0 +1,34 @@
+<article class="workspace-panel reveal" data-panel="review" aria-labelledby="review-title">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">审片中心</p>
+      <h2 id="review-title">处理待审内容</h2>
+    </div>
+    <span class="panel-badge" id="review-count" role="status" aria-live="polite">0 条待处理</span>
+  </div>
+
+  <section class="toolbar review-toolbar" aria-label="审片中心筛选与排序">
+    <label class="search-field">
+      <span>搜索待审素材</span>
+      <input id="review-search" type="search" placeholder="输入标题、来源、作者、标签" autocomplete="off" />
+    </label>
+
+    <div class="filter-row" id="review-filters" role="group" aria-label="按待审素材类型筛选">
+      <button class="filter-chip is-active" data-review-filter="all" type="button" aria-pressed="true">全部待审</button>
+      <button class="filter-chip" data-review-filter="photo" type="button" aria-pressed="false">图片</button>
+      <button class="filter-chip" data-review-filter="video" type="button" aria-pressed="false">视频</button>
+    </div>
+
+    <label class="field field-inline">
+      <span>审片排序</span>
+      <select id="review-sort">
+        <option value="newest">最新上传</option>
+        <option value="oldest">最早上传</option>
+        <option value="title">按标题</option>
+        <option value="author">按作者</option>
+      </select>
+    </label>
+  </section>
+
+  <div class="review-stack" id="review-stack" aria-live="polite"></div>
+</article>

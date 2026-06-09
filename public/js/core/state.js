@@ -41,8 +41,15 @@ export const state = {
   teamSort: 'name',
   teamEditingId: null,
 
-  // 待办相关
-  todoEditingId: null,
+  // 选题库相关
+  topicItems: [],
+  topicSearch: '',
+  topicFilter: 'all',
+  topicEditingId: null,
+
+  // 存储管理
+  storageStatus: null,
+  storageValidation: null,
 
   // 用户资料
   profile: {
@@ -79,6 +86,8 @@ export function resetState() {
   state.session = null;
   state.bootstrap = null;
   state.activeView = 'overview';
+  state.storageStatus = null;
+  state.storageValidation = null;
   state.selectedMedia.clear();
 }
 

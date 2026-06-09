@@ -1,7 +1,10 @@
 @echo off
 chcp 65001 >nul
+cd /d "%~dp0\.."
+for /f "delims=" %%P in ('node -e "try{require(''dotenv'').config();console.log(require(''./server/config'').PORT)}catch(e){console.log(3002)}"') do set "APP_PORT=%%P"
+set "RULE_NAME=声声工作室-%APP_PORT%"
 REM ================================================================
-REM  Windows 防火墙放行 - 声声工作室（端口 3002）
+REM  Windows 防火墙放行 - 声声工作室
 REM  请右键 → 以管理员身份运行
 REM ================================================================
 echo.
@@ -20,20 +23,21 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
+echo [信息] 当前端口：%APP_PORT%
 echo [信息] 检查现有规则...
-netsh advfirewall firewall show rule name="声声工作室-3002" >nul 2>&1
+netsh advfirewall firewall show rule name="%RULE_NAME%" >nul 2>&1
 if %errorLevel% equ 0 (
     echo [信息] 已存在规则，先删除旧规则
-    netsh advfirewall firewall delete rule name="声声工作室-3002" >nul
+    netsh advfirewall firewall delete rule name="%RULE_NAME%" >nul
 )
 
-echo [操作] 添加 TCP 入站规则（端口 3002）...
+echo [操作] 添加 TCP 入站规则（端口 %APP_PORT%）...
 netsh advfirewall firewall add rule ^
-    name="声声工作室-3002" ^
+    name="%RULE_NAME%" ^
     dir=in ^
     action=allow ^
     protocol=TCP ^
-    localport=3002 ^
+    localport=%APP_PORT% ^
     profile=private,domain ^
     description="允许局域网设备访问声声思政工作室网站"
 

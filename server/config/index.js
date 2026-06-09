@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
@@ -14,12 +15,46 @@ function resolvePath(envPath, defaultPath) {
   return path.resolve(ROOT_DIR, envPath);
 }
 
+const DATA_DIR = resolvePath(null, path.join(__dirname, '..', 'data'));
+const STORAGE_CONFIG_PATH = path.join(DATA_DIR, 'storage-config.json');
+
+function readStorageConfig() {
+  try {
+    if (!fs.existsSync(STORAGE_CONFIG_PATH)) return {};
+    const payload = JSON.parse(fs.readFileSync(STORAGE_CONFIG_PATH, 'utf8'));
+    return payload && typeof payload === 'object' ? payload : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function getConfiguredPath(storageConfig, key) {
+  const value = typeof storageConfig[key] === 'string' ? storageConfig[key].trim() : '';
+  return value || '';
+}
+
+function choosePath(envValue, storageValue, defaultPath) {
+  if (envValue) return { value: resolvePath(envValue, defaultPath), source: 'env' };
+  if (storageValue) return { value: resolvePath(storageValue, defaultPath), source: 'storage-config' };
+  return { value: defaultPath, source: 'default' };
+}
+
+const storageConfig = readStorageConfig();
+const uploadPath = choosePath(
+  process.env.UPLOAD_DIR,
+  getConfiguredPath(storageConfig, 'uploadDir'),
+  path.join(__dirname, '..', 'uploads')
+);
+
 const config = {
   // 目录配置
   ROOT_DIR,
-  DATA_DIR: resolvePath(null, path.join(__dirname, '..', 'data')),
+  DATA_DIR,
   LOG_DIR: resolvePath(null, path.join(__dirname, '..', 'logs')),
-  UPLOAD_DIR: resolvePath(process.env.UPLOAD_DIR, path.join(__dirname, '..', 'uploads')),
+  STORAGE_CONFIG_PATH,
+  STORAGE_CONFIG: storageConfig,
+  UPLOAD_DIR: uploadPath.value,
+  UPLOAD_DIR_SOURCE: uploadPath.source,
 
   // 服务器配置
   PORT: Number(process.env.PORT || 3002),
@@ -63,7 +98,15 @@ const config = {
 config.MEDIA_DIR = path.join(config.UPLOAD_DIR, 'media');
 config.AVATAR_DIR = path.join(config.UPLOAD_DIR, 'avatars');
 config.DEVICE_IMAGE_DIR = path.join(config.UPLOAD_DIR, 'devices');
-config.INBOX_DIR = resolvePath(process.env.INBOX_DIR, path.join(config.UPLOAD_DIR, 'inbox'));
+const inboxPath = choosePath(
+  process.env.INBOX_DIR,
+  getConfiguredPath(storageConfig, 'inboxDir'),
+  path.join(config.UPLOAD_DIR, 'inbox')
+);
+config.INBOX_DIR = inboxPath.value;
+config.INBOX_DIR_SOURCE = inboxPath.source;
 config.DB_PATH = resolvePath(process.env.DATABASE_PATH, path.join(config.DATA_DIR, 'studio.sqlite'));
+
+config.resolvePath = resolvePath;
 
 module.exports = config;

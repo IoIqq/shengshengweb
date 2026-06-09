@@ -24,6 +24,10 @@ function addLocalActivity(title, detail) {
   document.dispatchEvent(new CustomEvent('activity-updated'));
 }
 
+function isAdminUser() {
+  return state.session?.user?.role === 'admin';
+}
+
 /**
  * 检查借出是否逾期
  * @param {string} expectedReturnAt - 预期归还时间
@@ -63,6 +67,10 @@ export function borrowMatchesView(item) {
   const search = String(state.borrowSearch || '').trim().toLowerCase();
   if (state.borrowFilter === 'overdue') {
     if (!(item.status === 'approved' && isOverdue(item.expectedReturnAt, item.returnStatus))) return false;
+  } else if (state.borrowFilter === 'returned') {
+    if (item.returnStatus !== 'returned') return false;
+  } else if (state.borrowFilter === 'approved') {
+    if (!(item.status === 'approved' && item.returnStatus !== 'returned')) return false;
   } else if (state.borrowFilter !== 'all' && item.status !== state.borrowFilter) {
     return false;
   }
@@ -95,7 +103,7 @@ export function getBorrowSourceItems() {
  * @returns {Array}
  */
 export function getAvailableBorrowDevices() {
-  return getDeviceSourceItems().filter((item) => item.status !== 'maintenance');
+  return getDeviceSourceItems().filter((item) => item.status === 'available');
 }
 
 /**
@@ -160,8 +168,20 @@ export function renderBorrowRequests() {
                       ? 'danger'
                       : 'info'
                   : 'neutral';
+          const actionLabel = `${item.applicant || '申请人'}的${item.deviceName || item.deviceId || '设备'}借用申请`;
+          const adminActions = isAdminUser()
+            ? item.status === 'pending'
+              ? `<button class="primary-btn" data-borrow-approve="${escapeHtml(item.id)}" type="button" aria-label="批准${escapeHtml(actionLabel)}">批准</button>
+                         <button class="ghost-btn" data-borrow-reject="${escapeHtml(item.id)}" type="button" aria-label="拒绝${escapeHtml(actionLabel)}">拒绝</button>`
+              : item.status === 'approved' && item.returnStatus !== 'returned'
+                ? `<button class="primary-btn" data-borrow-return="${escapeHtml(item.id)}" type="button" aria-label="确认${escapeHtml(actionLabel)}已归还">确认归还</button>`
+                : ''
+            : '';
+          const deleteAction = isAdminUser()
+            ? `<button class="ghost-btn" data-borrow-delete="${escapeHtml(item.id)}" type="button" aria-label="删除${escapeHtml(actionLabel)}记录">删除</button>`
+            : '';
           return `
-              <article class="borrow-item" data-status="${escapeHtml(item.status)}" ${overdue ? 'data-overdue="true"' : ''}>
+              <article class="borrow-item" role="listitem" data-status="${escapeHtml(item.status)}" ${overdue ? 'data-overdue="true"' : ''}>
                 <div class="borrow-head">
                   <div>
                     <h3>${escapeHtml(item.applicant)}</h3>
@@ -176,17 +196,7 @@ export function renderBorrowRequests() {
                   ${item.approvedBy ? `<span>审批人：${escapeHtml(item.approvedBy)}</span>` : ''}
                 </div>
                 ${item.note ? `<small class="borrow-note">备注：${escapeHtml(item.note)}</small>` : ''}
-                <div class="borrow-actions">
-                  ${
-  item.status === 'pending'
-    ? `<button class="primary-btn" data-borrow-approve="${escapeHtml(item.id)}" type="button">批准</button>
-                         <button class="ghost-btn" data-borrow-reject="${escapeHtml(item.id)}" type="button">拒绝</button>`
-    : item.status === 'approved' && item.returnStatus !== 'returned'
-      ? `<button class="primary-btn" data-borrow-return="${escapeHtml(item.id)}" type="button">确认归还</button>`
-      : ''
-}
-                  <button class="ghost-btn" data-borrow-delete="${escapeHtml(item.id)}" type="button">删除</button>
-                </div>
+                ${(adminActions || deleteAction) ? `<div class="borrow-actions">${adminActions}${deleteAction}</div>` : ''}
               </article>
             `;
         },

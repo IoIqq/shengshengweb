@@ -3,8 +3,45 @@
  * 检查运行环境是否满足要求
  */
 
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const config = require('../config');
+
+function displayPath(value) {
+  return String(value || '').replace(/\\/g, '/');
+}
+
+function pathSourceLabel(source) {
+  if (source === 'env') return '.env';
+  if (source === 'storage-config') return '界面配置';
+  return '默认值';
+}
+
+function checkPath(checks, label, targetPath, required = true) {
+  const exists = fs.existsSync(targetPath);
+  checks.push({
+    name: label,
+    pass: exists,
+    level: exists ? 'success' : (required ? 'warning' : 'info'),
+    message: exists ? `已存在 (${displayPath(targetPath)})` : `缺失，将在启动时尝试创建 (${displayPath(targetPath)})`
+  });
+  return exists;
+}
+
+function checkWritable(checks, label, targetPath) {
+  if (!fs.existsSync(targetPath)) return false;
+  try {
+    const testFile = path.join(targetPath, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    checks.push({ name: label, pass: true, level: 'success', message: '可写' });
+    return true;
+  } catch (error) {
+    checks.push({ name: label, pass: false, level: 'error', message: '无写入权限' });
+    return false;
+  }
+}
 
 function checkEnvironment() {
   console.log('🔍 检查运行环境...\n');
@@ -13,7 +50,6 @@ function checkEnvironment() {
   let hasError = false;
   let hasWarning = false;
 
-  // 1. 检查 Node.js 版本
   const nodeVersion = process.version;
   const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
   const nodeCheck = {
@@ -25,104 +61,81 @@ function checkEnvironment() {
   checks.push(nodeCheck);
   if (!nodeCheck.pass) hasError = true;
 
-  // 2. 检查 .env 文件
-  const envCheck = {
+  const envExists = fs.existsSync('.env');
+  checks.push({
     name: '.env 配置文件',
-    pass: fs.existsSync('.env'),
-    level: fs.existsSync('.env') ? 'success' : 'error',
-    message: fs.existsSync('.env') ? '已存在' : '缺失，请复制 .env.example 并配置'
-  };
-  checks.push(envCheck);
-  if (!envCheck.pass) hasError = true;
+    pass: envExists,
+    level: envExists ? 'success' : 'warning',
+    message: envExists ? '已存在' : '缺失，将使用默认配置或界面存储配置'
+  });
+  if (!envExists) hasWarning = true;
 
-  // 加载环境变量（如果存在）
-  if (envCheck.pass) {
-    require('dotenv').config();
+  checks.push({
+    name: '素材目录配置来源',
+    pass: true,
+    level: 'info',
+    message: `UPLOAD_DIR=${pathSourceLabel(config.UPLOAD_DIR_SOURCE)}，INBOX_DIR=${pathSourceLabel(config.INBOX_DIR_SOURCE)}`
+  });
+
+  if ((config.UPLOAD_DIR_SOURCE === 'env' || config.INBOX_DIR_SOURCE === 'env') && config.STORAGE_CONFIG?.uploadDir) {
+    checks.push({
+      name: '存储配置优先级',
+      pass: true,
+      level: 'warning',
+      message: '.env 正在覆盖 server/data/storage-config.json 中的界面配置'
+    });
+    hasWarning = true;
   }
 
-  // 3. 检查必要目录
   const dirs = [
-    { path: 'server/data', required: true },
-    { path: 'server/uploads', required: true },
-    { path: 'server/uploads/media', required: true },
-    { path: 'server/uploads/inbox', required: true }
+    { label: '数据目录', path: config.DATA_DIR, required: true },
+    { label: '数据库父目录', path: path.dirname(config.DB_PATH), required: true },
+    { label: '上传根目录', path: config.UPLOAD_DIR, required: true },
+    { label: '媒体目录', path: config.MEDIA_DIR, required: true },
+    { label: 'Inbox 目录', path: config.INBOX_DIR, required: true },
+    { label: '头像目录', path: config.AVATAR_DIR, required: true },
+    { label: '设备图片目录', path: config.DEVICE_IMAGE_DIR, required: true },
   ];
 
   dirs.forEach(dir => {
-    const exists = fs.existsSync(dir.path);
-    const check = {
-      name: `目录 ${dir.path}`,
-      pass: exists,
-      level: exists ? 'success' : (dir.required ? 'warning' : 'info'),
-      message: exists ? '已存在' : '缺失（将自动创建）'
-    };
-    checks.push(check);
-    if (!check.pass && dir.required) hasWarning = true;
+    const exists = checkPath(checks, dir.label, dir.path, dir.required);
+    if (!exists && dir.required) hasWarning = true;
   });
 
-  // 4. 检查数据库
-  const dbPath = process.env.DATABASE_PATH || 'server/data/studio.sqlite';
-  const dbExists = fs.existsSync(dbPath);
-  const dbCheck = {
+  const dbExists = fs.existsSync(config.DB_PATH);
+  checks.push({
     name: '数据库文件',
     pass: dbExists,
     level: dbExists ? 'success' : 'warning',
-    message: dbExists ? `已存在 (${dbPath})` : `将自动创建 (${dbPath})`
-  };
-  checks.push(dbCheck);
-  if (!dbCheck.pass) hasWarning = true;
+    message: dbExists ? `已存在 (${displayPath(config.DB_PATH)})` : `将自动创建 (${displayPath(config.DB_PATH)})`
+  });
+  if (!dbExists) hasWarning = true;
 
-  // 5. 检查上传目录权限
-  const uploadDir = process.env.UPLOAD_DIR || 'server/uploads';
-  if (fs.existsSync(uploadDir)) {
-    try {
-      const testFile = path.join(uploadDir, '.write-test');
-      fs.writeFileSync(testFile, 'test');
-      fs.unlinkSync(testFile);
-      checks.push({
-        name: '上传目录权限',
-        pass: true,
-        level: 'success',
-        message: '可写'
-      });
-    } catch (error) {
-      checks.push({
-        name: '上传目录权限',
-        pass: false,
-        level: 'error',
-        message: '无写入权限'
-      });
-      hasError = true;
-    }
-  }
+  if (!checkWritable(checks, '上传目录权限', config.UPLOAD_DIR)) hasError = fs.existsSync(config.UPLOAD_DIR) || hasError;
 
-  // 6. 检查端口配置
-  const port = process.env.PORT || 3002;
   checks.push({
     name: '服务端口',
     pass: true,
     level: 'info',
-    message: `${port}`
+    message: `${config.PORT}`
   });
 
-  // 7. 检查管理员配置
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminUsername = config.ADMIN_USERNAME;
+  const adminPassword = config.ADMIN_PASSWORD;
   const adminConfigured = adminUsername && adminPassword;
-  const isDefaultPassword = adminPassword === 'ShengSheng@2026';
+  const isWeakDefaultPassword = adminPassword === 'admin123456' || adminPassword === 'ShengSheng@2026';
 
   checks.push({
     name: '管理员账号',
     pass: adminConfigured,
-    level: adminConfigured ? (isDefaultPassword ? 'warning' : 'success') : 'error',
+    level: adminConfigured ? (isWeakDefaultPassword ? 'warning' : 'success') : 'error',
     message: adminConfigured
-      ? (isDefaultPassword ? '使用默认密码（建议修改）' : '已配置')
+      ? (isWeakDefaultPassword ? '使用默认密码（建议修改）' : '已配置')
       : '未配置'
   });
   if (!adminConfigured) hasError = true;
-  if (isDefaultPassword) hasWarning = true;
+  if (isWeakDefaultPassword) hasWarning = true;
 
-  // 8. 检查依赖包
   const nodeModulesExists = fs.existsSync('node_modules');
   checks.push({
     name: '依赖包',
@@ -132,28 +145,19 @@ function checkEnvironment() {
   });
   if (!nodeModulesExists) hasError = true;
 
-  // 输出结果
   checks.forEach(check => {
     let icon;
     switch (check.level) {
-      case 'success':
-        icon = '✅';
-        break;
-      case 'warning':
-        icon = '⚠️ ';
-        break;
-      case 'error':
-        icon = '❌';
-        break;
-      default:
-        icon = 'ℹ️ ';
+      case 'success': icon = '✅'; break;
+      case 'warning': icon = '⚠️ '; break;
+      case 'error': icon = '❌'; break;
+      default: icon = 'ℹ️ ';
     }
     console.log(`${icon} ${check.name}: ${check.message}`);
   });
 
   console.log('');
 
-  // 总结
   if (hasError) {
     console.log('❌ 环境检查失败，存在严重问题');
     console.log('   请先解决上述错误，然后重新运行部署脚本\n');
@@ -166,7 +170,6 @@ function checkEnvironment() {
   }
 }
 
-// 如果直接运行此脚本
 if (require.main === module) {
   try {
     checkEnvironment();

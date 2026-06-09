@@ -11,9 +11,11 @@ const ROLE_PERMISSIONS = {
     'profile:update'
   ],
   guest: [
-    'media:read',
+    'media:read', 'media:create',
     'todo:read',
     'team:read',
+    'device:read',
+    'borrow:read', 'borrow:create',
     'wish:read'
   ]
 };

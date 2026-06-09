@@ -5,10 +5,14 @@ const session = require('./session');
 const media = require('./media');
 const todo = require('./todo');
 const audit = require('./audit');
+const activity = require('./activity');
 const device = require('./device');
 const borrow = require('./borrow');
 const team = require('./team');
 const profile = require('./profile');
+const topicLibrary = require('./topic-library');
+const settings = require('./settings');
+const registrationRequest = require('./registration-request');
 
 module.exports = {
   database,
@@ -17,8 +21,12 @@ module.exports = {
   media,
   todo,
   audit,
+  activity,
   device,
   borrow,
   team,
-  profile
+  profile,
+  topicLibrary,
+  settings,
+  registrationRequest,
 };

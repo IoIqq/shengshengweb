@@ -59,16 +59,6 @@ h6,
   letter-spacing: -0.05em;
 }
 
-.login-card h2 {
-  margin-top: 10px;
-  font-size: clamp(30px, 3vw, 44px);
-  line-height: 1.01;
-  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .login-brand-panel h1 {
   font-size: clamp(42px, 4.8vw, 78px);
   line-height: 0.92;
@@ -94,19 +84,6 @@ h6,
   letter-spacing: 0.05em;
   color: var(--text-muted);
   line-height: 1.2;
-}
-
-.panel-head h2 {
-  margin-top: 8px;
-  font-size: clamp(25px, 2.4vw, 36px);
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  position: relative;
-  padding-left: 14px;
 }
 
 .panel-head h2::before {
@@ -200,15 +177,6 @@ h6,
   font-weight: 800;
 }
 
-.profile-meta span {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 800;
-}
-
 .profile-meta strong {
   display: block;
   margin-top: 6px;
@@ -247,37 +215,9 @@ h6,
 
 /* 响应式字体 */
 @media (max-width: 768px) {
-  body {
-    font-size: 15px;
-  }
 
-  h1 {
-    font-size: 28px;
-  }
-
-  h2 {
-    font-size: 22px;
-  }
-
-  h3 {
-    font-size: 18px;
-  }
 }
 
 @media (max-width: 480px) {
-  body {
-    font-size: 14px;
-  }
 
-  h1 {
-    font-size: 24px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
-
-  h3 {
-    font-size: 16px;
-  }
 }

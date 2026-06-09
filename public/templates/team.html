@@ -1,0 +1,132 @@
+<article class="workspace-panel reveal" data-panel="team">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">团队协作</p>
+      <h2>成员与分工</h2>
+    </div>
+    <div class="panel-actions">
+      <span class="panel-badge" id="team-count">0 位成员</span>
+      <button class="primary-btn" id="team-add-btn" type="button">+ 新增成员</button>
+      <button class="ghost-btn" id="team-refresh-btn" type="button">刷新团队</button>
+    </div>
+  </div>
+
+  <div class="team-banner" id="team-banner">
+    <div>
+      <p class="eyebrow">青春同心 · 网络育人</p>
+      <strong>把每一次创作都变成看得见的思政力量</strong>
+    </div>
+    <span>学生骨干协作看板</span>
+  </div>
+
+  <div class="team-stats" id="team-stats"></div>
+
+  <form class="team-form" id="team-form" hidden>
+    <input type="hidden" name="id" id="team-form-id" />
+    <label class="field">
+      <span>姓名</span>
+      <input name="name" type="text" placeholder="例如：张三" required />
+    </label>
+    <label class="field">
+      <span>团队角色</span>
+      <input name="role" type="text" placeholder="例如：导演 / 摄影 / 剪辑 / 编剧 / 场务" required />
+    </label>
+    <label class="field">
+      <span>年级</span>
+      <select name="grade">
+        <option value="">请选择</option>
+        <option value="大一">大一</option>
+        <option value="大二">大二</option>
+        <option value="大三">大三</option>
+        <option value="大四">大四</option>
+        <option value="研一">研一</option>
+        <option value="研二">研二</option>
+        <option value="研三">研三</option>
+        <option value="博士">博士</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>专业方向</span>
+      <input name="major" type="text" placeholder="例如：数字媒体技术 / 广播电视编导" />
+    </label>
+    <label class="field">
+      <span>学号</span>
+      <input name="studentId" type="text" placeholder="例如：2024001234" />
+    </label>
+    <label class="field">
+      <span>协作小组</span>
+      <input name="groups" type="text" placeholder="多个小组用逗号分隔，例如：宣传部, 网络部" />
+    </label>
+    <label class="field">
+      <span>入团 / 入党时间</span>
+      <input name="partyJoinAt" type="date" />
+    </label>
+    <label class="field">
+      <span>技能标签</span>
+      <input name="skills" type="text" placeholder="多个标签用逗号分隔，例如：摄影, 剪辑, 编导" />
+    </label>
+    <label class="field">
+      <span>负责内容</span>
+      <input name="note" type="text" placeholder="例如：负责短视频包装和节奏优化" />
+    </label>
+    <label class="field team-bio-field">
+      <span>成员简介</span>
+      <textarea name="bio" rows="2" placeholder="一句话介绍成员特长与近期方向"></textarea>
+    </label>
+    <label class="field">
+      <span>徽章</span>
+      <input name="badge" type="text" placeholder="例如：剪（留空自动取姓名首字）" maxlength="2" />
+    </label>
+    <label class="field">
+      <span>邮箱</span>
+      <input name="email" type="email" placeholder="例如：zhangsan@example.com" />
+    </label>
+    <label class="field">
+      <span>电话</span>
+      <input name="phone" type="tel" placeholder="例如：138****1234" />
+    </label>
+    <label class="field">
+      <span>状态</span>
+      <select name="status">
+        <option value="active">活跃</option>
+        <option value="leave">请假</option>
+        <option value="inactive">已离开</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>加入日期</span>
+      <input name="joinedAt" type="date" />
+    </label>
+    <div class="team-form-actions">
+      <button class="primary-btn" type="submit" id="team-form-submit">保存成员</button>
+      <button class="ghost-btn" type="button" id="team-form-cancel">取消</button>
+    </div>
+  </form>
+
+  <div class="toolbar">
+    <label class="search-field">
+      <span>搜索成员</span>
+      <input id="team-search" type="search" placeholder="按姓名、角色或职责搜索" />
+    </label>
+    <label class="field team-sort-field">
+      <span>排序方式</span>
+      <select id="team-sort">
+        <option value="name">按姓名</option>
+        <option value="joinedAt-desc">最新入职</option>
+        <option value="joinedAt-asc">最早入职</option>
+        <option value="role">按角色</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="filter-row" id="team-filters">
+    <button class="filter-chip is-active" data-filter="all" type="button">全部</button>
+    <button class="filter-chip" data-filter="active" type="button">在职</button>
+    <button class="filter-chip" data-filter="leave" type="button">休假</button>
+    <button class="filter-chip" data-filter="inactive" type="button">离职</button>
+  </div>
+
+  <div class="team-leaderboard" id="team-leaderboard" aria-label="成员贡献榜"></div>
+
+  <div class="team-grid" id="team-grid"></div>
+</article>

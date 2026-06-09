@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { borrow: borrowModel } = require('../models');
 const { run, saveDatabase } = require('../models/database');
-const { requireAuth, requireEditor, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requirePermission, requireAdmin } = require('../middleware/auth');
 const { nowIso } = require('../utils');
 
 // Rate limiter for borrow requests
@@ -28,7 +28,7 @@ function logBorrowActivity(title, meta, detail) {
 }
 
 // GET /api/borrow-requests - Get borrow request list with filters
-router.get('/', requireAuth, (req, res) => {
+router.get('/', requireAuth, requirePermission('borrow:read'), (req, res) => {
   try {
     const items = borrowModel.getBorrowRequestList(req.query || {});
     res.json({ ok: true, items });
@@ -38,7 +38,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // GET /api/borrow-requests/overdue - Get overdue borrow requests
-router.get('/overdue', requireAuth, (req, res) => {
+router.get('/overdue', requireAuth, requirePermission('borrow:read'), (req, res) => {
   try {
     const items = borrowModel.getOverdueBorrows();
     res.json({ ok: true, items, count: items.length });
@@ -48,7 +48,7 @@ router.get('/overdue', requireAuth, (req, res) => {
 });
 
 // GET /api/borrow-requests/stats - Get borrow statistics
-router.get('/stats', requireAuth, (req, res) => {
+router.get('/stats', requireAuth, requirePermission('borrow:read'), (req, res) => {
   try {
     const stats = borrowModel.getBorrowStats();
     res.json({ ok: true, stats });
@@ -58,7 +58,7 @@ router.get('/stats', requireAuth, (req, res) => {
 });
 
 // GET /api/borrow-requests/:id - Get single borrow request
-router.get('/:id', requireAuth, (req, res) => {
+router.get('/:id', requireAuth, requirePermission('borrow:read'), (req, res) => {
   try {
     const id = String(req.params.id || '');
     const item = borrowModel.getBorrowRequestById(id);
@@ -74,7 +74,7 @@ router.get('/:id', requireAuth, (req, res) => {
 });
 
 // POST /api/borrow-requests - Create borrow request
-router.post('/', borrowLimiter, requireAuth, requireEditor, (req, res) => {
+router.post('/', borrowLimiter, requireAuth, requirePermission('borrow:create'), (req, res) => {
   try {
     const body = req.body || {};
     const applicant = String(body.applicant || '').trim();

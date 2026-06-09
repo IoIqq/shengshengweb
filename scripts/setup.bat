@@ -1,5 +1,7 @@
 @echo off
 chcp 65001 >nul
+cd /d "%~dp0\.."
+for /f "delims=" %%P in ('node -e "try{require(''dotenv'').config();console.log(require(''./server/config'').PORT)}catch(e){console.log(3002)}"') do set "APP_PORT=%%P"
 echo ========================================
 echo   声声网络思政工作室 - 自动部署脚本
 echo ========================================
@@ -97,9 +99,9 @@ echo   生产模式: npm run start
 echo   PM2 部署: npm run pm2:start
 echo.
 echo 🌐 访问地址：
-echo   本地: http://localhost:3002
-echo   局域网: http://你的IP:3002
+echo   本地: http://localhost:%APP_PORT%
+echo   局域网: http://你的IP:%APP_PORT%
 echo.
-echo 📚 更多信息请查看 DEPLOYMENT.md
+echo 📚 更多信息请查看 docs\GUIDE.md
 echo.
 pause

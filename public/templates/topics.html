@@ -1,0 +1,47 @@
+<article class="workspace-panel reveal" data-panel="topics" aria-labelledby="topics-title">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">选题库</p>
+      <h2 id="topics-title">新媒体视频创作选题</h2>
+    </div>
+    <span class="panel-badge" id="topics-badge" role="status">0 条选题</span>
+  </div>
+
+  <form class="topic-form" id="topics-form" autocomplete="off">
+    <label class="field">
+      <span>选题标题</span>
+      <input name="title" type="text" placeholder="例如：校园开学季Vlog" required />
+    </label>
+    <label class="field">
+      <span>流媒体链接</span>
+      <input name="sourceUrl" type="url" placeholder="粘贴视频链接，支持 B站/YouTube/Vimeo/抖音等" required />
+    </label>
+    <label class="field">
+      <span>选题说明</span>
+      <input name="description" type="text" placeholder="创作角度、目标受众或补充信息（可选）" />
+    </label>
+    <label class="field">
+      <span>标签</span>
+      <input name="tags" type="text" placeholder="多个标签用逗号分隔（可选）" />
+    </label>
+    <div class="topic-form-actions">
+      <button class="primary-btn" type="submit" id="topics-submit-btn">添加选题</button>
+    </div>
+  </form>
+
+  <div class="toolbar topics-toolbar">
+    <label class="search-field">
+      <span>搜索选题</span>
+      <input id="topics-search" type="search" placeholder="按标题、说明、域名搜索" autocomplete="off" />
+    </label>
+    <div class="filter-row" id="topics-filters" role="group" aria-label="按选题状态筛选">
+      <button class="filter-chip is-active" data-topic-filter="all" type="button" aria-pressed="true">全部</button>
+      <button class="filter-chip" data-topic-filter="idea" type="button" aria-pressed="false">灵感</button>
+      <button class="filter-chip" data-topic-filter="researching" type="button" aria-pressed="false">调研中</button>
+      <button class="filter-chip" data-topic-filter="selected" type="button" aria-pressed="false">已入选</button>
+      <button class="filter-chip" data-topic-filter="archived" type="button" aria-pressed="false">已归档</button>
+    </div>
+  </div>
+
+  <div class="media-grid" id="topics-list" aria-live="polite"></div>
+</article>

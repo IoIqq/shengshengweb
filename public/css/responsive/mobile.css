@@ -68,10 +68,6 @@
     gap: 8px;
   }
 
-  .topbar-actions .ghost-btn {
-    display: none;
-  }
-
   /* Panels */
   .panel-head {
     flex-direction: column;
@@ -112,17 +108,13 @@
   }
 
   .overview-hero {
-    padding: 16px;
+
     gap: 12px;
     margin-bottom: 16px;
   }
 
-  .media-grid {
-    gap: 10px;
-  }
-
   .field {
-    gap: 6px;
+
     margin-top: 12px;
   }
 
@@ -362,7 +354,7 @@
   .primary-btn,
   .ghost-btn,
   .topbar-cta {
-    min-height: 40px;
+    min-height: var(--touch-target-min);
     padding: 0 14px;
     font-size: 14px;
   }
@@ -370,7 +362,7 @@
   .topbar-cta {
     padding: 0 12px;
     font-size: 14px;
-    min-height: 38px;
+    min-height: var(--touch-target-min);
   }
 
   /* Topbar */
@@ -423,10 +415,6 @@
     margin-bottom: 14px;
   }
 
-  .media-grid {
-    gap: 10px;
-  }
-
   .field {
     gap: 6px;
     margin-top: 12px;
@@ -442,7 +430,7 @@
   .field input,
   .field select,
   .search-field input {
-    min-height: 42px;
+    min-height: var(--touch-target-min);
     font-size: 15px;
   }
 
@@ -588,7 +576,7 @@
   .primary-btn,
   .ghost-btn,
   .topbar-cta {
-    min-height: 38px;
+    min-height: var(--touch-target-min);
     font-size: 13px;
     padding: 0 12px;
   }
@@ -598,7 +586,7 @@
   .field select,
   .field textarea,
   .search-field input {
-    min-height: 40px;
+    min-height: var(--touch-target-min);
     font-size: 14px;
   }
 

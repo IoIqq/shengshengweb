@@ -46,22 +46,6 @@
   transform: translateX(-50%) scale(1);
 }
 
-/* Avatar Tooltip */
-.avatar-tooltip {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(23, 24, 26, 0.08);
-  box-shadow: 0 12px 26px rgba(17, 18, 20, 0.08);
-  color: var(--text);
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
 /* Toast Container */
 .toast-container {
   position: fixed;
@@ -356,19 +340,13 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .toast-container {
-    bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));
-  }
+
 }
 
 @media (max-width: 640px) {
-  .toast {
-    width: calc(100vw - 32px);
-    max-width: 400px;
-  }
 
   .toast {
-    width: calc(100vw - 24px);
+
     padding: 12px 14px;
     font-size: 13px;
   }
@@ -380,11 +358,6 @@
 }
 
 @media (max-width: 480px) {
-  .toast {
-    width: calc(100vw - 24px);
-    padding: 12px 14px;
-    font-size: 13px;
-  }
 
   .popover {
     max-width: calc(100vw - 32px);

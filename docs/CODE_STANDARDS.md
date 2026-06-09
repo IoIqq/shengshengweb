@@ -1,233 +1,84 @@
 # 声声网络思政工作室 - 开发规范
 
-## 🚨 严格禁止事项 (CRITICAL)
+本文件是当前项目开发的强制规范。若历史文档、归档文档或旧报告与本文冲突，以本文为准。
 
-### ❌ 绝对禁止修改的文件
+## 1. 最高优先级规则
 
-以下文件已被弃用并归档，**任何情况下都不得修改**：
+### 1.1 禁止非必要全局读取
 
-1. ~~`server/server.js`~~ → **已归档至 `_archive/server/server.js.monolithic-backup-20260604`**
-   - 旧的3,469行单体服务器文件
-   - ✅ **请使用** `server/server-new.js` (208行模块化入口)
+开发、排查和修改必须按模块拆成小任务执行：
 
-2. ~~`public/styles.css`~~ → **即将归档至 `_archive/styles/` (CSS模块化完成后)**
-   - 旧的7,923行单体样式文件
-   - ✅ **请使用** `public/css/` 目录下的模块化CSS文件
+- 每个小任务只读取该任务必要的具体文件。
+- 禁止为了“保险”而全局读取、全目录扫描、全仓库 grep 或一次性打开大量无关文件。
+- 如确需扩大读取范围，必须先把范围限制到具体模块或具体文件，并说明原因。
+- 修改前先确认当前小任务的文件边界；修改后只对受影响文件做必要验证。
 
-**违规后果：**
-- 所有修改将在代码审查时被拒绝
-- 必须将修改迁移到对应的模块化文件
-- 这些文件已从主代码库中移除，仅作历史备份
+### 1.2 禁止修改旧单体文件
 
-### ✅ 正确的开发流程
+以下旧单体文件只作历史参考，不得修改：
 
-**添加新API端点：**
-1. 在 `server/models/` 创建或扩展数据模型
-2. 在 `server/routes/` 创建或扩展路由模块
-3. 在 `server/server-new.js` 注册路由（如是新模块）
+- `server/server.js`
+- `public/styles.css`
 
-**添加新样式：**
-1. 确定样式属于哪个层级（base/layout/components/pages/responsive/utilities）
-2. 编辑对应的CSS模块文件
-3. 如需新模块，在 `public/css/main.css` 添加导入
+当前入口与样式入口：
 
----
+- 后端：`server/server-new.js`
+- CSS：`public/css/main.css`
 
-## 📁 静态资源管理规范
+### 1.3 禁止绕过模块化结构
 
-### 前端资源目录结构
+- 不在路由中直接写 SQL；SQL 与持久化逻辑必须放在 `server/models/`。
+- 不新增根级 `public/*.js` 功能脚本；前端功能代码必须放在 `public/js/`。
+- 不在 `public/index.html` 写非必要内联样式；样式放入 `public/css/` 对应模块。
+- Service Worker 缓存列表必须指向当前模块化入口，不能缓存旧 `styles.css` 或旧单体入口。
 
-所有前端静态资源**必须**放在 `public/` 目录下：
+## 2. 后端模块化规范
 
-```
-public/
-├── css/                    # CSS模块（27个）
-│   ├── main.css           # CSS入口文件
-│   ├── base/              # 基础层
-│   ├── layout/            # 布局层
-│   ├── components/        # 组件层
-│   ├── pages/             # 页面层
-│   ├── responsive/        # 响应式层
-│   └── utilities/         # 工具类
-├── js/                    # JavaScript模块
-├── assets/                # 图片、字体等
-├── config.js              # 前端配置
-└── index.html             # 主页面
+当前后端按以下结构组织：
+
+```text
+server/
+├── server-new.js       # 当前服务入口，只负责装配中间件、静态资源和路由
+├── config/             # 配置
+├── middleware/         # 认证、CSRF、通用中间件
+├── models/             # 数据模型与持久化
+├── routes/             # HTTP 路由
+└── utils/              # 工具函数
 ```
 
-### HTML资源引用规范
+当前模型集中导出于 `server/models/index.js`：
 
-**CSS引用：**
-```html
-<!-- ✅ 正确：使用模块化CSS入口 -->
-<link rel="stylesheet" href="css/main.css" />
+- `database`
+- `user`
+- `session`
+- `media`
+- `todo`
+- `audit`
+- `device`
+- `borrow`
+- `team`
+- `profile`
 
-<!-- ❌ 错误：引用已归档的单体文件 -->
-<link rel="stylesheet" href="styles.css" />
-```
+### 2.1 新增 API 的流程
 
-**JavaScript引用：**
-```html
-<!-- ✅ 正确：相对于public目录的路径 -->
-<script src="js/app-modular.js"></script>
-<script src="config.js"></script>
+1. 在 `server/models/` 新建或扩展模型，封装查询、写入、删除和持久化。
+2. 在 `server/routes/` 新建或扩展路由，只处理 HTTP、认证、权限、参数校验和响应格式。
+3. 如果是新路由模块，在 `server/server-new.js` 注册。
+4. 更新 `docs/GUIDE.md` 的 API 参考。
 
-<!-- ❌ 错误：使用绝对路径或错误路径 -->
-<script src="/public/js/app-modular.js"></script>
-```
-
-### 服务器静态资源配置
-
-**Express静态资源中间件必须指向 `public` 目录：**
+示例：
 
 ```javascript
-// ✅ 正确配置 (server/server-new.js)
-app.use(
-  express.static(path.join(config.ROOT_DIR, 'public'), {
-    index: 'index.html',
-    // ...
-  })
-);
+// server/models/feature.js
+const { all } = require('./database');
 
-// ❌ 错误：指向项目根目录
-app.use(express.static(config.ROOT_DIR, { ... }));
-```
-
-**说明：**
-- `config.ROOT_DIR` 是项目根目录
-- 静态资源中间件应指向 `public` 子目录
-- 这样 URL `/css/main.css` 才能正确映射到 `public/css/main.css`
-- 必须设置 `index: 'index.html'` 以正确提供首页
-
-### 常见问题
-
-**问题1：手机端提示"未找到请求的资源"**
-
-**原因：**
-- HTML引用了已归档的 `styles.css`
-- 或静态资源目录配置错误
-
-**解决：**
-1. 检查 `public/index.html` 中CSS引用是否为 `css/main.css`
-2. 检查 `server/server-new.js` 静态中间件是否指向 `public` 目录
-3. 重启服务器并清除浏览器缓存
-
-**问题2：PC端正常但手机端异常**
-
-**原因：** PC端浏览器缓存了旧版本资源
-
-**解决：** 
-- PC端清除缓存（Ctrl+Shift+Delete）
-- 强制刷新（Ctrl+F5）
-- 检查Network面板是否有404错误
-
-**示例 - 添加新API端点：**
-```javascript
-// 步骤1: 在 server/models/feature.js 创建模型
-const { all, run, saveDatabase } = require('./database');
-
-function getAllFeatures() {
+function getFeatures() {
   return all('SELECT * FROM features ORDER BY created_at DESC');
 }
 
-function createFeature(data) {
-  run('INSERT INTO features (id, name) VALUES (?, ?)', [data.id, data.name]);
-  saveDatabase();
-}
-
-module.exports = { getAllFeatures, createFeature };
-
-// 步骤2: 在 server/routes/feature.js 创建路由
-const express = require('express');
-const router = express.Router();
-const { feature } = require('../models');
-const { requireAuth } = require('../middleware/auth');
-
-router.get('/', requireAuth, (req, res) => {
-  const features = feature.getAllFeatures();
-  res.json({ ok: true, features });
-});
-
-module.exports = router;
-
-// 步骤3: 在 server/server-new.js 注册路由
-const featureRoutes = require('./routes/feature');
-app.use('/api/features', featureRoutes);
+module.exports = { getFeatures };
 ```
 
----
-
-## 🚨 强制性规范
-
-### 1. 代码模块化规范（必须遵守）
-
-**禁止向 `server/server.js` 写入冗余代码！**
-
-项目已完成模块化重构，所有新代码必须按照以下结构组织：
-
-```
-server/
-├── config/          # 配置文件
-│   ├── index.js     # 主配置
-│   └── permissions.js  # 权限配置
-│
-├── middleware/      # 中间件
-│   ├── auth.js      # 认证中间件
-│   ├── csrf.js      # CSRF保护
-│   └── index.js     # 通用中间件
-│
-├── models/          # 数据模型（必须使用）
-│   ├── database.js  # 数据库核心
-│   ├── user.js      # 用户模型
-│   ├── session.js   # 会话模型
-│   ├── media.js     # 媒体模型
-│   ├── todo.js      # 待办模型
-│   ├── audit.js     # 审计模型
-│   └── index.js     # 模型导出
-│
-├── routes/          # 路由模块（必须使用）
-│   ├── auth.js      # 认证路由
-│   ├── users.js     # 用户管理路由
-│   ├── media.js     # 媒体路由（待添加）
-│   ├── todos.js     # 待办路由（待添加）
-│   └── ... 其他路由
-│
-├── utils/           # 工具函数
-│   ├── index.js     # 通用工具
-│   └── logger.js    # 日志工具
-│
-├── controllers/     # 业务逻辑（可选）
-│
-└── server-new.js    # 主服务器文件（精简版，192行）
-```
-
-### 2. 新功能开发流程
-
-#### ❌ 错误做法（禁止）
-```javascript
-// 不要在 server.js 中直接写路由和业务逻辑
-app.post('/api/some-feature', (req, res) => {
-  // 100+ 行业务逻辑
-  // 数据库操作
-  // ...
-});
-```
-
-#### ✅ 正确做法（必须）
-
-**步骤 1: 在 models/ 创建数据模型**
-```javascript
-// server/models/feature.js
-const { all, get, run, saveDatabase } = require('./database');
-
-function getFeatureById(id) {
-  return get('SELECT * FROM features WHERE id = ?', [id]);
-}
-
-module.exports = { getFeatureById };
-```
-
-**步骤 2: 在 routes/ 创建路由**
 ```javascript
 // server/routes/feature.js
 const express = require('express');
@@ -235,217 +86,163 @@ const router = express.Router();
 const { feature: featureModel } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 
-router.get('/:id', requireAuth, (req, res) => {
-  const feature = featureModel.getFeatureById(req.params.id);
-  res.json({ ok: true, feature });
+router.get('/', requireAuth, (req, res) => {
+  res.json({ ok: true, items: featureModel.getFeatures() });
 });
 
 module.exports = router;
 ```
 
-**步骤 3: 在 server-new.js 注册路由**
 ```javascript
 // server/server-new.js
 const featureRoutes = require('./routes/feature');
 app.use('/api/features', featureRoutes);
 ```
 
-### 3. 数据库操作规范
+### 2.2 路由层禁止事项
 
-**❌ 禁止直接操作数据库**
-```javascript
-// 不要在路由中直接写SQL
-app.get('/api/users', (req, res) => {
-  const users = db.prepare('SELECT * FROM users').all();
-  res.json(users);
-});
+路由模块不得：
+
+- 直接导入 `run/get/all/transaction/saveDatabase` 写业务 SQL。
+- 拼接 SQL 或直接操作表。
+- 承担复杂业务状态转换。
+- 处理与 HTTP 无关的持久化细节。
+
+路由模块可以：
+
+- 读取 `req.params`、`req.query`、`req.body`。
+- 做输入校验与权限控制。
+- 调用模型层函数。
+- 返回统一响应。
+
+### 2.3 权限与安全
+
+常用中间件：
+
+- `requireAuth`：要求登录。
+- `requireAdmin`：要求管理员。
+- `requireEditor`：要求编辑或管理员。
+- `requireAuthForUploads`：保护上传文件访问。
+- `csrfProtect`：全局 CSRF 保护。
+
+写操作必须确认权限；敏感操作必须记录审计日志或活动日志。日志持久化也应由模型层封装。
+
+## 3. 前端模块化规范
+
+当前前端按以下结构组织：
+
+```text
+public/
+├── index.html
+├── config.js
+├── service-worker.js
+├── css/
+│   ├── main.css
+│   ├── base/
+│   ├── layout/
+│   ├── components/
+│   ├── pages/
+│   ├── responsive/
+│   └── utilities/
+└── js/
+    ├── app-modular.js
+    ├── core/
+    ├── modules/
+    ├── ui/
+    └── utils/
 ```
 
-**✅ 必须通过模型层**
-```javascript
-// 使用封装好的模型方法
-const { user: userModel } = require('../models');
-const users = userModel.getAllUsers();
-```
+### 3.1 JavaScript
 
-### 4. 中间件使用规范
+- 页面业务模块放在 `public/js/modules/`。
+- UI 基础能力放在 `public/js/ui/`。
+- 状态、DOM、配置放在 `public/js/core/`。
+- 请求、存储、辅助函数放在 `public/js/utils/`。
+- 新增 DOM 引用先集中到 `public/js/core/dom.js`，再在业务模块使用。
+- HTTP JSON 请求优先复用 `public/js/utils/api.js` 的 `requestJSON()`。
+- 文件上传可按现有 XHR + CSRF 模式实现，但必须放在对应业务模块中。
 
-**已提供的中间件：**
-- `requireAuth` - 要求用户登录
-- `requireAdmin` - 要求管理员权限
-- `requireEditor` - 要求编辑或管理员权限
-- `requirePermission(permission)` - 要求特定权限
-- `csrfProtect` - CSRF保护（自动应用）
+禁止：
 
-**示例：**
-```javascript
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+- 新增根级 `public/*.js` 功能脚本。
+- 使用全局函数和 inline `onclick` 绑定业务行为。
+- 在 JS 中写可用 CSS 类表达的布局/视觉内联样式。
 
-router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
-  // 删除操作
-});
-```
+### 3.2 CSS
 
-### 5. 配置管理规范
+CSS 必须写入对应层级模块：
 
-**❌ 不要硬编码配置**
-```javascript
-const PORT = 3002;
-const DB_PATH = './server/data/studio.sqlite';
-```
+| 层级 | 用途 |
+| --- | --- |
+| `base/` | 变量、重置、排版、动画基础。 |
+| `layout/` | 工作区、导航、网格、面板等布局。 |
+| `components/` | 按钮、表单、卡片、弹窗、表格等通用组件。 |
+| `pages/` | 单页面或功能区专属样式。 |
+| `responsive/` | 断点和触摸设备覆盖。 |
+| `utilities/` | 工具类。 |
 
-**✅ 使用配置模块**
-```javascript
-const config = require('./config');
-const PORT = config.PORT;
-const DB_PATH = config.DB_PATH;
-```
+规则：
 
-### 6. 日志记录规范
+- 新 CSS 文件必须在 `public/css/main.css` 中导入。
+- 间距优先使用 `--spacing-*` 令牌。
+- 颜色、圆角、阴影、动效优先使用现有设计令牌。
+- 不把页面样式塞进组件模块，也不把组件通用样式散落到页面模块。
+- 不写不归属任何模块的“杂项 CSS”。
 
-**使用统一的日志工具：**
-```javascript
-const { logServerEvent } = require('../utils/logger');
+## 4. UI/UX 强制项
 
-logServerEvent('info', 'feature_created', {
-  featureId: newFeature.id,
-  userId: req.user.id
-});
-```
+UI 改动必须满足以下最低要求：
 
-### 7. 错误处理规范
+- 交互目标尺寸不低于 44px。
+- 图标按钮必须有可访问名称：可见文字、`aria-label` 或等效语义。
+- 键盘焦点必须可见，不能移除 `:focus-visible`。
+- 表单字段必须有可见 label，错误信息应靠近对应字段。
+- 状态不能只靠颜色表达，应配合文字、图形或语义。
+- 小屏不应产生页面级横向滚动。
+- 动效应控制在 150-300ms，并尊重 `prefers-reduced-motion`。
+- 结构性图标使用统一 SVG/文本策略，不使用 emoji 作为导航、状态或系统控制图标。
 
-**统一使用try-catch和错误中间件：**
-```javascript
-router.post('/', requireAuth, async (req, res, next) => {
-  try {
-    const result = await someOperation();
-    res.json({ ok: true, result });
-  } catch (error) {
-    next(error); // 传递给错误处理中间件
-  }
-});
-```
+## 5. 配置与静态资源
 
-## 📋 代码审查检查清单
+- 配置从 `server/config/` 读取，不硬编码端口、路径、上传限制等运行配置。
+- Express 静态资源必须指向 `public/`。
+- `/uploads` 必须受认证保护。
+- Service Worker 缓存条目必须与当前文件结构一致。
+- PM2 等部署入口必须指向 `server/server-new.js`。
 
-在提交代码前，确保：
+## 6. 提交前检查清单
 
-- [ ] 没有在 `server.js` 中添加新的路由或业务逻辑
-- [ ] 数据库操作都通过 models/ 层完成
-- [ ] 路由已正确拆分到 routes/ 目录
-- [ ] 使用了正确的中间件进行权限控制
-- [ ] 配置项从 config/ 读取，不硬编码
-- [ ] 添加了适当的错误处理
-- [ ] 记录了关键操作的日志
-- [ ] 审计日志已记录（用户敏感操作）
+提交前确认：
 
-## 🔧 重构进度
+- [ ] 本次工作按小任务执行，没有非必要全局读取或扫描。
+- [ ] 未修改 `server/server.js`、`public/styles.css`。
+- [ ] 路由未新增直接 SQL。
+- [ ] 新后端持久化逻辑已放入 `server/models/`。
+- [ ] 新前端功能代码位于 `public/js/` 对应模块。
+- [ ] 新样式位于 `public/css/` 对应模块，并使用设计令牌。
+- [ ] 没有新增 HTML 内联样式或 inline 事件处理。
+- [ ] 触控目标、焦点、图标标签、表单标签满足 UI 强制项。
+- [ ] API 或架构变化已更新 `docs/GUIDE.md`。
+- [ ] 运行了与本次改动范围匹配的 lint、语法检查或手测。
 
-### 已完成 ✅
-- [x] 配置模块化 (config/)
-- [x] 工具函数提取 (utils/)
-- [x] 中间件提取 (middleware/)
-- [x] 数据库模型层 (models/)
-- [x] 认证路由 (routes/auth.js)
-- [x] 用户管理路由 (routes/users.js)
-- [x] 新版服务器入口 (server-new.js - 192行)
+## 7. 当前模块化状态
 
-### 待完成 ⏳
-- [ ] 媒体管理路由 (routes/media.js)
-- [ ] 待办事项路由 (routes/todos.js)
-- [ ] 团队管理路由 (routes/team.js)
-- [ ] 设备管理路由 (routes/devices.js)
-- [ ] 借用申请路由 (routes/borrow.js)
-- [ ] 留言墙路由 (routes/wishes.js)
-- [ ] 审计日志路由 (routes/audit.js)
-- [ ] 文件上传处理模块
-- [ ] 完整迁移到 server-new.js
+已完成并作为当前结构维护：
 
-## 🎯 目标
+- 配置模块：`server/config/`
+- 中间件模块：`server/middleware/`
+- 模型层：`server/models/`
+- 路由层：`server/routes/`
+- 当前入口：`server/server-new.js`
+- 前端模块：`public/js/`
+- CSS 模块：`public/css/`
 
-通过模块化重构：
-1. **提高可维护性** - 每个文件职责清晰
-2. **提升代码质量** - 统一的代码风格和规范
-3. **便于团队协作** - 模块独立，减少冲突
-4. **简化测试** - 模块化便于单元测试
-5. **降低复杂度** - 从3469行降至192行主文件
+仍需持续治理的方向：
 
-## ⚠️ 违规处理
-
-如果发现代码违反上述规范：
-1. 代码审查不通过
-2. 要求重构成模块化结构
-3. 记录到技术债务清单
+- 将历史遗留的路由直接 SQL 逐步迁移到模型层。
+- 将根级前端功能脚本迁入 `public/js/`。
+- 清理内联样式、重复 CSS 和低于 44px 的交互控件。
 
 ---
 
-## 🔒 安全性配置
-
-### 登录速率限制
-
-**配置文件：** `server/routes/auth.js`
-
-**当前设置：**
-- **时间窗口**: 1分钟（60秒）
-- **最大尝试次数**: 5次
-- **限流消息**: "登录尝试次数过多，请1分钟后再试。"
-
-**实现代码：**
-```javascript
-const rateLimit = require('express-rate-limit');
-
-// 登录限流：1分钟内最多5次尝试
-const loginLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1分钟
-  max: 5,
-  message: { error: '登录尝试次数过多，请1分钟后再试。' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// 应用到登录路由
-router.post('/login', loginLimiter, (req, res) => {
-  // 登录逻辑
-});
-```
-
-**工作原理：**
-1. 使用 `express-rate-limit` 中间件跟踪每个IP的请求
-2. 在1分钟窗口内，同一IP最多允许5次登录尝试
-3. 超过限制后，返回429 Too Many Requests状态码
-4. 1分钟后计数器自动重置
-
-**修改限流配置：**
-
-如需调整限流参数，修改 `server/routes/auth.js` 中的 `loginLimiter` 配置：
-
-```javascript
-// 更严格：30秒3次
-windowMs: 30 * 1000,
-max: 3,
-
-// 更宽松：5分钟10次
-windowMs: 5 * 60 * 1000,
-max: 10,
-```
-
-**安全建议：**
-- ✅ 当前配置（1分钟5次）适合大多数场景
-- ✅ 防止暴力破解攻击
-- ✅ 不影响正常用户登录体验
-- ⚠️ 修改前请评估业务影响
-
-### 其他安全措施
-
-项目已实施的安全措施：
-- **Helmet.js**: HTTP安全头（HSTS, CSP等）
-- **CSRF保护**: 基于HMAC的CSRF令牌
-- **会话管理**: 安全的Cookie配置
-- **审计日志**: 记录所有敏感操作
-- **密码加密**: 使用bcrypt加密存储（如已实现）
-- **权限控制**: 基于角色的访问控制（guest/editor/admin）
-
----
-
-**记住：保持模块化，让代码更清晰！** 🚀
+**最后更新**：2026-06-05

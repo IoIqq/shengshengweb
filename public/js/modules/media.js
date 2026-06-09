@@ -14,6 +14,26 @@ import { showFeedback, setPending } from '../ui/feedback.js';
 // 上传队列
 let uploadQueue = [];
 
+function createUploadQueueItem(file) {
+  const isImage = file.type.startsWith('image/');
+  return {
+    file,
+    isImage,
+    previewUrl: isImage ? URL.createObjectURL(file) : '',
+  };
+}
+
+function revokeUploadQueueItem(item) {
+  if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
+}
+
+function clearUploadQueue() {
+  uploadQueue.forEach(revokeUploadQueueItem);
+  uploadQueue = [];
+}
+
+const safeText = (value) => escapeHtml(String(value ?? ''));
+
 function addLocalActivity(title, detail) {
   if (!state.bootstrap) state.bootstrap = {};
   if (!Array.isArray(state.bootstrap.activity)) state.bootstrap.activity = [];
@@ -54,12 +74,16 @@ export function matchesSearch(item, search) {
   return source.includes(search.toLowerCase());
 }
 
-/**
- * 检查是否为管理员用户
- * @returns {boolean}
- */
+function currentRole() {
+  return state.session?.user?.role || state.bootstrap?.user?.role || '';
+}
+
+function canReviewMedia() {
+  return ['admin', 'editor'].includes(currentRole());
+}
+
 function isAdminUser() {
-  return state.session?.user?.role === 'admin';
+  return currentRole() === 'admin';
 }
 
 /**
@@ -74,17 +98,17 @@ export function renderMedia() {
     }));
 
   items = sortMedia(items, state.mediaSort);
-  const selectedCount = state.selectedMedia.size;
+  const selectedCount = canReviewMedia() ? state.selectedMedia.size : 0;
   const hasSelection = selectedCount > 0;
 
   if (!els.mediaGrid) return;
 
   const batchActionsHtml = hasSelection
-    ? `<div class="batch-actions-bar">
-        <span>${selectedCount} 项已选</span>
+    ? `<div class="batch-actions-bar" role="status" aria-live="polite">
+        <span>${safeText(selectedCount)} 项已选</span>
         <div class="batch-actions">
-          <button class="primary-btn" data-batch-action="approve" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>批量通过</button>
-          <button class="ghost-btn" data-batch-action="reject" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>批量退回</button>
+          <button class="primary-btn" data-batch-action="approve" type="button" aria-label="批量通过 ${safeText(selectedCount)} 个素材"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>批量通过</button>
+          <button class="ghost-btn" data-batch-action="reject" type="button" aria-label="批量退回 ${safeText(selectedCount)} 个素材"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>批量退回</button>
           <button class="ghost-btn" data-batch-action="clear" type="button">取消选择</button>
         </div>
       </div>`
@@ -94,9 +118,10 @@ export function renderMedia() {
     ? items
       .map(
         (item) => {
-          const isSelected = state.selectedMedia.has(item.id);
+          const canReview = canReviewMedia();
+          const isSelected = canReview && state.selectedMedia.has(item.id);
           const canDelete = isAdminUser();
-          const kindIcon = item.kind === 'video' ? '🎬' : '🖼️';
+          const kindLabel = item.kind === 'video' ? '视频' : '图片';
           const statusTone = item.reviewState === 'approved' ? 'success' : item.reviewState === 'rejected' ? 'danger' : 'warning';
 
           // 截断简介，超过100字显示省略号
@@ -106,11 +131,11 @@ export function renderMedia() {
 
           return `
             <article class="media-card media-card--enhanced ${isSelected ? 'is-selected' : ''}" data-media-id="${escapeHtml(item.id)}" data-review-state="${escapeHtml(item.reviewState)}">
-              <div class="media-select-overlay">
+              ${canReview ? `<div class="media-select-overlay">
                 <input type="checkbox" class="media-checkbox" data-media-select="${escapeHtml(item.id)}" ${isSelected ? 'checked' : ''} aria-label="选择 ${escapeHtml(item.title)}" />
-              </div>
+              </div>` : ''}
               <div class="media-thumb-wrapper">
-                <img class="media-thumb" alt="${escapeHtml(item.title)}" loading="lazy" src="${escapeHtml(item.thumb || '')}" />
+                <img class="media-thumb" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" src="${escapeHtml(item.thumb || '')}" />
                 <div class="media-thumb-overlay">
                   <button class="media-preview-btn" data-media-preview="${escapeHtml(item.id)}" type="button" aria-label="预览素材">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -119,7 +144,7 @@ export function renderMedia() {
                     </svg>
                   </button>
                 </div>
-                <span class="media-kind-badge" aria-label="${item.kind === 'video' ? '视频' : '图片'}">${kindIcon}</span>
+                <span class="media-kind-badge" aria-label="${kindLabel}">${kindLabel}</span>
               </div>
               <div class="media-body">
                 <div class="media-topline">
@@ -133,8 +158,8 @@ export function renderMedia() {
                 <p class="media-note" title="${escapeHtml(item.note || '')}">${escapeHtml(notePreview)}</p>
                 <div class="tag-row">${(item.tags || []).map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>
                 <div class="media-actions">
-                  ${
-    item.reviewState === 'pending'
+                  ${canReview
+    ? item.reviewState === 'pending'
       ? `<button class="primary-btn media-action-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button" title="通过审核">
                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                              <polyline points="20 6 9 17 4 12"/>
@@ -150,6 +175,7 @@ export function renderMedia() {
       : item.reviewState === 'approved'
         ? `<button class="ghost-btn media-action-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button">撤回</button>`
         : `<button class="ghost-btn media-action-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button">重新通过</button>`
+    : ''
     }
                   ${canDelete ? `<button class="ghost-btn media-action-btn media-action-btn--danger" data-media-delete="${escapeHtml(item.id)}" type="button" title="删除素材">删除</button>` : ''}
                 </div>
@@ -167,7 +193,8 @@ export function renderMedia() {
  * @returns {Array}
  */
 export function reviewItems() {
-  let items = (state.bootstrap?.media || []).filter((item) => reviewMatchesFilter(item));
+  let items = (state.bootstrap?.media || [])
+    .filter((item) => reviewMatchesFilter(item) && matchesSearch(item, state.reviewSearch));
   return sortReview(items, state.reviewSort);
 }
 
@@ -178,7 +205,8 @@ export function reviewItems() {
  */
 function reviewMatchesFilter(item) {
   const filter = state.reviewFilter;
-  if (filter === 'all') return item.reviewState === 'pending';
+  if (item.reviewState !== 'pending') return false;
+  if (filter === 'all') return true;
   return item.kind === filter;
 }
 
@@ -192,38 +220,53 @@ export function renderReview() {
     els.reviewCount.textContent = `${items.length} 条待处理 (图片: ${stats.image}, 视频: ${stats.video})`;
   }
   if (!els.reviewStack) return;
+  const hasPendingItems = (state.bootstrap?.media || []).some((item) => item.reviewState === 'pending');
   els.reviewStack.innerHTML = items.length
     ? items
       .map(
-        (item) => `
-            <article class="review-item">
-              <img src="${escapeHtml(item.thumb || '')}" alt="${escapeHtml(item.title)}" loading="lazy" />
+        (item) => {
+          const kindLabel = item.kind === 'video' ? '视频' : '图片';
+          const noteText = item.note || '暂无素材说明';
+          return `
+            <article class="review-item media-card--enhanced" data-review-id="${escapeHtml(item.id)}" data-review-kind="${escapeHtml(item.kind || '')}">
+              <div class="review-thumb-wrap media-thumb-wrapper">
+                <img class="media-thumb" src="${escapeHtml(item.thumb || '')}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" />
+                <div class="media-thumb-overlay media-thumb-overlay--visible">
+                  <button class="media-preview-btn" data-media-preview="${escapeHtml(item.id)}" type="button" aria-label="预览 ${escapeHtml(item.title || '待审素材')}">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <span class="media-kind-badge">${escapeHtml(kindLabel)}</span>
+              </div>
               <div class="review-copy">
                 <div class="review-head">
                   <div>
-                    <h3>${escapeHtml(item.title)}</h3>
-                    <p class="review-meta">${escapeHtml(item.source)} · ${escapeHtml(item.author)} · ${escapeHtml(item.kind)}</p>
+                    <h3>${escapeHtml(item.title || '未命名素材')}</h3>
+                    <p class="review-meta">${escapeHtml(item.source || '-')} · ${escapeHtml(item.author || '-')} · ${escapeHtml(kindLabel)}</p>
                     ${item.uploadedAt ? `<p class="review-meta"><small>上传于 ${escapeHtml(formatDatetime(item.uploadedAt))}</small></p>` : ''}
                   </div>
-                  <span class="status-pill">待审</span>
+                  <span class="status-pill status-pill--warning" data-status="pending">待审</span>
                 </div>
-                ${item.note ? `<p class="review-note">${escapeHtml(item.note)}</p>` : ''}
+                <p class="review-note">${escapeHtml(noteText)}</p>
+                <div class="tag-row">${(item.tags || []).map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>
                 <label class="field review-note-field">
                   <span>审片备注</span>
-                  <textarea class="review-note-input" data-review-note-for="${escapeHtml(item.id)}" rows="2" placeholder="可选：填写通过或退回说明"></textarea>
+                  <textarea class="review-note-input" data-review-note-for="${escapeHtml(item.id)}" rows="2" placeholder="可选：填写通过或退回说明" aria-label="${escapeHtml(item.title || '素材')} 的审片备注"></textarea>
                 </label>
-                <div class="tag-row">${(item.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</div>
                 <div class="review-actions">
-                  <button class="primary-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>通过</button>
-                  <button class="ghost-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>退回</button>
-                  ${isAdminUser() ? `<button class="ghost-btn" data-media-delete="${escapeHtml(item.id)}" type="button">删除</button>` : ''}
+                  <button class="primary-btn media-action-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button" aria-label="通过 ${escapeHtml(item.title || '该素材')}"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>通过</button>
+                  <button class="ghost-btn media-action-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button" aria-label="退回 ${escapeHtml(item.title || '该素材')}"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>退回</button>
+                  ${isAdminUser() ? `<button class="ghost-btn media-action-btn media-action-btn--danger" data-media-delete="${escapeHtml(item.id)}" type="button" aria-label="删除 ${escapeHtml(item.title || '该素材')}">删除</button>` : ''}
                 </div>
               </div>
             </article>
-          `,
+          `;
+        },
       )
       .join('')
-    : '<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已处理完成。<button class="link-btn" type="button" data-jump="media">去素材库上传</button> 或等待服务器同步。</p></div>';
+    : hasPendingItems
+      ? '<div class="empty-state"><strong>没有符合筛选条件的待审素材</strong><p>可以调整搜索关键词、类型筛选或排序方式。</p></div>'
+      : '<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已处理完成。<button class="link-btn" type="button" data-jump="media">去素材库上传</button> 或等待服务器同步。</p></div>';
 }
 
 /**
@@ -394,7 +437,7 @@ export function openUploadDialog() {
   const overlay = document.getElementById('upload-overlay');
   const fileInput = document.getElementById('upload-file-input');
   if (!overlay) return;
-  uploadQueue = [];
+  clearUploadQueue();
   renderUploadQueue();
   resetUploadProgress();
   overlay.hidden = false;
@@ -407,7 +450,7 @@ export function closeUploadDialog() {
   overlay.classList.remove('is-open');
   setTimeout(() => {
     overlay.hidden = true;
-    uploadQueue = [];
+    clearUploadQueue();
     renderUploadQueue();
     resetUploadProgress();
   }, 200);
@@ -426,8 +469,8 @@ function resetUploadProgress() {
 
 function addFilesToQueue(files) {
   for (const file of files) {
-    if (uploadQueue.find(f => f.name === file.name && f.size === file.size)) continue;
-    uploadQueue.push(file);
+    if (uploadQueue.find(item => item.file.name === file.name && item.file.size === file.size)) continue;
+    uploadQueue.push(createUploadQueueItem(file));
   }
   renderUploadQueue();
   const confirmBtn = document.getElementById('upload-confirm-btn');
@@ -435,7 +478,8 @@ function addFilesToQueue(files) {
 }
 
 function removeFileFromQueue(index) {
-  uploadQueue.splice(index, 1);
+  const [removed] = uploadQueue.splice(index, 1);
+  revokeUploadQueueItem(removed);
   renderUploadQueue();
   const confirmBtn = document.getElementById('upload-confirm-btn');
   if (confirmBtn) confirmBtn.disabled = uploadQueue.length === 0;
@@ -448,10 +492,10 @@ function renderUploadQueue() {
     container.innerHTML = '';
     return;
   }
-  container.innerHTML = uploadQueue.map((file, i) => {
-    const isImage = file.type.startsWith('image/');
-    const preview = isImage
-      ? `<img src="${URL.createObjectURL(file)}" alt="" class="upload-preview-thumb" />`
+  container.innerHTML = uploadQueue.map((item, i) => {
+    const file = item.file;
+    const preview = item.isImage
+      ? `<img src="${escapeHtml(item.previewUrl)}" alt="" class="upload-preview-thumb" />`
       : '<span class="upload-preview-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 7 1 1 7 1 23 23 23 23 7"/><circle cx="8" cy="7" r="1"/></svg></span>';
     return `<div class="upload-queue-item">
       ${preview}
@@ -479,7 +523,7 @@ async function doUpload() {
   if (cancelBtn) cancelBtn.disabled = true;
 
   const formData = new FormData();
-  uploadQueue.forEach(f => formData.append('files', f));
+  uploadQueue.forEach(item => formData.append('files', item.file));
 
   try {
     const csrfToken = readCookie('ss_csrf');
@@ -522,7 +566,8 @@ async function doUpload() {
       addLocalActivity('素材上传', `上传了 ${uploadedItems.length} 个素材`);
     }
 
-    Toast.success(`成功上传 ${uploadQueue.length} 个素材`);
+    const uploadedCount = uploadQueue.length;
+    Toast.success(canReviewMedia() ? `成功上传 ${uploadedCount} 个素材` : `成功上传 ${uploadedCount} 个素材，等待审核`);
     closeUploadDialog();
     renderMedia();
   } catch (error) {

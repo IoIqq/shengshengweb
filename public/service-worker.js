@@ -7,25 +7,41 @@
  * - Stale While Revalidate: HTML（返回缓存，后台更新）
  */
 
-const CACHE_NAME = 'shengsheng-v1';
+const CACHE_NAME = 'shengsheng-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/styles.css',
+  '/css/main.css',
   '/config.js',
   '/favicon.svg',
-  '/wish-wall.js',
-  '/mobile-nav.js',
   '/js/app-modular.js',
   '/js/core/state.js',
   '/js/core/dom.js',
   '/js/core/config.js',
+  '/js/core/module-loader.js',
+  '/js/core/proxies.js',
+  '/js/core/router.js',
+  '/js/core/events.js',
+  '/js/core/profile.js',
+  '/js/core/bootstrap.js',
+  '/js/core/templates.js',
   '/js/ui/feedback.js',
   '/js/ui/loading.js',
   '/js/ui/navigation.js',
+  '/js/ui/mobile-nav.js',
   '/js/ui/toast.js',
+  '/js/modules/wish-wall.js',
   '/js/utils/api.js',
   '/js/utils/helpers.js',
+  '/templates/overview.html',
+  '/templates/media-library.html',
+  '/templates/review.html',
+  '/templates/todo.html',
+  '/templates/device.html',
+  '/templates/borrow.html',
+  '/templates/team.html',
+  '/templates/topics.html',
+  '/templates/settings.html',
 ];
 
 // 安装事件 - 预缓存静态资源

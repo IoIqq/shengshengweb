@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { device: deviceModel } = require('../models');
 const { run, saveDatabase } = require('../models/database');
-const { requireAuth, requireAdmin, requireEditor } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireEditor, requirePermission } = require('../middleware/auth');
 const config = require('../config');
 const { nowIso } = require('../utils');
 
@@ -61,7 +61,7 @@ function logDeviceActivity(title, meta, detail) {
 }
 
 // GET /api/devices/options - datalist 推荐数据（先于 /:id 注册避免被吞）
-router.get('/options', requireAuth, (req, res) => {
+router.get('/options', requireAuth, requirePermission('device:read'), (req, res) => {
   try {
     res.json({
       ok: true,
@@ -75,7 +75,7 @@ router.get('/options', requireAuth, (req, res) => {
 });
 
 // GET /api/devices - Get device list with filters
-router.get('/', requireAuth, (req, res) => {
+router.get('/', requireAuth, requirePermission('device:read'), (req, res) => {
   try {
     const items = deviceModel.getDeviceList(req.query || {});
     res.json({ ok: true, items });
@@ -85,7 +85,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // GET /api/devices/:id - Get single device
-router.get('/:id', requireAuth, (req, res) => {
+router.get('/:id', requireAuth, requirePermission('device:read'), (req, res) => {
   try {
     const id = String(req.params.id || '');
     const device = deviceModel.getDeviceById(id);

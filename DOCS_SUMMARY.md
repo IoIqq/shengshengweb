@@ -1,114 +1,44 @@
-# 📚 文档清单总结
+# 文档整合历史记录
 
-## ✅ 当前活跃文档（5个）
+本文记录 2026-06-04 文档整合工作的历史结果，不作为当前开发规范的来源。当前开发规范以 `docs/CODE_STANDARDS.md` 为准，当前架构/API/部署说明以 `docs/GUIDE.md` 为准。
 
-### 根目录
-1. **[README.md](README.md)** - 项目主页，快速开始
-2. **[REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)** - 模块化重构报告
-3. **[UI_OPTIMIZATION_P2_COMPLETE.md](UI_OPTIMIZATION_P2_COMPLETE.md)** - UI间距优化报告
+## 当前文档职责
 
-### docs/ 目录
-4. **[docs/README.md](docs/README.md)** - 文档导航索引
-5. **[docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)** - 开发规范 ⚠️必读
-6. **[docs/GUIDE.md](docs/GUIDE.md)** - 完整开发指南
+| 文档 | 当前职责 |
+| --- | --- |
+| [README.md](README.md) | 项目快速开始与入口导航。 |
+| [docs/README.md](docs/README.md) | docs 目录索引。 |
+| [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md) | 模块化开发强制规范。 |
+| [docs/GUIDE.md](docs/GUIDE.md) | 架构、部署、维护与 API 指南。 |
+| [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) | 模块化重构历史报告。 |
+| [UI_OPTIMIZATION_P2_COMPLETE.md](UI_OPTIMIZATION_P2_COMPLETE.md) | UI 间距优化历史报告。 |
+| [DOCS_SUMMARY.md](DOCS_SUMMARY.md) | 本文档：文档整合历史记录。 |
 
----
+## 历史整合结果
 
-## 📋 文档用途速查
+2026-06-04 的目标是把分散在项目中的阶段性说明、部署说明、维护说明和 UI 报告合并为少量可维护入口，并把历史材料归档。
 
-| 我想... | 查看文档 |
-|---------|---------|
-| 快速启动项目 | [README.md](README.md) 快速开始章节 |
-| 了解项目结构 | [README.md](README.md) 项目结构章节 |
-| 开始开发新功能 | [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md) ⚠️必读 |
-| 查看完整架构 | [docs/GUIDE.md](docs/GUIDE.md) 架构章节 |
-| 部署到服务器 | [docs/GUIDE.md](docs/GUIDE.md) 部署章节 |
-| 维护和故障排除 | [docs/GUIDE.md](docs/GUIDE.md) 维护章节 |
-| 查API接口文档 | [docs/GUIDE.md](docs/GUIDE.md) API章节 |
-| 了解重构历史 | [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) |
-| 了解UI优化 | [UI_OPTIMIZATION_P2_COMPLETE.md](UI_OPTIMIZATION_P2_COMPLETE.md) |
+整合后的原则：
 
----
+- 当前规范只维护在 `docs/CODE_STANDARDS.md`。
+- 当前架构、部署、维护、API 只维护在 `docs/GUIDE.md`。
+- 根 `README.md` 只承担快速开始和导航职责。
+- 阶段完成报告保留为历史参考，不作为当前实现的权威来源。
+- `docs/archive/` 和 `_archive/` 仅供回溯，不应被新开发引用为规范。
 
-## 📊 文档整合效果
+## 归档范围
 
-**整合前**: 18个文档，内容重复、难以维护
-**整合后**: 6个核心文档，清晰简洁
+历史文档已移至 `docs/archive/` 或 `_archive/`，包括：
 
-| 类型 | 整合前 | 整合后 | 减少 |
-|------|--------|--------|------|
-| 开发文档 | 6个 | 2个 | -67% |
-| 项目说明 | 3个 | 1个 | -67% |
-| 报告文档 | 9个 | 3个 | -67% |
-| **总计** | **18个** | **6个** | **-67%** |
+- 旧版项目指南、部署指南、维护手册。
+- 阶段完成报告和优化总结。
+- 旧单体后端与旧单体样式文件。
 
----
+## 维护建议
 
-## 🗄️ 归档文档
+- 新增功能后，更新 `docs/GUIDE.md` 的 API 或架构章节。
+- 架构约束变化后，更新 `docs/CODE_STANDARDS.md`。
+- 不再新增阶段性“完成报告”作为长期活跃文档；如确需记录历史，写入归档或本文的历史记录章节。
+- 避免在多个文档重复维护同一事实。
 
-已移至 `docs/archive/` 和 `_archive/`：
-- 原 PROJECT_GUIDE.md
-- 原 DEPLOYMENT.md
-- 原 MAINTENANCE.md
-- 各阶段完成报告（PHASE1/2、UI优化步骤1等）
-- 旧代码文件（server.js、styles.css）
-
----
-
-## ✨ 文档质量提升
-
-### 整合前的问题
-- ❌ 内容分散在18个文件
-- ❌ 重复内容多（部署步骤重复3次）
-- ❌ 查找困难（不知道看哪个）
-- ❌ 维护成本高（改一处要改多处）
-
-### 整合后的优势
-- ✅ 6个核心文档，职责清晰
-- ✅ 无重复内容
-- ✅ 快速索引导航
-- ✅ 易于维护更新
-
----
-
-## 🔄 文档更新记录
-
-**2026-06-04 17:00** - 文档整合完成
-- ✅ 精简 README.md（突出快速开始）
-- ✅ 精简 docs/README.md（清晰导航）
-- ✅ 精简 REFACTORING_SUMMARY.md（核心内容）
-- ✅ 创建文档清单（本文件）
-- ✅ 18个 → 6个核心文档（-67%）
-
-**2026-06-04 16:00** - UI优化文档
-- ✅ 创建 UI_OPTIMIZATION_P2_COMPLETE.md
-- ✅ 间距系统完整说明
-
-**2026-06-04 10:00** - 模块化重构文档
-- ✅ 创建 REFACTORING_SUMMARY.md
-- ✅ 创建 CODE_STANDARDS.md
-- ✅ 整合 GUIDE.md
-
----
-
-## 📌 维护建议
-
-### 何时更新文档
-
-1. **新增功能** → 更新 GUIDE.md API章节
-2. **架构变更** → 更新 CODE_STANDARDS.md
-3. **重大更新** → 更新 REFACTORING_SUMMARY.md
-4. **部署流程变化** → 更新 GUIDE.md 部署章节
-
-### 文档原则
-
-- ✅ **简洁为王** - 保留必要内容，删除冗余
-- ✅ **单一来源** - 同一信息只在一处维护
-- ✅ **清晰导航** - 用户能快速找到所需信息
-- ✅ **及时更新** - 代码改动后立即更新文档
-
----
-
-**文档状态**: ✅ 已整合并精简  
-**文档数量**: 6个核心 + 归档  
-**最后更新**: 2026-06-04
+**最后更新**：2026-06-05

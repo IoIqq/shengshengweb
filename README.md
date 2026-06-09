@@ -1,147 +1,221 @@
 # 声声网络思政工作室网站
 
-> 轻量级工作室协作管理系统 - 素材管理、审核、待办、团队协作、设备借用
+> **⚠️ 开发者必读：在开始任何开发工作前，务必先阅读 [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md) 和 [docs/GUIDE.md](docs/GUIDE.md)，了解项目架构、模块化规范和开发约束。**
 
-## ⚠️ 重要提示
+轻量级工作室协作管理系统，覆盖素材管理、审片、待办、团队协作、设备登记与借用、系统设置等日常场景。
 
-**项目已完成模块化重构（2026-06-04 + UI优化 2026-06-04）**
+## 📋 目录
 
-- ❌ **禁止修改** ~~`server/server.js`~~ 和 ~~`public/styles.css`~~ （已归档）
-- ✅ **使用** `server/server-new.js` 作为入口（208行 vs 旧版3,469行）
-- ✅ **使用** `public/css/` 模块化CSS（27个模块 + 8px网格系统）
-- 📖 **开发规范** [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)
-
----
-
-## 🚀 快速开始
-
-### Windows 一键启动
-
-```bash
-scripts/启动.bat
-```
-
-### 手动启动
-
-```bash
-npm install        # 安装依赖
-npm run dev        # 开发模式
-npm start          # 生产模式
-```
-
-### 手机访问
-
-```bash
-npm run network    # 显示局域网地址和二维码
-```
-
-**默认账号**
-- 管理员: `admin` / `ShengSheng@2026`
-- 访客: `guest` / `guest123`
+- [快速开始](#快速开始)
+- [开发前必读](#开发前必读)
+- [项目结构](#项目结构)
+- [文档导航](#文档导航)
+- [常用命令](#常用命令)
+- [技术栈](#技术栈)
+- [功能模块](#功能模块)
 
 ---
 
-## 📁 项目结构
+## 快速开始
 
+### 安装依赖
+
+```bash
+npm install
 ```
+
+### 开发模式
+
+```bash
+npm run dev
+```
+
+### 生产模式
+
+```bash
+npm start
+```
+
+### 局域网访问
+
+```bash
+npm run network
+```
+
+Windows 用户可使用一键启动脚本：`scripts/启动.bat`
+
+---
+
+## 开发前必读
+
+### ⚠️ 强制规范
+
+**在修改任何代码前，必须阅读：**
+
+1. **[docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)** — 模块化开发强制规范
+2. **[docs/GUIDE.md](docs/GUIDE.md)** — 架构、API、部署与维护指南
+3. **[docs/README.md](docs/README.md)** — 文档目录索引
+
+### 核心原则
+
+项目已完成模块化重构，后续开发必须严格遵守：
+
+- ✅ 后端入口使用 `server/server-new.js`
+- ✅ 后端新增能力按 `models -> routes -> server-new.js` 组织
+- ✅ 前端功能代码放在 `public/js/modules/` 对应模块
+- ✅ 样式只写入 `public/css/` 对应模块，通过 `public/css/main.css` 汇总
+- ❌ **禁止**修改旧单体文件 `server/server.js`、`public/styles.css`
+- ⚠️ 每次改动按模块分小任务执行，**非必要不做全局读取或全局扫描**
+
+---
+
+## 项目结构
+
+```text
 shengsheng-ideology-studio-site/
-├── server/                     # 后端（模块化）
-│   ├── server-new.js           # 入口 208行
-│   ├── config/                 # 配置层
-│   ├── middleware/             # 中间件（认证/CSRF/日志）
-│   ├── models/                 # 数据模型（9个）
-│   ├── routes/                 # 路由模块（10个，34个API）
-│   └── utils/                  # 工具函数
-│
-├── public/                     # 前端
-│   ├── css/                    # 27个CSS模块
-│   │   ├── base/               # 基础层（变量/重置/排版/动画）
-│   │   ├── layout/             # 布局层（网格/工作区/面板/导航）
-│   │   ├── components/         # 组件层（按钮/表单/卡片/模态框等）
-│   │   ├── pages/              # 页面层
-│   │   ├── responsive/         # 响应式（平板/手机/触摸）
-│   │   └── utilities/          # 工具类
-│   ├── js/                     # JavaScript模块
-│   └── index.html
-│
-├── docs/                       # 文档
-│   ├── CODE_STANDARDS.md       # 开发规范 ⚠️必读
-│   └── GUIDE.md                # 完整开发指南
-│
-└── _archive/                   # 归档代码（历史参考）
+├── server/                 # 后端模块
+│   ├── server-new.js       # ✅ 当前服务入口
+│   ├── config/             # 配置文件
+│   ├── middleware/         # 认证、CSRF、日志中间件
+│   ├── models/             # 数据模型与 SQLite 持久化
+│   ├── routes/             # API 路由模块
+│   ├── scripts/            # 维护脚本
+│   └── utils/              # 工具函数
+├── public/                 # 前端静态资源
+│   ├── index.html          # 主页面入口
+│   ├── css/                # 模块化 CSS
+│   │   ├── base/           # 变量、排版、动画
+│   │   ├── layout/         # 网格、工作区、导航
+│   │   ├── components/     # 按钮、表单、卡片、模态框
+│   │   ├── pages/          # 页面特定样式
+│   │   ├── responsive/     # 响应式断点
+│   │   └── main.css        # ✅ CSS 汇总入口
+│   └── js/                 # 原生 ES 模块
+│       ├── app-modular.js  # ✅ 应用主入口
+│       ├── core/           # 状态、DOM、配置
+│       ├── modules/        # 功能模块（dashboard、media、todo）
+│       ├── ui/             # UI 组件（toast、navigation）
+│       └── utils/          # 工具函数
+├── docs/                   # ✅ 当前开发文档
+│   ├── README.md           # 文档目录
+│   ├── CODE_STANDARDS.md   # 强制开发规范
+│   ├── GUIDE.md            # 架构与 API 指南
+│   └── archive/            # 历史报告归档
+└── _archive/               # 旧代码归档，仅供参考
 ```
 
 ---
 
-## 🛠️ 技术栈
+## 文档导航
 
-**前端**
-- HTML5/CSS3 模块化架构（27个CSS模块）
-- JavaScript ES6+ 模块化
-- 8px基础网格系统 + clamp()流体响应式
-- Service Worker 离线支持
+### 核心文档（必读）
 
-**后端**
-- Node.js >= 18 + Express
-- SQLite（sql.js）数据库
-- 模块化架构（27个模块，208行入口）
-- 登录限流（1分钟5次）+ CSRF防护
+| 文档 | 用途 |
+|-----|------|
+| [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md) | **强制开发规范** — 模块化架构、禁止事项、分层设计 |
+| [docs/GUIDE.md](docs/GUIDE.md) | **架构与 API 指南** — 技术栈、目录结构、API 参考 |
+| [docs/README.md](docs/README.md) | **文档索引** — 完整文档导航 |
 
----
+### 历史报告（参考）
 
-## 📱 响应式设计
-
-- ✅ **360px** - 超小屏手机（间距优化+150%）
-- ✅ **480px** - 小屏手机
-- ✅ **640px** - 标准手机
-- ✅ **768px** - 大屏手机/小平板
-- ✅ **900px** - iPad竖屏
-- ✅ **1200px+** - 桌面端
-
-触摸目标 ≥ 44px，符合WCAG标准
+| 文档 | 内容 |
+|-----|------|
+| [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) | 模块化重构完成报告 |
+| [UI_OPTIMIZATION_P2_COMPLETE.md](UI_OPTIMIZATION_P2_COMPLETE.md) | UI 间距优化完成报告 |
+| [DOCS_SUMMARY.md](DOCS_SUMMARY.md) | 文档整合历史记录 |
 
 ---
 
-## 📚 文档导航
+## 常用命令
 
-- **[开发指南](docs/GUIDE.md)** - 架构、部署、API文档
-- **[开发规范](docs/CODE_STANDARDS.md)** - 模块化规范 ⚠️必读
-- **[重构报告](REFACTORING_SUMMARY.md)** - 模块化重构详情
-- **[UI优化报告](UI_OPTIMIZATION_P2_COMPLETE.md)** - 间距系统优化
+```bash
+# 开发与运行
+npm run dev          # 开发模式（nodemon 热重载）
+npm start            # 生产模式
+npm run network      # 显示局域网访问地址
+npm run pm2:start    # 使用 PM2 启动生产服务
 
----
+# 代码质量
+npm run lint         # ESLint 代码检查
+npm run lint:fix     # 自动修复 ESLint 问题
+npm run format       # Prettier 格式化
+npm run format:check # Prettier 格式检查
+npm run check        # lint + npm audit
 
-## ⚡ 核心功能
-
-- 🖼️ **素材库** - 图片/视频管理、批量上传
-- ✅ **审片中心** - 素材审核、通过/拒绝
-- 📋 **待办事项** - 任务管理、状态跟踪
-- 👥 **团队协作** - 成员管理、在线状态
-- 🔧 **设备管理** - 库存管理、借用申请
-- ⚙️ **系统设置** - 配置管理、用户管理
-- 💬 **留言墙** - 匿名/实名留言
-
----
-
-## 🔐 安全特性
-
-- PBKDF2密码加密（100,000轮迭代）
-- 登录速率限制（1分钟5次）
-- CSRF令牌保护
-- Helmet安全头
-- 审计日志（90天自动清理）
-- 角色权限控制（admin/editor/guest）
+# 维护
+npm run maintenance  # 日志清理与数据维护
+npm run clean        # 清理 node_modules 并重新安装
+```
 
 ---
 
-## 📄 许可证
+## 技术栈
 
-MIT License
+### 后端
+
+- **运行时**: Node.js >= 18
+- **框架**: Express 4.x
+- **数据库**: sql.js (SQLite in-memory + 持久化)
+- **安全**: Helmet, CSRF Protection, Rate Limiting
+- **认证**: Session-based + Role-based Access Control
+- **文件上传**: Multer
+
+### 前端
+
+- **架构**: 原生 HTML / CSS / JavaScript ES Modules（无构建工具）
+- **模块化**: ES6 Modules, 组件化设计
+- **样式**: CSS Variables, CSS Grid, Flexbox
+- **响应式**: Mobile-first, 6 个断点（360px-1200px+）
+
+### 开发工具
+
+- **代码规范**: ESLint, Prettier
+- **进程管理**: PM2（生产环境）
+- **开发热重载**: nodemon
 
 ---
 
-## 🙋 获取帮助
+## 功能模块
 
-- 开发问题：查看 [docs/GUIDE.md](docs/GUIDE.md)
-- 规范问题：查看 [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)
-- 部署问题：查看 GUIDE.md 部署章节
+### 核心功能
+
+- 📁 **素材库** — 图片/视频上传、分类、标签、搜索
+- ✅ **审片中心** — 素材审核工作流（pending/approved/rejected）
+- 📝 **待办事项** — 个人与团队任务管理
+- 👥 **团队管理** — 成员信息、角色权限、贡献统计
+- 🖥️ **设备登记** — 设备清单、借用审批
+- 🎨 **展示页** — 公开素材展示（登录前可见）
+- ⚙️ **系统设置** — 站点配置、存储管理、主题切换
+
+### 权限角色
+
+- **admin** — 管理员（全权限）
+- **editor** — 编辑者（上传、审核、管理）
+- **guest** — 访客（只读权限）
+
+### 安全特性
+
+- Session-based 认证 + CSRF 保护
+- 角色权限控制（RBAC）
+- 审计日志记录
+- Rate limiting（登录、上传）
+- Helmet 安全头
+- 文件类型与大小验证
+
+---
+
+## 开发工作流
+
+1. **阅读文档** — 先看 [docs/CODE_STANDARDS.md](docs/CODE_STANDARDS.md)
+2. **创建分支** — 从 main 分支创建功能分支
+3. **模块化开发** — 按 `models -> routes -> frontend` 顺序
+4. **代码检查** — `npm run lint` 确保 0 errors
+5. **本地测试** — `npm run dev` 验证功能
+6. **提交代码** — 遵循 Conventional Commits 规范
+
+---
+
+## 许可证
+
+本项目仅供声声网络思政工作室内部使用。
+

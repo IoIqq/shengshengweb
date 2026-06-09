@@ -110,7 +110,7 @@ export async function request(path, options = {}) {
       const csrfHeaders = {};
       if (method !== 'GET' && method !== 'HEAD') {
         const token = readCookie('ss_csrf');
-        if (token) csrfHeaders['X-CSRF-Token'] = token;
+        if (token) csrfHeaders['x-csrf-token'] = token;
       }
 
       // 发送请求（带超时）

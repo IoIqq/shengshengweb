@@ -1,21 +1,4 @@
-/* ========================================
-   模态框组件 (Modals Component)
-   对话框、抽屉、弹出层、覆盖层
-   ======================================== */
 
-/* Profile Popover */
-.profile-popover {
-  position: fixed;
-  top: 78px;
-  right: 20px;
-  z-index: 90;
-  width: min(400px, calc(100vw - 32px));
-  pointer-events: none;
-}
-
-.profile-popover.is-open {
-  pointer-events: auto;
-}
 
 .profile-popover-inner {
   padding: 18px;
@@ -31,11 +14,6 @@
   transition:
     transform var(--motion-medium) var(--motion-ease),
     opacity var(--motion-medium) var(--motion-ease);
-}
-
-.profile-popover.is-open .profile-popover-inner {
-  transform: translateY(0) scale(1);
-  opacity: 1;
 }
 
 .profile-popover-head {
@@ -61,15 +39,6 @@
   cursor: pointer;
 }
 
-.profile-avatar-large img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: inherit;
-}
-
 .avatar-overlay {
   position: absolute;
   inset: 0;
@@ -84,71 +53,11 @@
   transition: opacity var(--motion-medium) var(--motion-ease);
 }
 
-.profile-avatar-large:hover .avatar-overlay,
-.profile-avatar-large:focus-within .avatar-overlay {
-  opacity: 1;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-popover-head strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-
-.profile-popover-head span {
-  display: block;
-  margin-top: 6px;
-  color: var(--text-soft);
-  font-size: 13px;
-}
-
-.profile-form {
-  display: grid;
-  gap: 16px;
-  margin-top: 16px;
-}
-
 .profile-section {
   display: grid;
   gap: 12px;
   padding-top: 14px;
   border-top: 1px solid rgba(23, 24, 26, 0.06);
-}
-
-.profile-section:first-of-type {
-  padding-top: 0;
-  border-top: none;
-}
-
-.profile-section-title {
-  margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 800;
-}
-
-.profile-meta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.profile-meta div {
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(17, 18, 20, 0.03);
-  border: 1px solid rgba(23, 24, 26, 0.05);
 }
 
 .profile-meta span {
@@ -158,19 +67,6 @@
   text-transform: uppercase;
   color: var(--text-muted);
   font-weight: 800;
-}
-
-.profile-meta strong {
-  display: block;
-  margin-top: 6px;
-  color: var(--text);
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.profile-actions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* Wish Modal */
@@ -351,6 +247,11 @@
   color: var(--text);
 }
 
+.wish-drawer-title-icon {
+  vertical-align: text-bottom;
+  margin-right: var(--spacing-xs);
+}
+
 .wish-drawer-close {
   width: 32px;
   height: 32px;
@@ -377,30 +278,6 @@
   transform: rotate(90deg) scale(0.9);
 }
 
-/* Mobile Nav Drawer */
-.mobile-nav-drawer {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-}
-
-.mobile-nav-drawer:not([hidden]) {
-  pointer-events: auto;
-}
-
-.mobile-nav-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.mobile-nav-drawer:not([hidden]) .mobile-nav-overlay {
-  opacity: 1;
-}
-
 .mobile-nav-content {
   position: absolute;
   top: 0;
@@ -419,34 +296,10 @@
   overflow-y: auto;
 }
 
-.mobile-nav-drawer:not([hidden]) .mobile-nav-content {
-  transform: translateX(0);
-}
-
-.mobile-nav-close {
-  align-self: flex-end;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  font-size: 28px;
-  line-height: 1;
-  color: var(--text, #17181a);
-  cursor: pointer;
-}
-
 .mobile-nav-items {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.mobile-nav-items .nav-chip {
-  width: 100%;
-  justify-content: flex-start;
-  padding: 12px 16px;
-  font-size: 16px;
-  text-align: left;
 }
 
 /* Dialog Component */
@@ -523,14 +376,15 @@
 }
 
 .dialog-btn {
-  padding: 10px 20px;
+  min-height: var(--touch-target-min);
+  min-width: 80px;
+  padding: var(--spacing-sm) var(--spacing-xl);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--motion-fast);
-  min-width: 80px;
 }
 
 .dialog-btn:focus-visible {
@@ -643,7 +497,12 @@
 }
 
 .user-dialog-close {
-  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -667,14 +526,14 @@
 /* Responsive */
 @media (max-width: 768px) {
   .profile-popover {
-    width: calc(100vw - 24px);
+
     right: 12px;
     top: 70px;
   }
 
   .profile-popover-inner {
     padding: 16px;
-    max-height: calc(100vh - 90px);
+
   }
 
   .wish-modal-content {
@@ -687,11 +546,6 @@
     padding: 20px;
   }
 
-  .wish-drawer-content {
-    width: 90vw;
-    max-width: 400px;
-  }
-
   .wish-drawer-header {
     padding: 16px 20px;
   }
@@ -700,23 +554,9 @@
     font-size: 20px;
   }
 
-  .profile-popover {
-    width: 100%;
-    max-width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-  }
-
-  .profile-popover-inner {
-    max-height: 100vh;
-  }
 }
 
 @media (max-width: 640px) {
-  .wish-drawer-content {
-    width: 100vw;
-    border-left: none;
-  }
 
   .wish-drawer-header,
   .wish-drawer .wish-list-section {

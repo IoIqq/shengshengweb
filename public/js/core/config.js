@@ -34,6 +34,7 @@ export const VIEW_LABELS = {
   device: '设备登记',
   borrow: '借出申请',
   team: '团队协作',
+  topics: '选题库',
   settings: '系统设置',
 };
 

@@ -1,0 +1,39 @@
+<article class="workspace-panel reveal" data-panel="media" aria-labelledby="media-title">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">素材库</p>
+      <h2 id="media-title">图片与视频素材</h2>
+    </div>
+    <div class="panel-actions" aria-label="素材库主要操作">
+      <button class="ghost-btn" id="upload-btn" type="button">上传素材</button>
+      <button class="ghost-btn" id="sync-btn" type="button">同步服务器照片</button>
+    </div>
+  </div>
+
+  <section class="toolbar media-toolbar" aria-label="素材库筛选与排序">
+    <label class="search-field">
+      <span>搜索素材</span>
+      <input id="media-search" type="search" placeholder="输入标题、来源、作者、标签" autocomplete="off" />
+    </label>
+
+    <div class="filter-row" id="media-filters" role="group" aria-label="按素材类型和审核状态筛选">
+      <button class="filter-chip is-active" data-filter="all" type="button" aria-pressed="true">全部</button>
+      <button class="filter-chip" data-filter="photo" type="button" aria-pressed="false">图片</button>
+      <button class="filter-chip" data-filter="video" type="button" aria-pressed="false">视频</button>
+      <button class="filter-chip" data-filter="pending" type="button" aria-pressed="false">待审</button>
+      <button class="filter-chip" data-filter="approved" type="button" aria-pressed="false">已通过</button>
+    </div>
+
+    <label class="field field-inline">
+      <span>素材排序</span>
+      <select id="media-sort">
+        <option value="newest">最新上传</option>
+        <option value="oldest">最早上传</option>
+        <option value="title">按标题</option>
+        <option value="author">按作者</option>
+      </select>
+    </label>
+  </section>
+
+  <div class="media-grid" id="media-grid"></div>
+</article>

@@ -1,9 +1,16 @@
 const initSqlJs = require('sql.js');
 const fs = require('fs');
+const fsp = require('fs').promises;
+const path = require('path');
 const config = require('../config');
 const { logDbIssue } = require('../utils/logger');
 
 let db = null;
+let transactionDepth = 0;
+let pendingSave = false;
+let flushTimer = null;
+let activeFlush = null;
+const FLUSH_INTERVAL_MS = 200;
 
 /**
  * 初始化数据库连接
@@ -141,6 +148,39 @@ function createTables() {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS topic_library (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      source_host TEXT DEFAULT '',
+      source_platform TEXT DEFAULT 'other',
+      embed_url TEXT DEFAULT '',
+      thumbnail_url TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      tags_json TEXT DEFAULT '[]',
+      status TEXT DEFAULT 'idea',
+      created_by TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS registration_requests (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL,
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      reject_reason TEXT,
+      created_user_id INTEGER,
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS audit_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,
@@ -247,18 +287,113 @@ function migrateSchema() {
     if (!userColumns.includes('bio')) {
       db.exec("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''");
     }
+
+    // 扩展 topic_library 表字段
+    const topicColumns = all('PRAGMA table_info(topic_library)').map(col => col.name);
+    if (!topicColumns.includes('description')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN description TEXT DEFAULT ''");
+    }
+    if (!topicColumns.includes('tags_json')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN tags_json TEXT DEFAULT '[]'");
+    }
+    if (!topicColumns.includes('source_host')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN source_host TEXT DEFAULT ''");
+    }
+    if (!topicColumns.includes('source_platform')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN source_platform TEXT DEFAULT 'other'");
+    }
+    if (!topicColumns.includes('embed_url')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN embed_url TEXT DEFAULT ''");
+    }
+    if (!topicColumns.includes('thumbnail_url')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN thumbnail_url TEXT DEFAULT ''");
+    }
+    if (!topicColumns.includes('status')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN status TEXT DEFAULT 'idea'");
+    }
+    if (!topicColumns.includes('created_by')) {
+      db.exec("ALTER TABLE topic_library ADD COLUMN created_by TEXT DEFAULT ''");
+    }
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_media_review_created ON media(review_state, created_at);
+      CREATE INDEX IF NOT EXISTS idx_media_kind_created ON media(kind, created_at);
+      CREATE INDEX IF NOT EXISTS idx_activity_created ON activity(created_at);
+      CREATE INDEX IF NOT EXISTS idx_todos_done_created ON todos(done, created_at);
+      CREATE INDEX IF NOT EXISTS idx_registration_requests_status_created ON registration_requests(status, created_at);
+      CREATE INDEX IF NOT EXISTS idx_registration_requests_username ON registration_requests(username);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+    `);
   } catch (error) {
     logDbIssue('schema_migration_failed', error);
   }
 }
 
 /**
- * 保存数据库到磁盘
+ * 异步落盘（节流），事件循环空闲时执行
+ */
+async function flushDatabase() {
+  if (!db) return;
+  flushTimer = null;
+
+  const tmpPath = `${config.DB_PATH}.tmp`;
+  try {
+    const data = Buffer.from(db.export());
+    await fsp.mkdir(path.dirname(config.DB_PATH), { recursive: true });
+    await fsp.writeFile(tmpPath, data);
+    await fsp.rename(tmpPath, config.DB_PATH);
+  } catch (error) {
+    logDbIssue('database_flush_failed', error);
+    try { await fsp.unlink(tmpPath); } catch (_) { /* ignore cleanup */ }
+  } finally {
+    activeFlush = null;
+  }
+}
+
+function scheduleFlush() {
+  if (transactionDepth > 0) {
+    pendingSave = true;
+    return;
+  }
+  if (flushTimer) return;
+  flushTimer = setTimeout(() => {
+    if (activeFlush) {
+      activeFlush = activeFlush.then(() => flushDatabase());
+    } else {
+      activeFlush = flushDatabase();
+    }
+  }, FLUSH_INTERVAL_MS);
+  if (typeof flushTimer.unref === 'function') flushTimer.unref();
+}
+
+/**
+ * 安排数据库落盘（节流）
  */
 function saveDatabase() {
   if (!db) return;
-  const data = db.export();
-  fs.writeFileSync(config.DB_PATH, data);
+  scheduleFlush();
+}
+
+/**
+ * 立即同步落盘，仅用于优雅关停
+ */
+function saveDatabaseNow() {
+  if (!db) return;
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+  pendingSave = false;
+  try {
+    const data = Buffer.from(db.export());
+    const tmpPath = `${config.DB_PATH}.tmp`;
+    fs.mkdirSync(path.dirname(config.DB_PATH), { recursive: true });
+    fs.writeFileSync(tmpPath, data);
+    fs.renameSync(tmpPath, config.DB_PATH);
+  } catch (error) {
+    logDbIssue('database_flush_sync_failed', error);
+  }
 }
 
 /**
@@ -304,16 +439,26 @@ function run(sql, params = []) {
  */
 function transaction(callback) {
   if (!db) throw new Error('Database not initialized');
+  const isOuterTransaction = transactionDepth === 0;
   try {
-    db.exec('BEGIN');
-    callback();
-    db.exec('COMMIT');
-    saveDatabase();
+    if (isOuterTransaction) db.exec('BEGIN');
+    transactionDepth++;
+    const result = callback();
+    transactionDepth--;
+    if (isOuterTransaction) {
+      db.exec('COMMIT');
+      if (pendingSave) saveDatabase();
+    }
+    return result;
   } catch (error) {
-    try {
-      db.exec('ROLLBACK');
-    } catch (rollbackError) {
-      logDbIssue('transaction_rollback_failed', rollbackError);
+    transactionDepth = Math.max(0, transactionDepth - 1);
+    if (isOuterTransaction) {
+      try {
+        db.exec('ROLLBACK');
+      } catch (rollbackError) {
+        logDbIssue('transaction_rollback_failed', rollbackError);
+      }
+      pendingSave = false;
     }
     throw error;
   }
@@ -329,6 +474,7 @@ function getDb() {
 module.exports = {
   initDatabase,
   saveDatabase,
+  saveDatabaseNow,
   all,
   get,
   run,

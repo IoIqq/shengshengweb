@@ -4,8 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { all, get, run, saveDatabase, transaction } = require('../models/database');
-const { media: mediaModel, todo: todoModel, team: teamModel, device: deviceModel, borrow: borrowModel } = require('../models');
+const { media: mediaModel, todo: todoModel, team: teamModel, device: deviceModel, borrow: borrowModel, settings: settingsModel } = require('../models');
 const config = require('../config');
+const { hasPermission } = require('../config/permissions');
 const { nowIso } = require('../utils');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
@@ -25,22 +26,11 @@ function nowLocalDateKey() {
  * 获取/设置系统设置
  */
 function getSetting(key, fallback = '') {
-  const row = get('SELECT value FROM settings WHERE key = ? LIMIT 1', [key]);
-  return row ? row.value : fallback;
+  return settingsModel.getSetting(key, fallback);
 }
 
 function setSetting(key, value) {
-  const existing = get('SELECT key FROM settings WHERE key = ? LIMIT 1', [key]);
-  if (existing) {
-    run('UPDATE settings SET value = ?, updated_at = ? WHERE key = ?', [value, nowIso(), key]);
-  } else {
-    run('INSERT INTO settings (key, value, created_at, updated_at) VALUES (?, ?, ?, ?)', [
-      key,
-      value,
-      nowIso(),
-      nowIso(),
-    ]);
-  }
+  return settingsModel.setSetting(key, value);
 }
 
 /**
@@ -126,15 +116,48 @@ function getDashboard() {
  * 获取站点设置
  */
 function getSettings() {
-  return {
-    siteTitle: getSetting('siteTitle', config.SITE_TITLE),
-    siteSubtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
-    homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
-    publicUrl: getSetting('publicUrl', config.PUBLIC_URL),
-    adminUsername: getSetting('adminUsername', config.ADMIN_USERNAME),
-    syncMessage: getSetting('syncMessage', '等待同步'),
-    lastSyncAt: getSetting('lastSyncAt', ''),
-  };
+  return settingsModel.getSettings();
+}
+
+function toDisplayPath(value) {
+  const relativePath = path.relative(config.ROOT_DIR, value);
+  if (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+    return relativePath.replace(/\\/g, '/');
+  }
+  return String(value || '').replace(/\\/g, '/');
+}
+
+function countUploadFiles(limit = 5000) {
+  const summary = { files: 0, truncated: false };
+  if (!fs.existsSync(config.UPLOAD_DIR)) return summary;
+
+  const stack = [config.UPLOAD_DIR];
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (error) {
+      summary.truncated = true;
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (entry.isFile()) {
+        summary.files += 1;
+        if (summary.files >= limit) {
+          summary.truncated = true;
+          return summary;
+        }
+      }
+    }
+  }
+
+  return summary;
 }
 
 /**
@@ -142,9 +165,9 @@ function getSettings() {
  */
 function getSystemInfo() {
   return {
-    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, '/'),
-    uploadDir: 'server/uploads',
-    inboxDir: 'server/uploads/inbox',
+    databasePath: toDisplayPath(config.DB_PATH),
+    uploadDir: toDisplayPath(config.UPLOAD_DIR),
+    inboxDir: toDisplayPath(config.INBOX_DIR),
     inboxAutoScanSeconds: config.AUTO_SCAN_SECONDS || 30,
     maxUploadMb: config.MAX_UPLOAD_MB,
   };
@@ -154,29 +177,41 @@ function getSystemInfo() {
  * 构建bootstrap数据
  */
 function buildBootstrap(user) {
-  return {
+  const publicSettings = {
+    siteTitle: getSetting('siteTitle', config.SITE_TITLE),
+    siteSubtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
+    homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
+    publicUrl: getSetting('publicUrl', config.PUBLIC_URL),
+  };
+  const payload = {
     user,
-    publicConfig: {
-      siteTitle: getSetting('siteTitle', config.SITE_TITLE),
-      siteSubtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
-      homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
-      publicUrl: getSetting('publicUrl', config.PUBLIC_URL),
-    },
+    publicConfig: publicSettings,
     site: {
-      title: getSetting('siteTitle', config.SITE_TITLE),
-      subtitle: getSetting('siteSubtitle', config.SITE_SUBTITLE),
-      homeHeroMessage: getSetting('homeHeroMessage', '首页只保留最关键的摘要，方便快速进入工作状态。'),
+      title: publicSettings.siteTitle,
+      subtitle: publicSettings.siteSubtitle,
+      homeHeroMessage: publicSettings.homeHeroMessage,
     },
-    system: getSystemInfo(),
-    settings: getSettings(),
     dashboard: getDashboard(),
     media: mediaModel.getAllMedia().map(m => mediaModel.mediaRowToItem(m)),
     todos: todoModel.getAllTodos(),
     activity: getAllActivity(),
     team: teamModel.getAllTeam(),
-    devices: deviceModel.getAllDevices(),
-    borrowRequests: borrowModel.getAllBorrowRequests(),
   };
+
+  if (hasPermission(user.role, 'device:read')) {
+    payload.devices = deviceModel.getAllDevices();
+  }
+
+  if (hasPermission(user.role, 'borrow:read')) {
+    payload.borrowRequests = borrowModel.getAllBorrowRequests();
+  }
+
+  if (user.role === 'admin') {
+    payload.system = getSystemInfo();
+    payload.settings = getSettings();
+  }
+
+  return payload;
 }
 
 /**
@@ -184,17 +219,18 @@ function buildBootstrap(user) {
  */
 function buildFullBackup() {
   const databaseExists = fs.existsSync(config.DB_PATH);
-  const uploadFiles = 0; // TODO: count files recursively
+  const uploadSummary = countUploadFiles();
   const mediaCount = get('SELECT COUNT(*) AS count FROM media').count;
   const todoCount = get('SELECT COUNT(*) AS count FROM todos').count;
   const activityCount = get('SELECT COUNT(*) AS count FROM activity').count;
 
   return {
     generatedAt: nowIso(),
-    databasePath: path.relative(config.ROOT_DIR, config.DB_PATH).replace(/\\/g, '/'),
+    databasePath: toDisplayPath(config.DB_PATH),
     databaseExists,
-    uploadDir: 'server/uploads',
-    uploadFiles,
+    uploadDir: toDisplayPath(config.UPLOAD_DIR),
+    uploadFiles: uploadSummary.files,
+    uploadFilesTruncated: uploadSummary.truncated,
     counts: {
       media: mediaCount,
       todos: todoCount,
@@ -288,18 +324,26 @@ router.get('/settings', requireAuth, requireAdmin, (req, res) => {
 router.patch('/settings', requireAuth, requireAdmin, (req, res) => {
   try {
     const body = req.body || {};
-    const siteTitle = String(body.siteTitle || '').trim();
-    const siteSubtitle = String(body.siteSubtitle || '').trim();
-    const homeHeroMessage = String(body.homeHeroMessage || '').trim();
-    const publicUrl = String(body.publicUrl || '').trim();
+    const updates = {
+      siteTitle: body.siteTitle,
+      siteSubtitle: body.siteSubtitle,
+      homeHeroMessage: body.homeHeroMessage,
+      publicUrl: body.publicUrl,
+      showcaseEnabled: body.showcaseEnabled,
+      showcaseBrand: body.showcaseBrand,
+      showcaseHeroLabel: body.showcaseHeroLabel,
+      showcaseTitle: body.showcaseTitle,
+      showcaseSubtitle: body.showcaseSubtitle,
+      showcaseFooterText: body.showcaseFooterText,
+      showcaseLimit: body.showcaseLimit,
+      showcaseKindFilter: body.showcaseKindFilter,
+    };
     const adminUsername = String(body.adminUsername || '').trim();
     const adminPassword = String(body.adminPassword || '');
 
+    const settings = settingsModel.updateSettings(updates);
+
     transaction(() => {
-      if (siteTitle) setSetting('siteTitle', siteTitle);
-      if (siteSubtitle) setSetting('siteSubtitle', siteSubtitle);
-      if (homeHeroMessage !== '') setSetting('homeHeroMessage', homeHeroMessage);
-      if (publicUrl !== '') setSetting('publicUrl', publicUrl);
       if (adminUsername) {
         setSetting('adminUsername', adminUsername);
         const adminUser = get("SELECT * FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1");
@@ -323,7 +367,7 @@ router.patch('/settings', requireAuth, requireAdmin, (req, res) => {
     });
     saveDatabase();
 
-    res.json({ ok: true, settings: getSettings() });
+    res.json({ ok: true, settings });
   } catch (error) {
     res.status(500).json({ error: '更新设置失败。' });
   }

@@ -14,8 +14,10 @@ server/data/*.db
 server/data/state.json
 server/uploads/media/*
 server/uploads/inbox/*
+server/uploads/avatars/*
 !server/uploads/media/.gitkeep
 !server/uploads/inbox/.gitkeep
+!server/uploads/avatars/.gitkeep
 
 # Local backups / temp files
 app.js.bak
@@ -38,3 +40,6 @@ Thumbs.db
 # Build output
 dist/
 build/
+
+# Tool index (codegraph local cache)
+.codegraph/

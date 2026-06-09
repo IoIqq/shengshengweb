@@ -1,10 +1,44 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
+const config = require('../config');
 const { user: userModel, session: sessionModel, audit: auditModel } = require('../models');
-const { requireAuth } = require('../middleware/auth');
-const { setSessionCookie, clearSessionCookie } = require('../middleware/csrf');
+const { getSession, requireAuth } = require('../middleware/auth');
+const { setSessionCookie, clearSessionCookie, getRequestCookies } = require('../middleware/csrf');
 const { logLoginFailure } = require('../utils/logger');
+
+function createLoginSession(req, res, user) {
+  const { token, expiresAt } = sessionModel.createSession(user.id);
+
+  userModel.updateLastLogin(user.id);
+
+  auditModel.createAuditLog({
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    action: 'login',
+    resourceType: 'session',
+    resourceId: token,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent')
+  });
+
+  setSessionCookie(req, res, token, expiresAt);
+
+  res.json({
+    success: true,
+    authenticated: true,
+    expiresAt,
+    user: {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      displayName: user.display_name || '',
+      signature: user.signature || '',
+      avatarUrl: user.avatar_url || '',
+    }
+  });
+}
 
 // 登录限流：1分钟内最多5次尝试
 const loginLimiter = rateLimit({
@@ -19,7 +53,6 @@ const loginLimiter = rateLimit({
  * 获取当前会话信息
  */
 router.get('/session', (req, res) => {
-  const { getSession } = require('../middleware/auth');
   const session = getSession(req);
   if (!session) {
     return res.json({ authenticated: false });
@@ -48,48 +81,35 @@ router.post('/login', loginLimiter, (req, res) => {
     return res.status(403).json({ error: '账号已被禁用。' });
   }
 
-  // 创建会话
-  const { token, expiresAt } = sessionModel.createSession(user.id);
+  createLoginSession(req, res, user);
+});
 
-  // 更新最后登录时间
-  userModel.updateLastLogin(user.id);
+/**
+ * 访客登录
+ */
+router.post('/login/guest', loginLimiter, (req, res) => {
+  const user = userModel.getUserByUsername(config.GUEST_USERNAME);
 
-  // 记录审计日志
-  auditModel.createAuditLog({
-    userId: user.id,
-    username: user.username,
-    role: user.role,
-    action: 'login',
-    resourceType: 'session',
-    resourceId: token,
-    ipAddress: req.ip,
-    userAgent: req.get('user-agent')
-  });
+  if (!user) {
+    return res.status(404).json({ error: '访客账号不存在。' });
+  }
 
-  // 设置Cookie
-  setSessionCookie(req, res, token, expiresAt);
+  if (user.status !== 'active') {
+    return res.status(403).json({ error: '访客账号已被禁用。' });
+  }
 
-  res.json({
-    success: true,
-    user: {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      displayName: user.display_name || '',
-      signature: user.signature || '',
-      avatarUrl: user.avatar_url || '',
-    }
-  });
+  if (user.role !== 'guest') {
+    return res.status(403).json({ error: '访客账号配置异常。' });
+  }
+
+  createLoginSession(req, res, user);
 });
 
 /**
  * 用户登出
  */
 router.post('/logout', requireAuth, (req, res) => {
-  const { parseCookies } = require('../middleware/csrf');
-  const config = require('../config');
-
-  const cookies = parseCookies(req.headers.cookie || '');
+  const cookies = getRequestCookies(req);
   const token = cookies[config.SESSION_COOKIE];
 
   if (token) {

@@ -88,7 +88,10 @@
   --spacing-form-gap: clamp(6px, 1vw, 10px);   /* 表单字段间距 */
 
   /* 布局 */
-  --container: min(1440px, calc(100vw - 32px));
+
+  --touch-target-min: 44px;
+  --focus-ring: 0 0 0 3px rgba(47, 97, 255, 0.24);
+  --focus-ring-strong: 0 0 0 4px rgba(47, 97, 255, 0.28);
 
   /* 动画速度 */
   --motion-fast: 160ms;
@@ -127,7 +130,7 @@ img {
 
 button {
   font-family: inherit;
-  cursor: pointer;
+
   border: none;
   background: none;
 }
@@ -137,9 +140,4 @@ textarea,
 select {
   font-family: inherit;
   font-size: inherit;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
 }

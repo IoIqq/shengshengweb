@@ -80,10 +80,10 @@ function createAuditLogItem(log) {
   };
 
   const actionIcons = {
-    login: '🔐',
-    create: '➕',
-    update: '✏️',
-    delete: '🗑️',
+    login: '登',
+    create: '新',
+    update: '改',
+    delete: '删',
   };
 
   const resourceTypeLabels = {
@@ -116,7 +116,7 @@ function createAuditLogItem(log) {
   const actionLabel = actionLabels[log.action] || log.action;
 
   return `
-    <div class="audit-log-item">
+    <div class="audit-log-item" role="listitem">
       <div class="audit-time">${time}</div>
       <div class="audit-user">
         <span class="user-badge ${log.role}">${log.username}</span>

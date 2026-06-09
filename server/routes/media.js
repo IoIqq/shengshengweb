@@ -3,8 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
-const { media: mediaModel } = require('../models');
-const { requireAuth, requireEditor, requireAdmin } = require('../middleware/auth');
+const { media: mediaModel, settings: settingsModel } = require('../models');
+const { requireAuth, requireEditor, requireAdmin, requirePermission } = require('../middleware/auth');
 const config = require('../config');
 const { nowIso } = require('../utils');
 
@@ -144,6 +144,17 @@ function cleanupManagedMediaFile(row, req) {
 
 // Routes
 
+// GET /api/media/showcase - Public showcase (no auth required)
+router.get('/showcase', (req, res) => {
+  try {
+    const settings = settingsModel.getPublicShowcaseSettings();
+    const items = settings.enabled ? mediaModel.getShowcaseItems(settings) : [];
+    res.json({ ok: true, settings, items });
+  } catch (error) {
+    res.status(500).json({ error: '展示内容加载失败。' });
+  }
+});
+
 // POST /api/media/sync - Sync server media from inbox
 router.post('/sync', requireAuth, requireEditor, (req, res) => {
   try {
@@ -156,7 +167,7 @@ router.post('/sync', requireAuth, requireEditor, (req, res) => {
 });
 
 // POST /api/media/upload - Upload media files
-router.post('/upload', uploadLimiter, requireAuth, requireEditor, (req, res, next) => {
+router.post('/upload', uploadLimiter, requireAuth, requirePermission('media:create'), (req, res, next) => {
   mediaUpload.array('files', config.MAX_UPLOAD_FILES)(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -174,7 +185,7 @@ router.post('/upload', uploadLimiter, requireAuth, requireEditor, (req, res, nex
       return res.status(500).json({ error: '文件上传失败，请重试。' });
     }
 
-    const { transaction } = require('../models/database');
+    const { transaction, saveDatabase } = require('../models/database');
     const { insertMediaRecord, mediaRowToItem } = mediaModel;
 
     const files = Array.isArray(req.files) ? req.files : [];
@@ -192,6 +203,7 @@ router.post('/upload', uploadLimiter, requireAuth, requireEditor, (req, res, nex
         items.push(mediaRowToItem(record));
         logActivity('素材上传', req.user?.username || 'unknown', `上传了 ${record.title}`);
       }
+      saveDatabase();
     });
 
     res.json({ ok: true, items });
@@ -199,7 +211,7 @@ router.post('/upload', uploadLimiter, requireAuth, requireEditor, (req, res, nex
 });
 
 // POST /api/media/:id/review - Review media (approve/reject)
-router.post('/:id/review', requireAuth, requireEditor, (req, res) => {
+router.post('/:id/review', requireAuth, requirePermission('media:review'), (req, res) => {
   const { transaction, get, run, saveDatabase } = require('../models/database');
   const { mediaRowToItem } = mediaModel;
 
@@ -238,7 +250,7 @@ router.post('/:id/review', requireAuth, requireEditor, (req, res) => {
 
 // DELETE /api/media/:id - Delete media
 router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
-  const { transaction, get, run } = require('../models/database');
+  const { transaction, get, run, saveDatabase } = require('../models/database');
 
   const id = String(req.params.id || '');
   const row = get('SELECT * FROM media WHERE id = ? LIMIT 1', [id]);
@@ -250,6 +262,7 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   transaction(() => {
     run('DELETE FROM media WHERE id = ?', [id]);
     logActivity('素材删除', req.user?.username || 'unknown', `${row.title} 已删除`);
+    saveDatabase();
   });
 
   cleanupManagedMediaFile(row, req);

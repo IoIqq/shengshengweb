@@ -9,13 +9,14 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   overflow: hidden;
+  max-width: 100%;
 }
 
 .audit-log-item {
   display: grid;
-  grid-template-columns: 140px 120px 200px 1fr 120px;
-  gap: 12px;
-  padding: 12px 16px;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(96px, 0.7fr) minmax(150px, 1fr) minmax(180px, 1.6fr) minmax(96px, 0.8fr);
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--line);
   font-size: 14px;
   align-items: center;
@@ -55,9 +56,10 @@
 
 .audit-details {
   color: var(--text-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .audit-ip {
@@ -74,12 +76,6 @@
 }
 
 /* Device/Borrow Lists */
-.device-list,
-.borrow-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 14px;
-}
 
 /* Todo List */
 .todo-list {
@@ -102,10 +98,6 @@
 }
 
 /* Wish List */
-.wish-list {
-  display: grid;
-  gap: 12px;
-}
 
 .wish-list {
   display: flex;
@@ -114,13 +106,6 @@
 }
 
 /* Wish Item */
-.wish-item {
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  transition: all var(--motion-fast) var(--motion-ease);
-}
 
 .wish-item {
   padding: 16px 18px;
@@ -129,12 +114,6 @@
   border-radius: 14px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   animation: wish-fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-}
-
-.wish-item:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-soft);
-  transform: translateY(-1px);
 }
 
 .wish-item:hover {
@@ -158,24 +137,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.wish-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
-}
-
-.wish-item-author {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
 }
 
 .wish-item-author {
@@ -188,29 +151,12 @@
 }
 
 .wish-item-mood {
-  padding: 3px 10px;
-  background: linear-gradient(135deg, rgba(47, 97, 255, 0.08), rgba(47, 97, 255, 0.12));
-  color: #2f61ff;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.wish-item-mood {
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(47, 97, 255, 0.08);
   font-size: 11px;
   font-weight: 600;
   color: #2f61ff;
-}
-
-.wish-item-content {
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--text);
-  margin-bottom: 12px;
-  word-wrap: break-word;
 }
 
 .wish-item-content {
@@ -229,26 +175,9 @@
 }
 
 .wish-item-time {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.wish-item-time {
   font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
-}
-
-.wish-item-delete {
-  padding: 4px 12px;
-  border: 1px solid rgba(154, 62, 62, 0.2);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--danger);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .wish-item-delete {
@@ -264,11 +193,6 @@
 }
 
 .wish-item-delete:hover {
-  background: rgba(154, 62, 62, 0.08);
-  border-color: rgba(154, 62, 62, 0.3);
-}
-
-.wish-item-delete:hover {
   background: rgba(154, 62, 62, 0.12);
   border-color: rgba(154, 62, 62, 0.3);
   transform: translateY(-1px);
@@ -276,45 +200,6 @@
 
 .wish-item-delete:active {
   transform: translateY(0) scale(0.95);
-}
-
-/* System Row */
-.system-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.system-row:last-child {
-  border-bottom: none;
-}
-
-.system-row span {
-  font-size: 13px;
-  color: var(--text-soft);
-  font-weight: 600;
-}
-
-.system-row strong {
-  font-size: 13px;
-  color: var(--text);
-  font-family: var(--font-mono);
-}
-
-.system-row-highlight {
-  background: linear-gradient(90deg, rgba(47, 97, 255, 0.04), transparent);
-  padding: 14px 12px;
-  margin: 0 -12px;
-  border-radius: var(--radius-sm);
-  border-left: 3px solid rgba(47, 97, 255, 0.4);
-}
-
-.system-value-with-action {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 /* Todo Board */
@@ -495,12 +380,6 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-.timeline-item {
-  position: relative;
-  padding-left: 36px;
-  margin-bottom: 16px;
-}
-
 .timeline-dot {
   position: absolute;
   left: 5px;
@@ -518,50 +397,12 @@
   margin: 0;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 16px 0;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  transition: all var(--motion-fast);
-  font-size: 14px;
-}
-
-.pagination button:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-}
-
-.pagination button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pagination .page-info {
-  padding: 0 12px;
-  color: var(--text-soft);
-  font-size: 14px;
-}
-
 /* Responsive */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .audit-log-item {
     grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 16px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
   }
 
   .audit-time,
@@ -620,20 +461,6 @@
     gap: 8px;
   }
 
-  .todo-list,
-  .device-list,
-  .borrow-list {
-    gap: 12px;
-  }
-
-  .user-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .user-actions .ghost-btn {
-    width: 100%;
-  }
 }
 
 @media (max-width: 640px) {

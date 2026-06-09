@@ -4,12 +4,21 @@ const config = require('../config');
 const { nowIso, nowLocalDateKey, serializeLogValue } = require('./index');
 
 let logCleanupRan = false;
+let lastRotateCheckAt = 0;
+let lastRotateCheckPath = '';
+let cachedLogDateKey = '';
+let cachedLogFilePath = '';
+const ROTATE_CHECK_INTERVAL_MS = 5000;
 
 /**
  * 日志轮转（当文件超过阈值时）
  */
 function rotateLogIfNeeded(filePath) {
   try {
+    const now = Date.now();
+    if (lastRotateCheckPath === filePath && now - lastRotateCheckAt < ROTATE_CHECK_INTERVAL_MS) return;
+    lastRotateCheckPath = filePath;
+    lastRotateCheckAt = now;
     const stat = fs.statSync(filePath);
     if (stat.size < config.LOG_MAX_BYTES) return;
     let seq = 1;
@@ -44,6 +53,15 @@ function cleanupOldLogs() {
   });
 }
 
+function getLogFilePath() {
+  const dateKey = nowLocalDateKey();
+  if (dateKey !== cachedLogDateKey) {
+    cachedLogDateKey = dateKey;
+    cachedLogFilePath = path.join(config.LOG_DIR, `${dateKey}.log`);
+  }
+  return cachedLogFilePath;
+}
+
 /**
  * 写入日志到文件
  */
@@ -54,7 +72,7 @@ function appendServerLog(level, event, details = {}) {
     event,
     ...serializeLogValue(details),
   });
-  const filePath = path.join(config.LOG_DIR, `${nowLocalDateKey()}.log`);
+  const filePath = getLogFilePath();
   rotateLogIfNeeded(filePath);
   fs.appendFile(filePath, `${line}\n`, (error) => {
     if (error) {

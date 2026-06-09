@@ -23,8 +23,9 @@ a {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 .shortcut-btn:focus-visible,
@@ -45,7 +46,7 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: var(--touch-target-min);
   padding: 0 16px;
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -146,7 +147,7 @@ a:focus-visible {
 /* Navigation Chips */
 .nav-chip,
 .filter-chip {
-  min-height: 44px;
+  min-height: var(--touch-target-min);
   padding: 10px 16px;
   color: var(--text-soft);
   background: transparent;
@@ -160,22 +161,6 @@ a:focus-visible {
   background: rgba(47, 97, 255, 0.08);
   color: var(--text);
   border-color: rgba(47, 97, 255, 0.12);
-}
-
-.nav-chip.is-active::after {
-  content: "";
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(47, 97, 255, 0.2), #2f61ff, rgba(47, 97, 255, 0.2));
-}
-
-.nav-chip:hover {
-  background: rgba(47, 97, 255, 0.05);
-  color: var(--text);
 }
 
 .nav-chip:active {
@@ -201,8 +186,8 @@ a:focus-visible {
 /* Avatar Button */
 .avatar-btn {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(23, 24, 26, 0.08);
@@ -211,31 +196,11 @@ a:focus-visible {
   flex: none;
 }
 
-.avatar-btn:hover {
-  transform: translateY(-1px);
-}
-
-.avatar-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.avatar-initials {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Close Button */
 .close-btn {
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: 0 var(--spacing-md);
   border-radius: 999px;
   border: 1px solid rgba(23, 24, 26, 0.1);
   background: rgba(255, 255, 255, 0.82);
@@ -243,25 +208,6 @@ a:focus-visible {
 }
 
 /* Input Action Button */
-.input-action {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--motion-fast) var(--motion-ease);
-  z-index: 2;
-}
 
 .input-action:hover {
   background: rgba(23, 24, 26, 0.06);
@@ -279,7 +225,9 @@ a:focus-visible {
 
 /* Copy Button */
 .copy-btn {
-  padding: 6px 10px;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 8px;
   border: 1px solid rgba(23, 24, 26, 0.1);
   background: rgba(255, 255, 255, 0.9);
@@ -303,15 +251,9 @@ a:focus-visible {
 
 /* Focus Link */
 .focus-link {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+
+  min-width: var(--touch-target-min);
+
 }
 
 .focus-link:hover {
@@ -319,37 +261,15 @@ a:focus-visible {
 }
 
 /* Shortcut Button */
-.shortcut-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 18px 12px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.shortcut-btn:hover {
-  border-color: #4f46e5;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.10);
-}
-
-.shortcut-btn:active {
-  transform: translateY(0) scale(0.97);
-}
 
 /* Hamburger Button */
 .hamburger-btn {
   display: none;
   flex-direction: column;
   justify-content: space-around;
-  width: 36px;
-  height: 36px;
-  padding: 6px;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: var(--spacing-sm);
   background: transparent;
   border: 1px solid rgba(23, 24, 26, 0.12);
   border-radius: 10px;
@@ -357,37 +277,7 @@ a:focus-visible {
   margin-right: 12px;
 }
 
-.hamburger-btn span {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: var(--text, #17181a);
-  border-radius: 2px;
-  transition: transform 0.3s ease, opacity 0.2s ease;
-}
-
-.hamburger-btn[aria-expanded="true"] span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.hamburger-btn[aria-expanded="true"] span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger-btn[aria-expanded="true"] span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
 /* Media Action Buttons */
-.media-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all var(--motion-fast) var(--motion-ease);
-}
 
 .media-action-btn svg {
   flex-shrink: 0;
@@ -488,14 +378,11 @@ button.is-loading {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .hamburger-btn {
-    display: flex;
-  }
 
   .primary-btn,
   .ghost-btn,
   .topbar-cta {
-    min-height: 44px;
+    min-height: var(--touch-target-min);
     padding: 0 20px;
     font-size: 15px;
   }
@@ -511,24 +398,10 @@ button.is-loading {
 }
 
 @media (max-width: 480px) {
-  .topbar-cta {
-    padding: 0 12px;
-    font-size: 14px;
-    min-height: 38px;
-  }
 
-  .avatar-btn {
-    width: 38px;
-    height: 38px;
-  }
 }
 
 /* Touch Devices */
 @media (hover: none) and (pointer: coarse) {
-  button:active,
-  .nav-chip:active,
-  .filter-chip:active {
-    transform: scale(0.97);
-    opacity: 0.8;
-  }
+
 }

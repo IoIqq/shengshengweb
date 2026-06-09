@@ -5,22 +5,71 @@ const { logAuthFailure } = require('../utils/logger');
 const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_EXEMPT_PATHS = new Set([
   '/api/login',
+  '/api/login/guest',
+  '/api/registration-requests',
   '/api/client-log',
 ]);
+
+function normalizePath(path) {
+  const normalized = String(path || '').split('?')[0].replace(/\/+/g, '/');
+  if (!normalized || normalized === '/') return '/';
+  return normalized.length > 1 ? normalized.replace(/\/+$/, '') : normalized;
+}
+
+function baseRequestPathCandidates(req) {
+  return [
+    normalizePath(req.path),
+    normalizePath(req.originalUrl),
+    normalizePath(`${req.baseUrl || ''}${req.path || ''}`),
+  ];
+}
+
+function requestPathCandidates(req) {
+  const candidates = new Set(baseRequestPathCandidates(req));
+
+  for (const path of [...candidates]) {
+    if (path.startsWith('/api/')) {
+      candidates.add(normalizePath(path.slice(4) || '/'));
+    } else {
+      candidates.add(normalizePath(`/api${path.startsWith('/') ? path : `/${path}`}`));
+    }
+  }
+
+  return [...candidates];
+}
+
+function isCsrfExempt(req) {
+  return requestPathCandidates(req).some((path) => CSRF_EXEMPT_PATHS.has(path));
+}
+
+function isApiRequest(req) {
+  return baseRequestPathCandidates(req).some((path) => path.startsWith('/api/'));
+}
+
+function parseCookieHeader(cookieStr) {
+  const cookies = {};
+  if (!cookieStr) return cookies;
+  cookieStr.split(';').forEach((pair) => {
+    const index = pair.indexOf('=');
+    if (index < 0) return;
+    const key = pair.slice(0, index).trim();
+    if (key) cookies[key] = decodeURIComponent(pair.slice(index + 1).trim());
+  });
+  return cookies;
+}
 
 /**
  * 解析Cookie字符串
  */
 function parseCookies(cookieStr) {
-  const cookies = {};
-  if (!cookieStr) return cookies;
-  cookieStr.split(';').forEach((pair) => {
-    const [key, ...rest] = pair.split('=');
-    if (key && rest.length > 0) {
-      cookies[key.trim()] = decodeURIComponent(rest.join('=').trim());
-    }
-  });
-  return cookies;
+  return parseCookieHeader(cookieStr);
+}
+
+function getRequestCookies(req) {
+  if (!req._parsedCookies) {
+    req._parsedCookies = parseCookieHeader(req.headers.cookie || '');
+  }
+  return req._parsedCookies;
 }
 
 /**
@@ -80,10 +129,10 @@ function clearSessionCookie(req, res) {
  */
 function csrfProtect(req, res, next) {
   if (CSRF_SAFE_METHODS.has(req.method)) return next();
-  if (CSRF_EXEMPT_PATHS.has(req.path)) return next();
-  if (!req.path.startsWith('/api/')) return next();
+  if (isCsrfExempt(req)) return next();
+  if (!isApiRequest(req)) return next();
 
-  const cookies = parseCookies(req.headers.cookie || '');
+  const cookies = getRequestCookies(req);
   const sessionToken = cookies[config.SESSION_COOKIE];
   const cookieCsrf = cookies[config.CSRF_COOKIE];
   const headerCsrf = req.get(config.CSRF_HEADER);
@@ -107,6 +156,7 @@ function csrfProtect(req, res, next) {
 
 module.exports = {
   parseCookies,
+  getRequestCookies,
   shouldUseSecureCookie,
   setSessionCookie,
   clearSessionCookie,

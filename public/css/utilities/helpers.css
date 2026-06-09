@@ -1,13 +1,4 @@
-/**
- * Utility Helper Classes
- * Common utilities, spacing, text, display helpers
- * ~120 lines
- */
 
-/* Display Utilities */
-.hidden {
-  display: none !important;
-}
 
 /* Skip Link for Accessibility */
 .skip-link {
@@ -27,113 +18,6 @@
   transform: translateY(0);
 }
 
-/* Text Utilities */
-.eyebrow {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-/* Empty State */
-.empty-state {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-soft);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 252, 0.92));
-  border: 1px solid var(--line);
-}
-
-.empty-state strong {
-  display: block;
-  font-size: 16px;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.empty-state p {
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.empty-state-enhanced {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.empty-state-icon {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 20px;
-  opacity: 0.3;
-  animation: pulse-animation 2s ease-in-out infinite;
-}
-
-.empty-state-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.empty-state-description {
-  font-size: 14px;
-  color: var(--text-soft);
-  line-height: 1.6;
-  max-width: 400px;
-  margin-bottom: 20px;
-}
-
-.empty-state-action {
-  margin-top: 12px;
-}
-
-/* Loading Placeholder */
-.loading-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.loading-placeholder::before {
-  content: '';
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-  border: 2px solid var(--line-strong);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin-animation 0.8s linear infinite;
-}
-
-/* Link Button */
-.link-btn {
-  appearance: none;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: #2f61ff;
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit;
-}
-
-.link-btn:hover {
-  color: var(--accent-vermilion);
-}
-
 .empty-state .link-btn {
   color: #2f61ff;
   text-decoration: underline;
@@ -146,30 +30,6 @@
 
 .empty-state .link-btn:hover {
   color: #1e4fd9;
-}
-
-/* Toolbar */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-/* Search Field */
-.search-field {
-  display: grid;
-  gap: 6px;
-  flex: 0 1 400px;
-  max-width: 400px;
-}
-
-.search-field span {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.06em;
 }
 
 .search-field input {
@@ -198,62 +58,4 @@
   box-shadow: 0 0 0 4px rgba(23, 24, 26, 0.06);
   background: #ffffff;
   transform: translateY(-1px);
-}
-
-/* Filter Row */
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-/* Tooltip Enhanced */
-.tooltip-enhanced {
-  position: relative;
-}
-
-.tooltip-enhanced::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.9);
-  padding: 6px 12px;
-  background: rgba(23, 24, 26, 0.95);
-  color: white;
-  font-size: 12px;
-  white-space: nowrap;
-  border-radius: 6px;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1000;
-}
-
-.tooltip-enhanced::before {
-  content: '';
-  position: absolute;
-  bottom: calc(100% + 2px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: rgba(23, 24, 26, 0.95);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1000;
-}
-
-.tooltip-enhanced:hover::after,
-.tooltip-enhanced:hover::before {
-  opacity: 1;
-  transform: translateX(-50%) scale(1);
-}
-
-/* Status Icon */
-.status-icon {
-  display: inline-block;
-  margin-right: 4px;
-  font-style: normal;
 }

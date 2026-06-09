@@ -1,6 +1,6 @@
 const config = require('../config');
 const { hasPermission } = require('../config/permissions');
-const { parseCookies } = require('./csrf');
+const { getRequestCookies } = require('./csrf');
 const { logAuthFailure } = require('../utils/logger');
 
 /**
@@ -16,10 +16,13 @@ function getSession(req) {
   if (!getSessionFromDb) {
     throw new Error('Session getter not configured. Call setSessionGetter() first.');
   }
-  const cookies = parseCookies(req.headers.cookie || '');
+  if (req._sessionLoaded) return req._cachedSession;
+
+  const cookies = getRequestCookies(req);
   const token = cookies[config.SESSION_COOKIE];
-  if (!token) return null;
-  return getSessionFromDb(token);
+  req._sessionLoaded = true;
+  req._cachedSession = token ? getSessionFromDb(token) : null;
+  return req._cachedSession;
 }
 
 /**

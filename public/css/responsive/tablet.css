@@ -98,13 +98,10 @@
   }
 
   /* Media Grid */
-  .media-grid {
-    grid-template-columns: 1fr;
-  }
 
   /* Team Grid */
   .team-grid {
-    grid-template-columns: 1fr;
+
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 
@@ -120,7 +117,7 @@
   /* Card Grids */
   .media-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+
   }
 
   /* Stats */
@@ -348,7 +345,7 @@
   /* Media Grid */
   .media-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
+
   }
 
   .media-card {
@@ -427,8 +424,7 @@
 
   /* Modals */
   .profile-popover {
-    width: 90vw;
-    max-width: 400px;
+
     max-height: 85vh;
     width: 100%;
     max-width: 100vw;
@@ -448,7 +444,7 @@
 
   .wish-fab {
     right: 16px;
-    bottom: 16px;
+
     width: 52px;
     height: 52px;
   }
@@ -459,17 +455,6 @@
   }
 
   /* Safe Areas */
-  .workspace-main {
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-
-  .toast-container {
-    bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));
-  }
-
-  .wish-fab {
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
-  }
 
   /* Audit Toolbar */
   .audit-toolbar {

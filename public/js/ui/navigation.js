@@ -31,8 +31,7 @@ export function updateNavIndicator() {
   indicator.style.transform = `translateX(${left}px)`;
 }
 
-// 动画队列，防止快速切换导致冲突
-let animationQueue = Promise.resolve();
+let transitionToken = 0;
 
 /**
  * 等待指定时间
@@ -48,90 +47,81 @@ function wait(ms) {
  * @param {string} view - 视图名称 (overview, media, review, todo, device, borrow, team, settings)
  */
 export function setActiveView(view) {
-  // 如果已经是当前视图，不做任何操作
-  if (state.activeView === view) return;
+  const nextPanel = document.querySelector(`.workspace-panel[data-panel="${view}"]`);
+  if (!view || !nextPanel) {
+    console.warn(`视图 "${view}" 不存在`);
+    return;
+  }
 
-  // 将切换操作加入队列，防止快速点击导致动画冲突
-  animationQueue = animationQueue.then(() => performViewTransition(view));
+  const token = ++transitionToken;
+  if (state.activeView === view) {
+    normalizePanels(view);
+    updateNavigationUI(view);
+    return;
+  }
+
+  state.activeView = view;
+  updateNavigationUI(view);
+  performViewTransition(view, token);
+}
+
+function normalizePanels(activeView) {
+  $$('.workspace-panel').forEach((panel) => {
+    const active = panel.dataset.panel === activeView;
+    panel.classList.toggle('active', active);
+    panel.classList.remove('page-enter', 'page-exit');
+    panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+  });
 }
 
 /**
  * 执行视图切换动画
  * @param {string} view - 目标视图
  */
-async function performViewTransition(view) {
-  const previousView = state.activeView;
-  const previousPanel = document.querySelector(`.workspace-panel[data-panel="${previousView}"]`);
+async function performViewTransition(view, token) {
+  const previousPanel = document.querySelector('.workspace-panel.active');
   const nextPanel = document.querySelector(`.workspace-panel[data-panel="${view}"]`);
 
-  // 如果目标面板不存在，直接返回
-  if (!nextPanel) {
-    console.warn(`视图 "${view}" 不存在`);
-    return;
-  }
-
-  // 如果是同一个面板，不需要动画
+  if (!nextPanel) return;
   if (previousPanel === nextPanel) {
-    state.activeView = view;
-    updateNavigationUI(view);
+    normalizePanels(view);
     return;
   }
 
   try {
-    // 1. 旧面板退出动画
     if (previousPanel) {
       previousPanel.classList.add('page-exit');
-      await wait(200); // 等待退出动画完成
-      previousPanel.classList.remove('active', 'page-exit');
+      await wait(200);
+      if (token !== transitionToken) return;
     }
 
-    // 2. 更新状态
-    state.activeView = view;
-    updateNavigationUI(view);
+    normalizePanels(view);
 
-    // 3. 新面板进入动画
-    if (nextPanel) {
-      // 添加 active 类但保持不可见
-      nextPanel.classList.add('active');
+    nextPanel.classList.add('page-enter');
+    void nextPanel.offsetHeight;
+    await wait(50);
+    if (token !== transitionToken) return;
+    nextPanel.classList.remove('page-enter');
 
-      // 强制重排，确保动画生效
-      void nextPanel.offsetHeight;
+    nextPanel.querySelectorAll(':scope > *').forEach((child, index) => {
+      child.style.animation = 'none';
+      void child.offsetHeight;
+      child.style.animation = '';
+      child.style.animationDelay = `${index * 50}ms`;
+    });
 
-      // 添加进入动画类
-      nextPanel.classList.add('page-enter');
-
-      // 等待一帧后移除动画类，让 CSS 接管
-      await wait(50);
-      nextPanel.classList.remove('page-enter');
-
-      // 重置子元素动画（重新触发 stagger）
-      nextPanel.querySelectorAll(':scope > *').forEach((child, index) => {
-        child.style.animation = 'none';
-        void child.offsetHeight;
-        child.style.animation = '';
-        // 为子元素设置延迟，创建交错效果
-        child.style.animationDelay = `${index * 50}ms`;
-      });
-    }
-
-    // 4. 关闭个人资料弹窗（除非在设置页面）
     if (view !== 'settings') {
       closeProfilePopover();
     }
 
-    // 5. 清除反馈消息
     clearFeedback(view);
-
-    // 6. 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
   } catch (error) {
     console.error('视图切换动画失败:', error);
-    // 降级处理：直接切换
-    if (previousPanel) previousPanel.classList.remove('active');
-    if (nextPanel) nextPanel.classList.add('active');
-    state.activeView = view;
-    updateNavigationUI(view);
+    if (token === transitionToken) {
+      normalizePanels(view);
+      updateNavigationUI(view);
+    }
   }
 }
 

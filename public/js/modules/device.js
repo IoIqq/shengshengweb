@@ -32,6 +32,16 @@ function addLocalActivity(title, detail) {
   document.dispatchEvent(new CustomEvent('activity-updated'));
 }
 
+function canManageDevices() {
+  return state.session?.user?.role === 'admin';
+}
+
+function applyDeviceRoleVisibility() {
+  const canManage = canManageDevices();
+  if (els.deviceForm) els.deviceForm.hidden = !canManage;
+  if (els.deviceFormCancel) els.deviceFormCancel.hidden = !canManage || !state.deviceEditingId;
+}
+
 /**
  * 按设备类别推断占位图标
  */
@@ -127,6 +137,7 @@ export function syncDeviceView() {
  * 渲染设备列表
  */
 export function renderDevices() {
+  applyDeviceRoleVisibility();
   const items = Array.isArray(state.deviceItems) ? state.deviceItems : [];
   const stats = getDeviceStats();
   if (els.deviceCount) {
@@ -147,6 +158,12 @@ export function renderDevices() {
           const warrantyInfo = item.warrantyUntil ? `<span>保修至：${escapeHtml(item.warrantyUntil)}</span>` : '';
           const noteHtml = item.note
             ? `<details class="device-note-details"><summary>备注</summary><p>${escapeHtml(item.note)}</p></details>`
+            : '';
+          const actionsHtml = canManageDevices()
+            ? `<div class="device-actions">
+                    <button class="ghost-btn" data-device-edit="${escapeHtml(item.id)}" type="button">编辑</button>
+                    <button class="ghost-btn" data-device-delete="${escapeHtml(item.id)}" type="button">删除</button>
+                  </div>`
             : '';
           return `
             <article class="device-item" data-status="${escapeHtml(item.status)}">
@@ -172,10 +189,7 @@ export function renderDevices() {
                     ${warrantyInfo}
                   </div>
                   ${noteHtml}
-                  <div class="device-actions">
-                    <button class="ghost-btn" data-device-edit="${escapeHtml(item.id)}" type="button">编辑</button>
-                    <button class="ghost-btn" data-device-delete="${escapeHtml(item.id)}" type="button">删除</button>
-                  </div>
+                  ${actionsHtml}
                 </div>
               </div>
             </article>
@@ -183,7 +197,7 @@ export function renderDevices() {
         },
       )
       .join('')
-    : '<div class="empty-state"><strong>没有设备记录</strong><p>点击上方"保存设备"按钮添加第一台设备。</p></div>';
+    : `<div class="empty-state"><strong>没有设备记录</strong><p>${canManageDevices() ? '点击上方"保存设备"按钮添加第一台设备。' : '暂无可查看的设备台账。'}</p></div>`;
 }
 
 /**
@@ -437,6 +451,7 @@ export async function deleteDevice(id) {
  * @param {string} id - 设备 ID
  */
 export function startEditDevice(id) {
+  if (!canManageDevices()) return;
   state.deviceEditingId = id;
   const device = (state.deviceCatalog || []).find((d) => d.id === id);
   if (!device || !els.deviceForm) return;
@@ -459,6 +474,7 @@ export function startEditDevice(id) {
 
   if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = '保存修改';
   if (els.deviceFormId) els.deviceFormId.value = id;
+  applyDeviceRoleVisibility();
 }
 
 /**
@@ -470,4 +486,5 @@ export function cancelEditDevice() {
   setDeviceImagePreview('');
   if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = '保存设备';
   if (els.deviceFormId) els.deviceFormId.value = '';
+  applyDeviceRoleVisibility();
 }

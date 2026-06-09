@@ -17,8 +17,8 @@
   button,
   a,
   .clickable {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
   }
 
   /* Enhanced Touch Feedback */
@@ -35,6 +35,7 @@
   .team-card:active,
   .device-card:active,
   .borrow-card:active,
+  .borrow-item:active,
   .activity-item:active {
     transform: scale(0.98);
     box-shadow: var(--shadow);
@@ -43,7 +44,8 @@
   /* Remove Hover Effects (prevents sticky states) */
   .media-card:hover .media-overlay,
   .team-card:hover,
-  .device-item:hover {
+  .device-item:hover,
+  .borrow-item:hover {
     opacity: 1;
     transform: none;
   }
@@ -132,6 +134,8 @@
   .todo-body,
   .device-card p,
   .borrow-card p,
+  .borrow-item p,
+  .borrow-item small,
   .review-copy,
   .activity-item p {
     -webkit-user-select: text;
@@ -144,6 +148,7 @@
   .team-card,
   .device-card,
   .borrow-card,
+  .borrow-item,
   .nav-chip,
   .filter-chip,
   button {

@@ -12,6 +12,7 @@ const { cleanupOldLogs, logServerEvent } = require('./utils/logger');
 const { requestLogger, errorHandler, notFoundHandler } = require('./middleware');
 const { csrfProtect } = require('./middleware/csrf');
 const { setSessionGetter } = require('./middleware/auth');
+const { startMaintenanceScheduler, stopMaintenanceScheduler } = require('./utils/maintenance-scheduler');
 
 // 导入模型
 const models = require('./models');
@@ -26,23 +27,53 @@ const borrowRoutes = require('./routes/borrow');
 const teamRoutes = require('./routes/team');
 const profileRoutes = require('./routes/profile');
 const auditRoutes = require('./routes/audit');
+const topicLibraryRoutes = require('./routes/topic-library');
+const storageRoutes = require('./routes/storage');
+const registrationRequestRoutes = require('./routes/registration-requests');
 const systemRoutes = require('./routes/system');
 
+const STATIC_CACHEABLE_EXTENSIONS = new Set(['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf']);
+const UPLOAD_CACHEABLE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.mp4', '.webm', '.mov', '.m4v', '.ogg']);
+
 // 确保必要的目录存在
-ensureDir(config.DATA_DIR);
-ensureDir(config.LOG_DIR);
-ensureDir(config.UPLOAD_DIR);
-ensureDir(config.MEDIA_DIR);
-ensureDir(config.AVATAR_DIR);
-ensureDir(config.DEVICE_IMAGE_DIR);
-ensureDir(config.INBOX_DIR);
+const storageDirStatus = [];
+
+function ensureRequiredDir(label, dir) {
+  ensureDir(dir);
+  return { label, path: dir, ok: true };
+}
+
+function ensureOptionalStorageDir(label, dir) {
+  try {
+    ensureDir(dir);
+    storageDirStatus.push({ label, path: dir, ok: true });
+  } catch (error) {
+    const issue = { label, path: dir, ok: false, error: error.code || error.message };
+    storageDirStatus.push(issue);
+    console.warn(`⚠️  素材目录不可用：${label} -> ${dir} (${issue.error})`);
+  }
+}
+
+ensureRequiredDir('数据目录', config.DATA_DIR);
+ensureRequiredDir('数据库父目录', path.dirname(config.DB_PATH));
+ensureRequiredDir('日志目录', config.LOG_DIR);
+ensureOptionalStorageDir('素材根目录', config.UPLOAD_DIR);
+ensureOptionalStorageDir('媒体目录', config.MEDIA_DIR);
+ensureOptionalStorageDir('头像目录', config.AVATAR_DIR);
+ensureOptionalStorageDir('设备图片目录', config.DEVICE_IMAGE_DIR);
+ensureOptionalStorageDir('Inbox 目录', config.INBOX_DIR);
+config.STORAGE_DIR_STATUS = storageDirStatus;
 
 const app = express();
+let httpServer = null;
+let shuttingDown = false;
 
 // ========== 初始化数据库 ==========
 async function initApp() {
   try {
     await models.database.initDatabase();
+    models.user.ensureUserExists(config.ADMIN_USERNAME, config.ADMIN_PASSWORD, 'admin', 'system');
+    models.user.ensureUserExists(config.GUEST_USERNAME, config.GUEST_PASSWORD, 'guest', 'system');
     console.log('✓ 数据库初始化成功');
 
     // 配置会话获取器
@@ -51,6 +82,9 @@ async function initApp() {
     // 清理过期会话和旧日志
     models.session.cleanupExpiredSessions();
     cleanupOldLogs();
+
+    // 周期性维护：清理 sessions / audit_logs / activity
+    startMaintenanceScheduler(models);
 
     // ========== 中间件配置 ==========
     if (config.TRUST_PROXY) {
@@ -98,7 +132,16 @@ async function initApp() {
 
     // 上传文件静态服务（需要认证）
     const { requireAuthForUploads } = require('./middleware/auth');
-    app.use('/uploads', requireAuthForUploads, express.static(config.UPLOAD_DIR));
+    app.use('/uploads', requireAuthForUploads, express.static(config.UPLOAD_DIR, {
+      etag: true,
+      lastModified: true,
+      setHeaders(res, filePath) {
+        const ext = path.extname(filePath).toLowerCase();
+        if (UPLOAD_CACHEABLE_EXTENSIONS.has(ext)) {
+          res.setHeader('Cache-Control', 'private, max-age=86400, must-revalidate');
+        }
+      },
+    }));
 
     // 静态资源服务（带缓存策略）
     const STATIC_CACHE_MAX_AGE = 24 * 60 * 60; // 1天
@@ -114,7 +157,7 @@ async function initApp() {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             return;
           }
-          if (['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf'].includes(ext)) {
+          if (STATIC_CACHEABLE_EXTENSIONS.has(ext)) {
             res.setHeader('Cache-Control', `public, max-age=${STATIC_CACHE_MAX_AGE}, must-revalidate`);
           }
         },
@@ -131,6 +174,9 @@ async function initApp() {
     app.use('/api/team', teamRoutes);
     app.use('/api/profile', profileRoutes);
     app.use('/api/audit-logs', auditRoutes);
+    app.use('/api/topic-library', topicLibraryRoutes);
+    app.use('/api/storage', storageRoutes);
+    app.use('/api/registration-requests', registrationRequestRoutes);
     app.use('/api', systemRoutes); // system路由包含多个端点，挂载到/api
 
     // 健康检查（已包含在systemRoutes中，这里保留作为备份）
@@ -147,7 +193,7 @@ async function initApp() {
     app.use(errorHandler);
 
     // ========== 启动服务器 ==========
-    app.listen(config.PORT, config.HOST, () => {
+    httpServer = app.listen(config.PORT, config.HOST, () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
@@ -182,28 +228,53 @@ async function initApp() {
 }
 
 // ========== 进程错误处理 ==========
+function gracefulShutdown(reason, exitCode = 0) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`收到 ${reason} 信号，正在关闭服务器...`);
+
+  const finalize = () => {
+    try {
+      stopMaintenanceScheduler();
+      models.database.saveDatabaseNow();
+    } catch (error) {
+      console.error('关停期间最终落盘失败：', error);
+    }
+    process.exit(exitCode);
+  };
+
+  const forceTimer = setTimeout(() => {
+    console.warn('优雅关停超时，强制退出');
+    finalize();
+  }, 8000);
+  if (typeof forceTimer.unref === 'function') forceTimer.unref();
+
+  if (httpServer) {
+    httpServer.close((error) => {
+      if (error) console.error('HTTP 服务关闭失败：', error);
+      clearTimeout(forceTimer);
+      finalize();
+    });
+  } else {
+    clearTimeout(forceTimer);
+    finalize();
+  }
+}
+
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   logServerEvent('fatal', 'uncaught_exception', { error });
-  process.exit(1);
+  gracefulShutdown('uncaughtException', 1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   logServerEvent('fatal', 'unhandled_rejection', { reason });
+  gracefulShutdown('unhandledRejection', 1);
 });
 
-process.on('SIGTERM', () => {
-  console.log('收到 SIGTERM 信号，正在关闭服务器...');
-  models.database.saveDatabase();
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('\n收到 SIGINT 信号，正在关闭服务器...');
-  models.database.saveDatabase();
-  process.exit(0);
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM', 0));
+process.on('SIGINT', () => gracefulShutdown('SIGINT', 0));
 
 // 启动应用
 initApp();
