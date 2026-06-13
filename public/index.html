@@ -28,42 +28,49 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/main.css?v=20260604" />
+    <link rel="stylesheet" href="css/main.css?v=20260612" />
   </head>
   <body class="workspace-body">
     <a class="skip-link" href="#content">跳到主要内容</a>
 
     <div class="showcase-shell" id="showcase-shell">
+      <div class="sc-grain" aria-hidden="true"></div>
       <nav class="showcase-nav">
         <div class="showcase-nav-brand">
-          <svg width="32" height="32" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-            <rect width="36" height="36" rx="10" fill="url(#brand-gradient)"/>
-            <path d="M18 12c-3.5 0-6 2.5-6 5.5 0 1.5.5 2.8 1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-            <path d="M18 12c3.5 0 6 2.5 6 5.5 0 1.5-.5 2.8-1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-            <circle cx="18" cy="17.5" r="1.5" fill="white"/>
-          </svg>
-          <span>声声工作室 · 创作展示</span>
+          <img src="/assets/logo/studio-logo.png" alt="声声网络思政工作室" class="studio-logo" />
         </div>
         <button class="showcase-login-btn" id="showcase-to-login" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           工作台入口
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </nav>
 
       <section class="showcase-hero">
         <p class="eyebrow">CREATIVE SHOWCASE</p>
-        <h1>探索创作内容</h1>
-        <p class="showcase-hero-sub">浏览工作室的图片素材与视频作品，感受视觉创意的魅力。</p>
+        <h1>光影<em>之间</em></h1>
+        <p class="showcase-hero-sub">我们用镜头记录每一帧思想。这里收录工作室的影像与图片作品，欢迎走进我们的创作世界。</p>
+        <div class="showcase-hero-meta">
+          <span class="count" id="showcase-count">00</span>
+          <span>件作品</span>
+          <span class="rule" aria-hidden="true"></span>
+          <span>VOICE STUDIO</span>
+        </div>
       </section>
+
+      <div class="showcase-filters" id="showcase-filters" role="tablist" aria-label="作品分类">
+        <button class="showcase-filter-btn is-active" type="button" data-filter="all" role="tab" aria-selected="true">全部<span class="num" data-count="all">0</span></button>
+        <button class="showcase-filter-btn" type="button" data-filter="video" role="tab" aria-selected="false">影像<span class="num" data-count="video">0</span></button>
+        <button class="showcase-filter-btn" type="button" data-filter="photo" role="tab" aria-selected="false">图片<span class="num" data-count="photo">0</span></button>
+      </div>
 
       <main class="showcase-main" id="showcase-main">
         <div class="showcase-grid" id="showcase-grid">
-          <div class="showcase-loading">加载中...</div>
+          <div class="showcase-loading">正在载入作品…</div>
         </div>
         <div class="showcase-empty hidden" id="showcase-empty">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <p>暂无展示内容</p>
-          <span>素材通过审核后将在此展示</span>
+          <p>作品即将上映</p>
+          <span>素材通过审核后将在此展出</span>
         </div>
       </main>
 
@@ -76,7 +83,14 @@
         <button class="showcase-lightbox-close" id="showcase-lightbox-close" type="button" aria-label="关闭">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+        <button class="showcase-lightbox-nav showcase-lightbox-prev" id="showcase-lightbox-prev" type="button" aria-label="上一件">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="showcase-lightbox-nav showcase-lightbox-next" id="showcase-lightbox-next" type="button" aria-label="下一件">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <img class="showcase-lightbox-img" id="showcase-lightbox-img" src="" alt="" />
+        <video class="showcase-lightbox-video hidden" id="showcase-lightbox-video" controls playsinline></video>
         <p class="showcase-lightbox-title" id="showcase-lightbox-title"></p>
       </div>
     </div>

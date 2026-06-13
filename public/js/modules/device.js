@@ -5,36 +5,12 @@
 
 import { state } from '../core/state.js';
 import { els } from '../core/dom.js';
-import { escapeHtml } from '../utils/helpers.js';
-import { requestJSON } from '../utils/api.js';
+import { escapeHtml, addLocalActivity } from '../utils/helpers.js';
+import { requestJSON, readCookie } from '../utils/api.js';
+import { canManageDevices } from '../core/router.js';
 import { Toast } from '../ui/toast.js';
 import { Dialog } from '../ui/dialog.js';
 import { setPending, showFeedback } from '../ui/feedback.js';
-
-/**
- * 读取 cookie（CSRF 用）
- */
-function readCookie(name) {
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()[\]\\/+^]/g, '\\$&') + '=([^;]*)'));
-  return match ? decodeURIComponent(match[1]) : '';
-}
-
-function addLocalActivity(title, detail) {
-  if (!state.bootstrap) state.bootstrap = {};
-  if (!Array.isArray(state.bootstrap.activity)) state.bootstrap.activity = [];
-  state.bootstrap.activity.unshift({
-    id: `local-${Date.now()}`,
-    title,
-    meta: state.session?.user?.username || '本地操作',
-    detail,
-    createdAt: new Date().toISOString(),
-  });
-  document.dispatchEvent(new CustomEvent('activity-updated'));
-}
-
-function canManageDevices() {
-  return state.session?.user?.role === 'admin';
-}
 
 function applyDeviceRoleVisibility() {
   const canManage = canManageDevices();

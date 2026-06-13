@@ -5,28 +5,11 @@
 
 import { state } from '../core/state.js';
 import { els } from '../core/dom.js';
-import { escapeHtml, formatDatetime } from '../utils/helpers.js';
+import { escapeHtml, formatDatetime, isAdminUser, addLocalActivity } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { setPending } from '../ui/feedback.js';
 import { deviceStatusLabel, getDeviceSourceItems } from './device.js';
-
-function addLocalActivity(title, detail) {
-  if (!state.bootstrap) state.bootstrap = {};
-  if (!Array.isArray(state.bootstrap.activity)) state.bootstrap.activity = [];
-  state.bootstrap.activity.unshift({
-    id: `local-${Date.now()}`,
-    title,
-    meta: state.session?.user?.username || '本地操作',
-    detail,
-    createdAt: new Date().toISOString(),
-  });
-  document.dispatchEvent(new CustomEvent('activity-updated'));
-}
-
-function isAdminUser() {
-  return state.session?.user?.role === 'admin';
-}
 
 /**
  * 检查借出是否逾期

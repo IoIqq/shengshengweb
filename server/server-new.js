@@ -8,6 +8,7 @@ const path = require('path');
 // 导入配置和工具
 const config = require('./config');
 const { ensureDir } = require('./utils');
+const { getLanAddresses, findAvailablePort } = require('./utils/network');
 const { cleanupOldLogs, logServerEvent } = require('./utils/logger');
 const { requestLogger, errorHandler, notFoundHandler } = require('./middleware');
 const { csrfProtect } = require('./middleware/csrf');
@@ -193,31 +194,53 @@ async function initApp() {
     app.use(errorHandler);
 
     // ========== 启动服务器 ==========
-    httpServer = app.listen(config.PORT, config.HOST, () => {
+    // 自动选一个空闲端口：首选 config.PORT，被占用则按 PORT_FALLBACKS 回退。
+    const listenPort = await findAvailablePort(config.PORT, config.PORT_FALLBACKS, config.HOST);
+    if (!listenPort) {
+      console.error(`❌ 端口 ${config.PORT} 及所有备用端口都被占用，无法启动。`);
+      console.error('   可在 .env 里设置一个新的 PORT，或关闭占用端口的程序后重试。');
+      process.exit(1);
+    }
+    if (listenPort !== config.PORT) {
+      console.warn(`⚠️  端口 ${config.PORT} 被占用，已自动改用 ${listenPort}。`);
+    }
+    config.PORT = listenPort;
+
+    // 实时探测当前网络的局域网地址（切换 Wi-Fi / 有线后会自动反映）
+    const lanAddresses = getLanAddresses();
+    const networkUrl = lanAddresses.length
+      ? `http://${lanAddresses[0].address}:${listenPort}`
+      : '（未连接局域网）';
+
+    httpServer = app.listen(listenPort, config.HOST, () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   🚀  ${config.SITE_TITLE}                              ║
-║   ${config.SITE_SUBTITLE}                               ║
-║                                                           ║
-║   📡  本地: http://localhost:${config.PORT}              ║
-║   🌐  网络: http://${require('os').networkInterfaces()?.['WLAN']?.[1]?.address || '获取中...'}:${config.PORT}      ║
-║                                                           ║
-║   📁  数据库: ${path.relative(process.cwd(), config.DB_PATH)}  ║
-║   📤  上传: ${path.relative(process.cwd(), config.UPLOAD_DIR)}    ║
-║                                                           ║
-║   ⚙️   环境: ${process.env.NODE_ENV || 'development'}    ║
-║   📝  日志: ${path.relative(process.cwd(), config.LOG_DIR)}        ║
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
-      `);
+║   🚀  ${config.SITE_TITLE}
+║   ${config.SITE_SUBTITLE}
+║
+║   📡  本地: http://localhost:${listenPort}
+║   🌐  网络: ${networkUrl}
+║
+║   📁  数据库: ${path.relative(process.cwd(), config.DB_PATH)}
+║   📤  上传: ${path.relative(process.cwd(), config.UPLOAD_DIR)}
+║   ⚙️   环境: ${process.env.NODE_ENV || 'development'}
+╚═══════════════════════════════════════════════════════════╝`);
+
+      if (lanAddresses.length > 1) {
+        console.log('\n   其他可用网络地址（换网络时可试）：');
+        for (const ip of lanAddresses.slice(1)) {
+          console.log(`     • http://${ip.address}:${listenPort}  [${ip.name}]`);
+        }
+      }
+      console.log('\n   📱 手机访问 / 二维码：运行  npm run network\n');
 
       logServerEvent('info', 'server_started', {
         pid: process.pid,
         nodeVersion: process.version,
         platform: process.platform,
         host: config.HOST,
-        port: config.PORT,
+        port: listenPort,
+        lanAddresses: lanAddresses.map((ip) => ip.address),
       });
     });
 

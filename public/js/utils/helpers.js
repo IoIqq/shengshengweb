@@ -3,6 +3,8 @@
  * 提供通用的辅助函数
  */
 
+import { state } from '../core/state.js';
+
 // DOM 查询
 export function $(root, selector) {
   return root ? root.querySelector(selector) : null;
@@ -74,6 +76,34 @@ export function normalizeListResponse(data) {
   if (Array.isArray(data?.items)) return data.items;
   if (Array.isArray(data)) return data;
   return [];
+}
+
+// 角色与权限
+export function currentRole() {
+  return state.session?.user?.role || state.bootstrap?.user?.role || '';
+}
+
+export function isAdminUser() {
+  return currentRole() === 'admin';
+}
+
+// HTML 安全文本
+export function safeText(value) {
+  return escapeHtml(String(value ?? ''));
+}
+
+// 本地活动记录（无需服务器的即时反馈）
+export function addLocalActivity(title, detail) {
+  if (!state.bootstrap) state.bootstrap = {};
+  if (!Array.isArray(state.bootstrap.activity)) state.bootstrap.activity = [];
+  state.bootstrap.activity.unshift({
+    id: `local-${Date.now()}`,
+    title,
+    meta: state.session?.user?.username || '本地操作',
+    detail,
+    createdAt: new Date().toISOString(),
+  });
+  document.dispatchEvent(new CustomEvent('activity-updated'));
 }
 
 // 暴露到全局（向后兼容）

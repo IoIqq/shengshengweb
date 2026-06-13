@@ -5,19 +5,11 @@
 
 import { state } from '../core/state.js';
 import { els } from '../core/dom.js';
-import { escapeHtml, formatDatetime } from '../utils/helpers.js';
+import { escapeHtml, formatDatetime, isAdminUser } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { Dialog } from '../ui/dialog.js';
 import { setPending } from '../ui/feedback.js';
-
-/**
- * 检查是否为管理员
- * @returns {boolean}
- */
-function isAdminUser() {
-  return state.session?.user?.role === 'admin';
-}
 
 function normalizeGroups(value) {
   if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);

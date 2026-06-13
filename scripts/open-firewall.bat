@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0\.."
-for /f "delims=" %%P in ('node -e "try{require(''dotenv'').config();console.log(require(''./server/config'').PORT)}catch(e){console.log(3002)}"') do set "APP_PORT=%%P"
+for /f "usebackq delims=" %%P in (`node -e "try{require('dotenv').config();console.log(require('./server/config').PORT)}catch(e){console.log(48080)}"`) do set "APP_PORT=%%P"
 set "RULE_NAME=声声工作室-%APP_PORT%"
 REM ================================================================
 REM  Windows 防火墙放行 - 声声工作室

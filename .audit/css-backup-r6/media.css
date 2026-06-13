@@ -1,3 +1,5 @@
+
+
 /* Batch Actions Bar */
 
 @keyframes slideDown {
@@ -82,7 +84,12 @@
   font-weight: 600;
 }
 
-/* Tag Chip — 由 media-library.css 定义为单一克制蓝标签 */
+/* Tag Chip */
+
+.tag-chip:hover {
+  background: linear-gradient(135deg, rgba(58, 90, 122, 0.15), rgba(58, 90, 122, 0.2));
+  transform: translateY(-1px);
+}
 
 .media-card :is(button, input, textarea, select):focus-visible,
 .review-item :is(button, input, textarea, select):focus-visible,
@@ -124,7 +131,8 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius-xl);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 251, 0.94)), var(--surface);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 251, 0.94)),
+    var(--surface);
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.32);
   transform: translateY(18px) scale(0.98);
   transition:
@@ -146,7 +154,6 @@
 }
 
 .media-preview-head {
-  position: relative;
   border-bottom: 1px solid var(--line);
 }
 
@@ -199,7 +206,9 @@
   min-height: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top, rgba(58, 90, 122, 0.18), transparent 34%), #090d16;
+  background:
+    radial-gradient(circle at top, rgba(58, 90, 122, 0.18), transparent 34%),
+    #090d16;
 }
 
 .media-preview-image,
@@ -345,7 +354,9 @@ img[data-src]::before {
 
 /* Alert Chip (Media Overview) */
 .alert-chip {
+
   gap: 10px;
+
 }
 
 .alert-value {
@@ -363,7 +374,7 @@ img[data-src]::before {
 .alert-value {
   font-size: 20px;
   font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .alert-label {
@@ -380,6 +391,7 @@ img[data-src]::before {
   right: 8px;
 
   opacity: 0.5;
+
 }
 
 .alert-pulse {
@@ -391,8 +403,18 @@ img[data-src]::before {
 }
 
 @keyframes alert-pulse {
-  0%,
-  100% {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes alert-pulse {
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -421,17 +443,17 @@ img[data-src]::before {
   flex-shrink: 0;
 }
 
-.focus-priority[data-priority='高'] {
+.focus-priority[data-priority="高"] {
   background: rgba(154, 62, 62, 0.12);
   color: var(--danger);
 }
 
-.focus-priority[data-priority='中'] {
+.focus-priority[data-priority="中"] {
   background: rgba(168, 123, 31, 0.14);
   color: var(--warning);
 }
 
-.focus-priority[data-priority='低'] {
+.focus-priority[data-priority="低"] {
   background: rgba(107, 101, 94, 0.12);
   color: var(--text-soft);
 }
@@ -468,8 +490,7 @@ img[data-src]::before {
 }
 
 @keyframes pulse-animation {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
   50% {
@@ -485,13 +506,17 @@ img[data-src]::before {
 }
 
 @media (max-width: 768px) {
+
   .batch-actions {
+
     display: flex;
     gap: 8px;
   }
+
 }
 
 @media (max-width: 640px) {
+
   .shortcut-btn {
     padding: 14px 10px;
   }
@@ -502,13 +527,16 @@ img[data-src]::before {
 }
 
 @media (max-width: 480px) {
+
 }
 
 @media (max-width: 360px) {
+
 }
 
 /* Horizontal Scroll Optimization */
 @media (max-width: 768px) {
+
 }
 
 /* Touch Devices */
@@ -521,6 +549,7 @@ img[data-src]::before {
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
 }
 
 /* Dark Mode */

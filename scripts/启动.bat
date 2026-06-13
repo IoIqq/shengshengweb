@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0\.."
-for /f "delims=" %%P in ('node -e "try{require(''dotenv'').config();console.log(require(''./server/config'').PORT)}catch(e){console.log(3002)}"') do set "APP_PORT=%%P"
+for /f "usebackq delims=" %%P in (`node -e "try{require('dotenv').config();console.log(require('./server/config').PORT)}catch(e){console.log(48080)}"`) do set "APP_PORT=%%P"
 title 声声网络思政工作室 - 一键启动
 
 :menu
@@ -96,6 +96,8 @@ if "!SERVER_STATUS!"=="运行中" (
     :all_in_one_ready
     if "!READY!"=="1" (
         echo   [√] 服务已就绪
+        echo   [i] 正在用浏览器打开网站...
+        start "" "http://localhost:%APP_PORT%/"
     ) else (
         echo   [!] 服务可能仍在启动中，二维码若无法访问，请稍等再试。
     )
@@ -128,7 +130,10 @@ if "!SERVER_STATUS!"=="运行中" (
     goto :menu
 )
 echo   提示：服务将在当前窗口运行，关闭窗口或按 Ctrl+C 可停止。
+echo         服务就绪后会自动打开浏览器。
 echo.
+:: 后台延时打开浏览器（不阻塞前台 npm start；生产模式约 1-2 秒即就绪）
+start "" /min powershell -NoProfile -Command "Start-Sleep -Seconds 4; Start-Process 'http://localhost:%APP_PORT%/'"
 call npm start
 echo.
 pause

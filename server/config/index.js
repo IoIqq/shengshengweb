@@ -57,7 +57,11 @@ const config = {
   UPLOAD_DIR_SOURCE: uploadPath.source,
 
   // 服务器配置
-  PORT: Number(process.env.PORT || 3002),
+  // 默认端口选 48080：好记（呼应 8080），但落在不常用的高段，
+  // 普通开发工具很少占用；又在 Windows 临时端口段(49152+)之下，不会被当作出站端口抢走。
+  PORT: Number(process.env.PORT || 48080),
+  // 首选端口被占用时自动回退的候选列表
+  PORT_FALLBACKS: [48081, 48082, 49080, 38080],
   HOST: process.env.HOST || '0.0.0.0',
   TRUST_PROXY: String(process.env.TRUST_PROXY || '1') !== '0',
   PUBLIC_URL: process.env.PUBLIC_URL || '',

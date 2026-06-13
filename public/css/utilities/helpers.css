@@ -19,7 +19,7 @@
 }
 
 .empty-state .link-btn {
-  color: #2f61ff;
+  color: #3a5a7a;
   text-decoration: underline;
   background: none;
   border: none;
@@ -29,7 +29,7 @@
 }
 
 .empty-state .link-btn:hover {
-  color: #1e4fd9;
+  color: var(--brand-strong);
 }
 
 .search-field input {

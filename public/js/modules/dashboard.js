@@ -5,15 +5,9 @@
 
 import { state } from '../core/state.js';
 import { els } from '../core/dom.js';
-import { escapeHtml, formatDatetime } from '../utils/helpers.js';
+import { escapeHtml, formatDatetime, safeText, currentRole } from '../utils/helpers.js';
 import { todoDayKey, classifyTodoByDate, formatDueLabel } from './todo.js';
 import { isOverdue } from './borrow.js';
-
-const safeText = (value) => escapeHtml(String(value ?? ''));
-
-function currentRole() {
-  return state.session?.user?.role || state.bootstrap?.user?.role || '';
-}
 
 function canUseShortcut(shortcut) {
   const role = currentRole();

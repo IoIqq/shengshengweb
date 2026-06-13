@@ -27,38 +27,40 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.status-pill[data-status='pending'] {
+.status-pill[data-status="pending"] {
   background: rgba(124, 100, 47, 0.12);
   color: var(--warning);
 }
 
-.status-pill[data-status='approved'] {
+.status-pill[data-status="approved"] {
   background: rgba(44, 107, 79, 0.12);
   color: var(--success);
 }
 
-.status-pill[data-status='rejected'] {
+.status-pill[data-status="rejected"] {
   background: rgba(154, 62, 62, 0.12);
   color: var(--danger);
 }
 
-.status-pill[data-status='available'] {
+.status-pill[data-status="available"] {
   background: rgba(44, 107, 79, 0.12);
   color: var(--success);
 }
 
-.status-pill[data-status='borrowed'] {
+.status-pill[data-status="borrowed"] {
   background: rgba(124, 100, 47, 0.12);
   color: var(--warning);
 }
 
-.status-pill[data-status='maintenance'] {
+.status-pill[data-status="maintenance"] {
   background: rgba(154, 62, 62, 0.12);
   color: var(--danger);
 }
@@ -189,7 +191,7 @@
 }
 
 .team-status-dot::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   border-radius: 50%;
@@ -198,28 +200,27 @@
   animation: status-pulse 2s ease-in-out infinite;
 }
 
-.team-status-dot[data-status='active'] {
+.team-status-dot[data-status="active"] {
   background: var(--success);
   color: var(--success);
 }
 
-.team-status-dot[data-status='active']::before {
+.team-status-dot[data-status="active"]::before {
   opacity: 0.3;
 }
 
-.team-status-dot[data-status='leave'] {
+.team-status-dot[data-status="leave"] {
   background: var(--warning);
   color: var(--warning);
 }
 
-.team-status-dot[data-status='inactive'] {
+.team-status-dot[data-status="inactive"] {
   background: var(--text-muted);
   color: var(--text-muted);
 }
 
 @keyframes status-pulse {
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
     opacity: 0.3;
   }
@@ -292,9 +293,7 @@
 .brand-points div:hover {
   transform: translateY(-2px);
   border-color: rgba(58, 90, 122, 0.18);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 22px rgba(23, 24, 26, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 22px rgba(23, 24, 26, 0.08);
 }
 
 .brand-points strong {
@@ -312,6 +311,7 @@
 
 /* Hero Stats Badge */
 .hero-stats li::before {
+
   position: absolute;
   top: 0;
   left: 50%;
@@ -322,25 +322,25 @@
   border-radius: 0 0 999px 999px;
 }
 
-.hero-stats li[data-tone='warning'] .stat-dot {
+.hero-stats li[data-tone="warning"] .stat-dot {
   background: rgba(124, 100, 47, 0.7);
   box-shadow: 0 0 0 3px rgba(124, 100, 47, 0.14);
 }
 
 /* Focus Card Badge */
-.focus-card[data-tone='warning'] {
+.focus-card[data-tone="warning"] {
   border-left: 4px solid var(--warning);
 }
 
-.focus-card[data-tone='info'] {
+.focus-card[data-tone="info"] {
   border-left: 4px solid var(--brand);
 }
 
-.focus-card[data-tone='primary'] {
+.focus-card[data-tone="primary"] {
   border-left: 4px solid #2f4a66;
 }
 
-.focus-card[data-tone='danger'] {
+.focus-card[data-tone="danger"] {
   border-left: 4px solid #3a5a7a;
 }
 

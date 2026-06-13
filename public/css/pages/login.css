@@ -40,7 +40,7 @@
   right: -80px;
   width: 280px;
   height: 280px;
-  background: radial-gradient(circle at center, rgba(47, 97, 255, 0.12), transparent 68%);
+  background: radial-gradient(circle at center, rgba(58, 90, 122, 0.12), transparent 68%);
 }
 
 .login-brand-panel::after {

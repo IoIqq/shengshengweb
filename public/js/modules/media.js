@@ -6,7 +6,7 @@
 import { state } from '../core/state.js';
 import { els } from '../core/dom.js';
 import { sortMedia, sortReview } from '../core/config.js';
-import { escapeHtml, formatDatetime } from '../utils/helpers.js';
+import { escapeHtml, formatDatetime, safeText, currentRole, isAdminUser, addLocalActivity } from '../utils/helpers.js';
 import { requestJSON, readCookie } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { showFeedback, setPending } from '../ui/feedback.js';
@@ -30,21 +30,6 @@ function revokeUploadQueueItem(item) {
 function clearUploadQueue() {
   uploadQueue.forEach(revokeUploadQueueItem);
   uploadQueue = [];
-}
-
-const safeText = (value) => escapeHtml(String(value ?? ''));
-
-function addLocalActivity(title, detail) {
-  if (!state.bootstrap) state.bootstrap = {};
-  if (!Array.isArray(state.bootstrap.activity)) state.bootstrap.activity = [];
-  state.bootstrap.activity.unshift({
-    id: `local-${Date.now()}`,
-    title,
-    meta: state.session?.user?.username || '本地操作',
-    detail,
-    createdAt: new Date().toISOString(),
-  });
-  document.dispatchEvent(new CustomEvent('activity-updated'));
 }
 
 /**
@@ -74,16 +59,8 @@ export function matchesSearch(item, search) {
   return source.includes(search.toLowerCase());
 }
 
-function currentRole() {
-  return state.session?.user?.role || state.bootstrap?.user?.role || '';
-}
-
 function canReviewMedia() {
   return ['admin', 'editor'].includes(currentRole());
-}
-
-function isAdminUser() {
-  return currentRole() === 'admin';
 }
 
 /**
@@ -98,28 +75,13 @@ export function renderMedia() {
     }));
 
   items = sortMedia(items, state.mediaSort);
-  const selectedCount = canReviewMedia() ? state.selectedMedia.size : 0;
-  const hasSelection = selectedCount > 0;
 
   if (!els.mediaGrid) return;
 
-  const batchActionsHtml = hasSelection
-    ? `<div class="batch-actions-bar" role="status" aria-live="polite">
-        <span>${safeText(selectedCount)} 项已选</span>
-        <div class="batch-actions">
-          <button class="primary-btn" data-batch-action="approve" type="button" aria-label="批量通过 ${safeText(selectedCount)} 个素材"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>批量通过</button>
-          <button class="ghost-btn" data-batch-action="reject" type="button" aria-label="批量退回 ${safeText(selectedCount)} 个素材"><svg class="media-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>批量退回</button>
-          <button class="ghost-btn" data-batch-action="clear" type="button">取消选择</button>
-        </div>
-      </div>`
-    : '';
-
-  els.mediaGrid.innerHTML = batchActionsHtml + (items.length
+  els.mediaGrid.innerHTML = (items.length
     ? items
       .map(
         (item) => {
-          const canReview = canReviewMedia();
-          const isSelected = canReview && state.selectedMedia.has(item.id);
           const canDelete = isAdminUser();
           const kindLabel = item.kind === 'video' ? '视频' : '图片';
           const statusTone = item.reviewState === 'approved' ? 'success' : item.reviewState === 'rejected' ? 'danger' : 'warning';
@@ -130,10 +92,7 @@ export function renderMedia() {
             : (item.note || '暂无简介');
 
           return `
-            <article class="media-card media-card--enhanced ${isSelected ? 'is-selected' : ''}" data-media-id="${escapeHtml(item.id)}" data-review-state="${escapeHtml(item.reviewState)}">
-              ${canReview ? `<div class="media-select-overlay">
-                <input type="checkbox" class="media-checkbox" data-media-select="${escapeHtml(item.id)}" ${isSelected ? 'checked' : ''} aria-label="选择 ${escapeHtml(item.title)}" />
-              </div>` : ''}
+            <article class="media-card media-card--enhanced" data-media-id="${escapeHtml(item.id)}" data-review-state="${escapeHtml(item.reviewState)}">
               <div class="media-thumb-wrapper">
                 <img class="media-thumb" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" src="${escapeHtml(item.thumb || '')}" />
                 <div class="media-thumb-overlay">
@@ -158,25 +117,6 @@ export function renderMedia() {
                 <p class="media-note" title="${escapeHtml(item.note || '')}">${escapeHtml(notePreview)}</p>
                 <div class="tag-row">${(item.tags || []).map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>
                 <div class="media-actions">
-                  ${canReview
-    ? item.reviewState === 'pending'
-      ? `<button class="primary-btn media-action-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button" title="通过审核">
-                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                             <polyline points="20 6 9 17 4 12"/>
-                           </svg>
-                           通过
-                         </button>
-                         <button class="ghost-btn media-action-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button" title="退回修改">
-                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                           </svg>
-                           退回
-                         </button>`
-      : item.reviewState === 'approved'
-        ? `<button class="ghost-btn media-action-btn" data-media-review="rejected" data-id="${escapeHtml(item.id)}" type="button">撤回</button>`
-        : `<button class="ghost-btn media-action-btn" data-media-review="approved" data-id="${escapeHtml(item.id)}" type="button">重新通过</button>`
-    : ''
-    }
                   ${canDelete ? `<button class="ghost-btn media-action-btn media-action-btn--danger" data-media-delete="${escapeHtml(item.id)}" type="button" title="删除素材">删除</button>` : ''}
                 </div>
               </div>
@@ -185,7 +125,7 @@ export function renderMedia() {
         }
       )
       .join('')
-    : '<div class="empty-state"><strong>没有找到符合条件的素材</strong><p>可以尝试清空筛选条件，或者 <button class="link-btn" type="button" data-jump="media">上传新素材</button>。</p></div>');
+    : '<div class="empty-state"><strong>没有找到符合条件的素材</strong><p>可以尝试清空筛选条件，或者 <button class="link-btn" type="button" data-shortcut="upload">上传新素材</button>。</p></div>');
 }
 
 /**
@@ -266,7 +206,7 @@ export function renderReview() {
       .join('')
     : hasPendingItems
       ? '<div class="empty-state"><strong>没有符合筛选条件的待审素材</strong><p>可以调整搜索关键词、类型筛选或排序方式。</p></div>'
-      : '<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已处理完成。<button class="link-btn" type="button" data-jump="media">去素材库上传</button> 或等待服务器同步。</p></div>';
+      : '<div class="empty-state"><strong>当前没有待审素材</strong><p>所有素材都已处理完成。<button class="link-btn" type="button" data-shortcut="upload">去素材库上传</button> 或等待服务器同步。</p></div>';
 }
 
 /**
@@ -570,6 +510,7 @@ async function doUpload() {
     Toast.success(canReviewMedia() ? `成功上传 ${uploadedCount} 个素材` : `成功上传 ${uploadedCount} 个素材，等待审核`);
     closeUploadDialog();
     renderMedia();
+    renderReview();
   } catch (error) {
     Toast.error(error.message || '上传失败');
     if (confirmBtn) confirmBtn.disabled = false;

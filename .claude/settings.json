@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__codegraph__codegraph_status",
+      "mcp__codegraph__codegraph_explore",
+      "mcp__codegraph__codegraph_files",
+      "mcp__codegraph__codegraph_search",
+      "mcp__codegraph__codegraph_callers",
+      "mcp__codegraph__codegraph_callees",
+      "mcp__codegraph__codegraph_impact",
+      "Bash(node server/server-new.js)",
+      "Bash(node server/server.js)",
+      "Bash(npm start)",
+      "Bash(npm run *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:*)",
+      "Bash(curl -s http://localhost:*)",
+      "Bash(git diff --stat -- *)",
+      "Bash(git diff --check -- *)",
+      "Bash(git diff -- *)",
+      "Bash(git add *)",
+      "Bash(git commit -m '*)",
+      "Bash(git push *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(node --check *)",
+      "Bash(node -c *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(rm *)",
+      "Bash(du *)",
+      "Bash(wc *)",
+      "Read(//c/Users/Adm/.claude/skills/**)",
+      "Read(//c/Users/Adm/.claude/plugins/**)"
+    ],
+    "deny": [
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/server/logs/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/server/uploads/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/node_modules/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/.audit/**)",
+      "Bash(grep -r *)",
+      "Bash(grep -rn *)"
+    ]
+  }
+}

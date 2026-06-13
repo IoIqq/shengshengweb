@@ -39,7 +39,7 @@
 .team-card:hover {
   transform: translateY(-6px) scale(1.02);
   box-shadow: 0 16px 42px rgba(17, 18, 20, 0.12);
-  border-color: rgba(47, 97, 255, 0.25);
+  border-color: rgba(58, 90, 122, 0.25);
 }
 
 .team-card small {
@@ -93,7 +93,7 @@
   padding: 8px 12px;
   background: rgba(23, 24, 26, 0.025);
   border-radius: 8px;
-  border-left: 3px solid rgba(47, 97, 255, 0.15);
+  border-left: 3px solid rgba(58, 90, 122, 0.15);
 }
 
 /* Skill Tags */
@@ -107,8 +107,8 @@
 .skill-tag {
   display: inline-block;
   padding: 3px 10px;
-  background: linear-gradient(135deg, rgba(47, 97, 255, 0.08), rgba(139, 92, 246, 0.08));
-  color: var(--accent-blue, #2f61ff);
+  background: linear-gradient(135deg, rgba(58, 90, 122, 0.08), rgba(200, 165, 90, 0.10));
+  color: var(--brand);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
@@ -118,7 +118,7 @@
 
 /* Student Collaboration Enhancements */
 .skill-tag:hover {
-  background: linear-gradient(135deg, rgba(47, 97, 255, 0.18), rgba(139, 92, 246, 0.18));
+  background: linear-gradient(135deg, rgba(58, 90, 122, 0.18), rgba(200, 165, 90, 0.20));
   transform: translateY(-1px);
 }
 
@@ -226,14 +226,14 @@
   font-family: var(--font-mono);
 }
 
-.team-badge[data-grade="大一"] { background: linear-gradient(135deg, var(--accent-blue), #60a5fa); }
-.team-badge[data-grade="大二"] { background: linear-gradient(135deg, var(--success), #34d399); }
-.team-badge[data-grade="大三"] { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); }
-.team-badge[data-grade="大四"] { background: linear-gradient(135deg, var(--accent-vermilion), #fb7185); }
+.team-badge[data-grade="大一"] { background: linear-gradient(135deg, var(--accent-gold), #d9bd84); }
+.team-badge[data-grade="大二"] { background: linear-gradient(135deg, var(--success), #3f8a68); }
+.team-badge[data-grade="大三"] { background: linear-gradient(135deg, #3f6b66, #5a8a84); }
+.team-badge[data-grade="大四"] { background: linear-gradient(135deg, var(--accent-vermilion), #e06352); }
 .team-badge[data-grade="研一"],
 .team-badge[data-grade="研二"],
-.team-badge[data-grade="研三"] { background: linear-gradient(135deg, #7c3aed, var(--accent-blue)); }
-.team-badge[data-grade="博士"] { background: linear-gradient(135deg, #111827, var(--accent-vermilion)); }
+.team-badge[data-grade="研三"] { background: linear-gradient(135deg, #875528, var(--accent-gold)); }
+.team-badge[data-grade="博士"] { background: linear-gradient(135deg, #2d2420, var(--accent-vermilion)); }
 
 .team-status-wrap {
   display: grid;

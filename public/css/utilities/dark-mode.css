@@ -29,12 +29,20 @@
     --gradient-warning-end: #d97706;
     --surface-gradient: linear-gradient(135deg, rgba(30, 33, 38, 0.96), rgba(28, 31, 36, 0.94));
     --surface-gradient-soft: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(22, 25, 29, 0.94));
-    --accent-blue: #6b8cff;
-    --accent-blue-hover: #8ba5ff;
+    --accent-blue: #7ea3c8;
+    --accent-blue-hover: #97b6d4;
+    --brand: #7ea3c8;
+    --brand-strong: #97b6d4;
+    --brand-soft: rgba(126, 163, 200, 0.14);
+    --brand-softer: rgba(126, 163, 200, 0.07);
+    --brand-line: rgba(126, 163, 200, 0.28);
+    --brand-line-strong: rgba(126, 163, 200, 0.45);
+    --focus-ring: 0 0 0 3px rgba(126, 163, 200, 0.32);
+    --focus-ring-strong: 0 0 0 4px rgba(126, 163, 200, 0.40);
   }
 
   body::before {
-    background: radial-gradient(circle at center, rgba(47, 97, 255, 0.12), transparent 70%);
+    background: radial-gradient(circle at center, rgba(58, 90, 122, 0.12), transparent 70%);
   }
 
   .login-card,
@@ -104,7 +112,7 @@
 
   .workspace-panel[data-panel="overview"] {
     background: linear-gradient(180deg, rgba(30, 33, 38, 0.96), rgba(22, 25, 29, 0.94));
-    border-color: rgba(107, 140, 255, 0.12);
+    border-color: rgba(126, 163, 200, 0.12);
   }
 
   .overview-hero {

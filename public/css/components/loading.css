@@ -22,15 +22,15 @@
 
 .loading-bar-progress {
   height: 100%;
-  background: linear-gradient(90deg, #2f61ff 0%, #4f46e5 50%, #2f61ff 100%);
+  background: linear-gradient(90deg, #3a5a7a 0%, #2f4a66 50%, #3a5a7a 100%);
   background-size: 200% 100%;
   animation: loading-bar-shimmer 1.5s ease-in-out infinite;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(47, 97, 255, 0.5);
+  box-shadow: 0 0 10px rgba(58, 90, 122, 0.5);
 }
 
 .loading-bar.is-error .loading-bar-progress {
-  background: linear-gradient(90deg, #ef4444 0%, #dc2626 50%, #ef4444 100%);
+  background: linear-gradient(90deg, var(--danger) 0%, #dc2626 50%, var(--danger) 100%);
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
@@ -199,24 +199,34 @@
 
 /* Empty State */
 .empty-state {
-  padding: 48px 24px;
+  grid-column: 1 / -1;
+  padding: 56px 28px;
   text-align: center;
   color: var(--text-soft);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 252, 0.92));
-  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 0%, var(--brand-softer), transparent 60%),
+    var(--surface-strong);
+  border: 1px dashed var(--line-strong);
 }
 
 .empty-state strong {
   display: block;
-  font-size: 16px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text);
   margin-bottom: 8px;
 }
 
 .empty-state p {
   font-size: 14px;
+  line-height: 1.6;
   margin-top: 8px;
+  max-width: 42ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Empty State Enhanced */
@@ -277,7 +287,7 @@
 }
 
 .progress-ring-circle-progress {
-  stroke: #2f61ff;
+  stroke: #3a5a7a;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.3s ease;
 }

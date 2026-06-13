@@ -1,0 +1,4 @@
+# 批处理 / PowerShell 脚本必须用 CRLF 行尾，否则 Windows cmd 解析会出错（菜单闪退）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

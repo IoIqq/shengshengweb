@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0\.."
-for /f "delims=" %%P in ('node -e "try{require(''dotenv'').config();console.log(require(''./server/config'').PORT)}catch(e){console.log(3002)}"') do set "APP_PORT=%%P"
+for /f "usebackq delims=" %%P in (`node -e "try{require('dotenv').config();console.log(require('./server/config').PORT)}catch(e){console.log(48080)}"`) do set "APP_PORT=%%P"
 echo ========================================
 echo   声声网络思政工作室 - 自动部署脚本
 echo ========================================

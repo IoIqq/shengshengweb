@@ -12,6 +12,44 @@ let flushTimer = null;
 let activeFlush = null;
 const FLUSH_INTERVAL_MS = 200;
 
+// ============================================================
+// 内部工具
+// ============================================================
+
+/** 确保数据库已初始化，否则抛出明确错误 */
+function requireDb() {
+  if (!db) throw new Error('Database not initialized');
+}
+
+/** 原子写入：先写 .tmp 再 rename，避免写一半崩溃损坏主文件 */
+function writeAtomicallySync(filePath, data) {
+  const tmpPath = `${filePath}.tmp`;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(tmpPath, data);
+  fs.renameSync(tmpPath, filePath);
+}
+
+async function writeAtomically(filePath, data) {
+  const tmpPath = `${filePath}.tmp`;
+  await fsp.mkdir(path.dirname(filePath), { recursive: true });
+  await fsp.writeFile(tmpPath, data);
+  await fsp.rename(tmpPath, filePath);
+}
+
+/** 确保表中存在某列，不存在则 ALTER TABLE ADD COLUMN */
+function ensureColumn(table, column, definition) {
+  const columns = all(`PRAGMA table_info(${table})`).map((c) => c.name);
+  if (!columns.includes(column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+/** 确保索引存在 */
+function ensureIndex(table, columns) {
+  const name = `idx_${table}_${columns.join('_')}`;
+  db.exec(`CREATE INDEX IF NOT EXISTS ${name} ON ${table}(${columns.join(', ')})`);
+}
+
 /**
  * 初始化数据库连接
  */
@@ -53,7 +91,9 @@ function createTables() {
 
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
+      value TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS team (
@@ -200,131 +240,71 @@ function createTables() {
 }
 
 /**
- * 数据库架构迁移
+ * 数据库架构迁移 — 声明式增量更新
+ * 格式：[表名, 列名, SQL 类型定义]
  */
+const SCHEMA_MIGRATIONS = [
+  // team 扩展
+  ['team', 'email', "TEXT DEFAULT ''"],
+  ['team', 'phone', "TEXT DEFAULT ''"],
+  ['team', 'status', "TEXT DEFAULT 'active'"],
+  ['team', 'joined_at', "TEXT DEFAULT ''"],
+  ['team', 'student_id', "TEXT DEFAULT ''"],
+  ['team', 'grade', "TEXT DEFAULT ''"],
+  ['team', 'major', "TEXT DEFAULT ''"],
+  ['team', 'skills', "TEXT DEFAULT ''"],
+  ['team', 'bio', "TEXT DEFAULT ''"],
+  ['team', 'groups', "TEXT DEFAULT ''"],
+  ['team', 'party_join_at', "TEXT DEFAULT ''"],
+  // devices 扩展
+  ['devices', 'model', "TEXT DEFAULT ''"],
+  ['devices', 'purchase_date', "TEXT DEFAULT ''"],
+  ['devices', 'image', "TEXT DEFAULT ''"],
+  ['devices', 'serial_no', "TEXT DEFAULT ''"],
+  ['devices', 'warranty_until', "TEXT DEFAULT ''"],
+  ['devices', 'price', 'REAL DEFAULT 0'],
+  // users 扩展
+  ['users', 'display_name', "TEXT DEFAULT ''"],
+  ['users', 'signature', "TEXT DEFAULT ''"],
+  ['users', 'avatar_url', "TEXT DEFAULT ''"],
+  ['users', 'status', "TEXT DEFAULT 'active'"],
+  ['users', 'last_login_at', 'TEXT DEFAULT NULL'],
+  ['users', 'created_by', 'INTEGER DEFAULT NULL'],
+  ['users', 'phone', "TEXT DEFAULT ''"],
+  ['users', 'bio', "TEXT DEFAULT ''"],
+  // topic_library 扩展
+  ['topic_library', 'description', "TEXT DEFAULT ''"],
+  ['topic_library', 'tags_json', "TEXT DEFAULT '[]'"],
+  ['topic_library', 'source_host', "TEXT DEFAULT ''"],
+  ['topic_library', 'source_platform', "TEXT DEFAULT 'other'"],
+  ['topic_library', 'embed_url', "TEXT DEFAULT ''"],
+  ['topic_library', 'thumbnail_url', "TEXT DEFAULT ''"],
+  ['topic_library', 'status', "TEXT DEFAULT 'idea'"],
+  ['topic_library', 'created_by', "TEXT DEFAULT ''"],
+  // settings 扩展（修复旧库缺失列）
+  ['settings', 'created_at', "TEXT NOT NULL DEFAULT ''"],
+  ['settings', 'updated_at', "TEXT NOT NULL DEFAULT ''"],
+];
+
+const SCHEMA_INDEXES = [
+  ['sessions', ['expires_at']],
+  ['media', ['review_state', 'created_at']],
+  ['media', ['kind', 'created_at']],
+  ['activity', ['created_at']],
+  ['todos', ['done', 'created_at']],
+  ['registration_requests', ['status', 'created_at']],
+  ['registration_requests', ['username']],
+  ['audit_logs', ['created_at']],
+];
+
 function migrateSchema() {
   try {
-    // 扩展 team 表字段
-    const teamColumns = all('PRAGMA table_info(team)').map(col => col.name);
-    if (!teamColumns.includes('email')) {
-      db.exec("ALTER TABLE team ADD COLUMN email TEXT DEFAULT ''");
+    for (const [table, column, definition] of SCHEMA_MIGRATIONS) {
+      ensureColumn(table, column, definition);
     }
-    if (!teamColumns.includes('phone')) {
-      db.exec("ALTER TABLE team ADD COLUMN phone TEXT DEFAULT ''");
+    for (const [table, cols] of SCHEMA_INDEXES) {
+      ensureIndex(table, cols);
     }
-    if (!teamColumns.includes('status')) {
-      db.exec("ALTER TABLE team ADD COLUMN status TEXT DEFAULT 'active'");
-    }
-    if (!teamColumns.includes('joined_at')) {
-      db.exec("ALTER TABLE team ADD COLUMN joined_at TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('student_id')) {
-      db.exec("ALTER TABLE team ADD COLUMN student_id TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('grade')) {
-      db.exec("ALTER TABLE team ADD COLUMN grade TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('major')) {
-      db.exec("ALTER TABLE team ADD COLUMN major TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('skills')) {
-      db.exec("ALTER TABLE team ADD COLUMN skills TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('bio')) {
-      db.exec("ALTER TABLE team ADD COLUMN bio TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('groups')) {
-      db.exec("ALTER TABLE team ADD COLUMN groups TEXT DEFAULT ''");
-    }
-    if (!teamColumns.includes('party_join_at')) {
-      db.exec("ALTER TABLE team ADD COLUMN party_join_at TEXT DEFAULT ''");
-    }
-
-    // 扩展 devices 表字段
-    const deviceColumns = all('PRAGMA table_info(devices)').map(col => col.name);
-    if (!deviceColumns.includes('model')) {
-      db.exec("ALTER TABLE devices ADD COLUMN model TEXT DEFAULT ''");
-    }
-    if (!deviceColumns.includes('purchase_date')) {
-      db.exec("ALTER TABLE devices ADD COLUMN purchase_date TEXT DEFAULT ''");
-    }
-    if (!deviceColumns.includes('image')) {
-      db.exec("ALTER TABLE devices ADD COLUMN image TEXT DEFAULT ''");
-    }
-    if (!deviceColumns.includes('serial_no')) {
-      db.exec("ALTER TABLE devices ADD COLUMN serial_no TEXT DEFAULT ''");
-    }
-    if (!deviceColumns.includes('warranty_until')) {
-      db.exec("ALTER TABLE devices ADD COLUMN warranty_until TEXT DEFAULT ''");
-    }
-    if (!deviceColumns.includes('price')) {
-      db.exec("ALTER TABLE devices ADD COLUMN price REAL DEFAULT 0");
-    }
-
-    // 扩展 users 表字段
-    const userColumns = all('PRAGMA table_info(users)').map(col => col.name);
-    if (!userColumns.includes('display_name')) {
-      db.exec("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''");
-    }
-    if (!userColumns.includes('signature')) {
-      db.exec("ALTER TABLE users ADD COLUMN signature TEXT DEFAULT ''");
-    }
-    if (!userColumns.includes('avatar_url')) {
-      db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''");
-    }
-    if (!userColumns.includes('status')) {
-      db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'");
-    }
-    if (!userColumns.includes('last_login_at')) {
-      db.exec("ALTER TABLE users ADD COLUMN last_login_at TEXT DEFAULT NULL");
-    }
-    if (!userColumns.includes('created_by')) {
-      db.exec("ALTER TABLE users ADD COLUMN created_by INTEGER DEFAULT NULL");
-    }
-    if (!userColumns.includes('phone')) {
-      db.exec("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''");
-    }
-    if (!userColumns.includes('bio')) {
-      db.exec("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''");
-    }
-
-    // 扩展 topic_library 表字段
-    const topicColumns = all('PRAGMA table_info(topic_library)').map(col => col.name);
-    if (!topicColumns.includes('description')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN description TEXT DEFAULT ''");
-    }
-    if (!topicColumns.includes('tags_json')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN tags_json TEXT DEFAULT '[]'");
-    }
-    if (!topicColumns.includes('source_host')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN source_host TEXT DEFAULT ''");
-    }
-    if (!topicColumns.includes('source_platform')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN source_platform TEXT DEFAULT 'other'");
-    }
-    if (!topicColumns.includes('embed_url')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN embed_url TEXT DEFAULT ''");
-    }
-    if (!topicColumns.includes('thumbnail_url')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN thumbnail_url TEXT DEFAULT ''");
-    }
-    if (!topicColumns.includes('status')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN status TEXT DEFAULT 'idea'");
-    }
-    if (!topicColumns.includes('created_by')) {
-      db.exec("ALTER TABLE topic_library ADD COLUMN created_by TEXT DEFAULT ''");
-    }
-
-    db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
-      CREATE INDEX IF NOT EXISTS idx_media_review_created ON media(review_state, created_at);
-      CREATE INDEX IF NOT EXISTS idx_media_kind_created ON media(kind, created_at);
-      CREATE INDEX IF NOT EXISTS idx_activity_created ON activity(created_at);
-      CREATE INDEX IF NOT EXISTS idx_todos_done_created ON todos(done, created_at);
-      CREATE INDEX IF NOT EXISTS idx_registration_requests_status_created ON registration_requests(status, created_at);
-      CREATE INDEX IF NOT EXISTS idx_registration_requests_username ON registration_requests(username);
-      CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
-    `);
   } catch (error) {
     logDbIssue('schema_migration_failed', error);
   }
@@ -337,14 +317,12 @@ async function flushDatabase() {
   if (!db) return;
   flushTimer = null;
 
-  const tmpPath = `${config.DB_PATH}.tmp`;
   try {
     const data = Buffer.from(db.export());
-    await fsp.mkdir(path.dirname(config.DB_PATH), { recursive: true });
-    await fsp.writeFile(tmpPath, data);
-    await fsp.rename(tmpPath, config.DB_PATH);
+    await writeAtomically(config.DB_PATH, data);
   } catch (error) {
     logDbIssue('database_flush_failed', error);
+    const tmpPath = `${config.DB_PATH}.tmp`;
     try { await fsp.unlink(tmpPath); } catch (_) { /* ignore cleanup */ }
   } finally {
     activeFlush = null;
@@ -387,10 +365,7 @@ function saveDatabaseNow() {
   pendingSave = false;
   try {
     const data = Buffer.from(db.export());
-    const tmpPath = `${config.DB_PATH}.tmp`;
-    fs.mkdirSync(path.dirname(config.DB_PATH), { recursive: true });
-    fs.writeFileSync(tmpPath, data);
-    fs.renameSync(tmpPath, config.DB_PATH);
+    writeAtomicallySync(config.DB_PATH, data);
   } catch (error) {
     logDbIssue('database_flush_sync_failed', error);
   }
@@ -400,7 +375,7 @@ function saveDatabaseNow() {
  * 执行查询并返回所有结果
  */
 function all(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
+  requireDb();
   const stmt = db.prepare(sql);
   stmt.bind(params);
   const rows = [];
@@ -415,7 +390,7 @@ function all(sql, params = []) {
  * 执行查询并返回第一行结果
  */
 function get(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
+  requireDb();
   const stmt = db.prepare(sql);
   stmt.bind(params);
   const row = stmt.step() ? stmt.getAsObject() : null;
@@ -427,7 +402,7 @@ function get(sql, params = []) {
  * 执行增删改操作
  */
 function run(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
+  requireDb();
   const stmt = db.prepare(sql);
   stmt.bind(params);
   stmt.step();
@@ -438,7 +413,7 @@ function run(sql, params = []) {
  * 执行事务
  */
 function transaction(callback) {
-  if (!db) throw new Error('Database not initialized');
+  requireDb();
   const isOuterTransaction = transactionDepth === 0;
   try {
     if (isOuterTransaction) db.exec('BEGIN');

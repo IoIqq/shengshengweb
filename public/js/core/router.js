@@ -7,8 +7,11 @@
 
 import { state } from './state.js';
 import { els } from './dom.js';
-import { $$ } from '../utils/helpers.js';
+import { $$, currentRole } from '../utils/helpers.js';
 import { updateNavIndicator } from '../ui/navigation.js';
+
+// 从 helpers 重导出，保持向后兼容
+export { currentRole };
 
 /**
  * 角色中文标签
@@ -26,14 +29,6 @@ export function roleLabel(role) {
  */
 export function roleWorkspaceLabel(role) {
   return { admin: '管理员工作台', editor: '编辑者工作台', guest: '访客工作台' }[role] || '成员工作台';
-}
-
-/**
- * 当前登录用户角色
- * @returns {string}
- */
-export function currentRole() {
-  return state.session?.user?.role || state.bootstrap?.user?.role || '';
 }
 
 export function canManageMedia() {

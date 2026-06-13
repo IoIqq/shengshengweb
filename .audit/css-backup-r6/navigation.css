@@ -62,6 +62,17 @@
   transform: translateY(-1px);
 }
 
+.nav-chip.is-active::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(58, 90, 122, 0.2), #3a5a7a, rgba(58, 90, 122, 0.2));
+}
+
 .nav-chip:hover {
   background: rgba(58, 90, 122, 0.05);
   color: var(--text);

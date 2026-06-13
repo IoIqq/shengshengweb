@@ -28,44 +28,54 @@
     "Liberation Mono",
     monospace;
 
-  /* 颜色 */
-  --bg: #f5f6f7;
-  --surface: rgba(255, 255, 255, 0.9);
+  /* 颜色 —— 冷调净白基底 + 单一静谧蓝强调（克制专业风） */
+  --bg: #f6f7f9;
+  --surface: rgba(255, 255, 255, 0.94);
   --surface-strong: #ffffff;
-  --surface-soft: #f0f1f3;
-  --text: #17181a;
-  --text-soft: #666b72;
-  --text-muted: #8a9098;
-  --line: rgba(23, 24, 26, 0.08);
-  --line-strong: rgba(23, 24, 26, 0.16);
-  --accent: #2d3137;
-  --accent-vermilion: #c8392c;
+  --surface-soft: #eef1f4;
+  --text: #1a1c1f;
+  --text-soft: #5b626b;
+  --text-muted: #8b929b;
+  --line: rgba(20, 28, 40, 0.08);
+  --line-strong: rgba(20, 28, 40, 0.14);
+  --accent: #24282e;
+  --accent-vermilion: #3a5a7a;
   --accent-gold: #c8a55a;
   --success: #2c6b4f;
   --warning: #7c642f;
   --danger: #9a3e3e;
 
+  /* 品牌强调语义令牌（全站唯一交互强调色 = 静谧蓝） */
+  --brand: #3a5a7a;
+  --brand-strong: #2f4a66;
+  --brand-soft: rgba(58, 90, 122, 0.08);
+  --brand-softer: rgba(58, 90, 122, 0.04);
+  --brand-line: rgba(58, 90, 122, 0.18);
+  --brand-line-strong: rgba(58, 90, 122, 0.34);
+
   /* 渐变文字令牌 */
   --gradient-text-angle: 180deg;
-  --gradient-text-start: #17181a;
-  --gradient-text-end: #3a3d42;
+  --gradient-text-start: #1a1c1f;
+  --gradient-text-end: #3a3f47;
   --gradient-success-start: #2c6b4f;
   --gradient-success-end: #1e4d38;
   --gradient-warning-start: #7c642f;
   --gradient-warning-end: #5a4822;
 
-  /* 表面渐变令牌 */
-  --surface-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
-  --surface-gradient-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.96));
+  /* 表面渐变令牌（冷调） */
+  --surface-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(246, 247, 249, 0.96));
+  --surface-gradient-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(238, 241, 244, 0.96));
 
-  /* 统一强调色 */
-  --accent-blue: #2f61ff;
-  --accent-blue-hover: #4f46e5;
+  /* 统一强调色 —— 收敛到品牌静谧蓝（原朱砂已退役） */
+  --accent-blue: #3a5a7a;
+  --accent-blue-hover: #2f4a66;
 
-  /* 阴影 */
-  --shadow: 0 12px 30px rgba(17, 18, 20, 0.06);
-  --shadow-soft: 0 8px 20px rgba(17, 18, 20, 0.04);
-  --shadow-strong: 0 18px 48px rgba(17, 18, 20, 0.08);
+  /* 阴影 —— 冷灰蓝调,贴净白底（非纯黑） */
+  --shadow: 0 12px 30px rgba(30, 38, 50, 0.08);
+  --shadow-soft: 0 8px 20px rgba(30, 38, 50, 0.06);
+  --shadow-strong: 0 18px 48px rgba(30, 38, 50, 0.11);
+  /* 玻璃边缘内高光 */
+  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
   /* 圆角 */
   --radius-xl: 14px;
@@ -90,14 +100,15 @@
   /* 布局 */
 
   --touch-target-min: 44px;
-  --focus-ring: 0 0 0 3px rgba(47, 97, 255, 0.24);
-  --focus-ring-strong: 0 0 0 4px rgba(47, 97, 255, 0.28);
+  --focus-ring: 0 0 0 3px rgba(58, 90, 122, 0.24);
+  --focus-ring-strong: 0 0 0 4px rgba(58, 90, 122, 0.30);
 
-  /* 动画速度 */
+  /* 弹性缓动(高端微动) */
   --motion-fast: 160ms;
   --motion-medium: 260ms;
   --motion-slow: 520ms;
   --motion-ease: cubic-bezier(0.2, 0.7, 0.15, 1);
+  --motion-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ========== 基础重置 ========== */

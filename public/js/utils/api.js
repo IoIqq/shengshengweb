@@ -12,7 +12,8 @@ const API_CONFIG = {
 
 // 读取 Cookie
 export function readCookie(name) {
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  const escaped = name.replace(/[.$?*|{}()[\]\\/+^]/g, '\\$&');
+  const match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
   return match ? decodeURIComponent(match[1]) : '';
 }
 
