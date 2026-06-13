@@ -33,6 +33,7 @@ import {
   loadTeamContribution,
   renderTopics,
   renderSettings,
+  renderSystemPanel,
   renderBorrowDeviceSelect,
   syncDeviceView,
   syncBorrowView,
@@ -95,6 +96,7 @@ function renderAll() {
   renderTopics();
   if (currentRole() === 'admin') {
     renderSettings();
+    renderSystemPanel();
   }
   renderBorrowDeviceSelect();
 }

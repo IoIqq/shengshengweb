@@ -1,0 +1,82 @@
+<article class="workspace-panel reveal" data-panel="admin" data-admin-only="true">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">系统管理</p>
+      <h2>管理控制台</h2>
+    </div>
+    <button class="ghost-btn" id="sys-refresh-btn" type="button" title="刷新系统信息">⟳ 刷新</button>
+  </div>
+
+  <div class="system-admin-grid">
+    <!-- 1. 服务器状态卡片 -->
+    <section class="system-card" id="sys-card-server">
+      <div class="system-card-head">
+        <h3>🖥 服务器状态</h3>
+        <span class="sys-status-dot" id="sys-status-dot" title="运行中"></span>
+      </div>
+      <dl class="sys-info-list" id="sys-info-server">
+        <div><dt>Node.js</dt><dd id="sys-node-version">—</dd></div>
+        <div><dt>平台</dt><dd id="sys-platform">—</dd></div>
+        <div><dt>主机名</dt><dd id="sys-hostname">—</dd></div>
+        <div><dt>CPU 核心</dt><dd id="sys-cpu-cores">—</dd></div>
+        <div><dt>运行时间</dt><dd id="sys-uptime">—</dd></div>
+        <div><dt>监听端口</dt><dd id="sys-port">—</dd></div>
+        <div><dt>内存 (RSS)</dt><dd id="sys-mem-rss">—</dd></div>
+        <div><dt>堆内存</dt><dd id="sys-mem-heap">—</dd></div>
+        <div><dt>PM2 守护</dt><dd id="sys-pm2">—</dd></div>
+      </dl>
+    </section>
+
+    <!-- 2. 数据库卡片 -->
+    <section class="system-card" id="sys-card-db">
+      <div class="system-card-head">
+        <h3>🗄 数据库</h3>
+      </div>
+      <dl class="sys-info-list" id="sys-info-db">
+        <div><dt>路径</dt><dd id="sys-db-path">—</dd></div>
+        <div><dt>大小</dt><dd id="sys-db-size">—</dd></div>
+        <div><dt>状态</dt><dd id="sys-db-exists">—</dd></div>
+        <div><dt>上传文件数</dt><dd id="sys-upload-count">—</dd></div>
+      </dl>
+      <div class="sys-card-actions">
+        <button class="btn btn-sm" id="sys-db-backup-btn" type="button">⬇ 下载数据库备份</button>
+        <button class="btn btn-sm btn-outline" id="sys-db-json-btn" type="button">📋 导出 JSON 备份</button>
+      </div>
+    </section>
+
+    <!-- 3. 网络访问卡片 -->
+    <section class="system-card" id="sys-card-network">
+      <div class="system-card-head">
+        <h3>🌐 网络访问</h3>
+      </div>
+      <ul class="sys-lan-list" id="sys-lan-list">
+        <li class="sys-lan-placeholder">加载中…</li>
+      </ul>
+      <div class="sys-card-actions">
+        <button class="btn btn-sm" id="sys-refresh-network-btn" type="button">⟳ 刷新网络信息</button>
+      </div>
+      <div class="sys-qr-wrap" id="sys-qr-wrap">
+        <!-- QR SVG 动态插入 -->
+      </div>
+      <p class="sys-qr-hint" id="sys-qr-url"></p>
+    </section>
+
+    <!-- 4. 日志卡片 -->
+    <section class="system-card" id="sys-card-logs">
+      <div class="system-card-head">
+        <h3>📜 最近日志</h3>
+        <span class="sys-log-file" id="sys-log-file"></span>
+      </div>
+      <pre class="sys-log-viewer" id="sys-log-viewer">点击下方按钮加载日志…</pre>
+      <div class="sys-card-actions">
+        <button class="btn btn-sm" id="sys-load-logs-btn" type="button">📄 加载日志</button>
+        <button class="btn btn-sm btn-outline" id="sys-refresh-logs-btn" type="button">⟳ 刷新</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- CLI 提示 -->
+  <div class="sys-cli-hint">
+    <p>💡 <strong>CLI 操作提示：</strong>启动/停止服务、防火墙放行、PM2 管理、首次安装等操作，请双击项目 <code>scripts</code> 目录下的 <code>启动.bat</code> 统一完成。</p>
+  </div>
+</article>

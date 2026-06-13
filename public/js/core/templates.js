@@ -24,6 +24,7 @@ const PANELS = [
   'team',
   'topics',
   'settings',
+  'system-panel',
 ];
 
 // 模板片段内存缓存：file -> html 字符串

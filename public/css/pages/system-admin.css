@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════════════════════
+   系统管理面板样式
+   4 卡片网格布局 + 终端风格日志 + 响应式
+   ═══════════════════════════════════════════════════════════════════ */
+
+.system-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.system-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.system-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.system-card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ── 状态指示器 ── */
+.sys-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+  flex-shrink: 0;
+}
+
+/* ── 信息列表 ── */
+.sys-info-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+}
+
+.sys-info-list dt {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.sys-info-list dd {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+/* ── 徽章 ── */
+.sys-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.sys-badge-ok  { background: #dcfce7; color: #166534; }
+.sys-badge-dim { background: var(--color-bg-muted, #f1f5f9); color: var(--color-text-muted, #64748b); }
+.sys-badge-err { background: #fee2e2; color: #991b1b; }
+
+/* ── 按钮区 ── */
+.sys-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* ── 网络地址列表 ── */
+.sys-lan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sys-lan-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.sys-lan-iface {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-muted, #f1f5f9);
+  padding: 1px 6px;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.sys-lan-list code {
+  font-size: 0.85rem;
+  background: var(--color-bg-muted, #f1f5f9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.sys-lan-placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── 二维码区域 ── */
+.sys-qr-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.sys-qr-wrap svg {
+  max-width: 160px;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.sys-qr-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── 日志查看器 ── */
+.sys-log-file {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.sys-log-viewer {
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+/* ── CLI 提示 ── */
+.sys-cli-hint {
+  background: var(--color-bg-muted, #f8fafc);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.sys-cli-hint strong {
+  color: var(--color-text);
+}
+
+.sys-cli-hint code {
+  background: var(--color-surface);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+/* ── 暗模式适配 ── */
+body.dark .system-card {
+  background: var(--color-surface-dark, #1e293b);
+  border-color: var(--color-border-dark, #334155);
+}
+
+body.dark .sys-badge-ok  { background: #14532d; color: #86efac; }
+body.dark .sys-badge-dim { background: #1e293b; color: #94a3b8; }
+body.dark .sys-badge-err { background: #450a0a; color: #fca5a5; }
+
+body.dark .sys-log-viewer {
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+body.dark .sys-lan-iface,
+body.dark .sys-lan-list code {
+  background: #1e293b;
+}
+
+body.dark .sys-qr-wrap svg {
+  background: #fff; /* QR code needs white bg for contrast */
+}
+
+/* ── 响应式 ── */
+@media (max-width: 768px) {
+  .system-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}

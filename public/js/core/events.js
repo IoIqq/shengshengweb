@@ -73,6 +73,10 @@ import {
   bindTopicsEvents,
   bindStorageEvents,
   initWishWall,
+  renderSystemPanel,
+  refreshSystemInfo,
+  loadSystemLogs,
+  loadNetworkInfo,
 } from './proxies.js';
 
 /**
@@ -92,6 +96,7 @@ export function bindAllEvents() {
   bindSettingsEvents();
   bindSettingsTabs();
   bindStorageEvents();
+  bindSystemAdminEvents();
   initWishWall();
 }
 
@@ -821,5 +826,53 @@ function bindSettingsTabs() {
       }
     });
   });
+}
+
+// ── 系统管理面板事件 ──
+function bindSystemAdminEvents() {
+  // 刷新按钮
+  const refreshBtn = document.getElementById('sys-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      refreshSystemInfo();
+      loadNetworkInfo();
+    });
+  }
+
+  // 下载数据库备份
+  const dbBackupBtn = document.getElementById('sys-db-backup-btn');
+  if (dbBackupBtn) {
+    dbBackupBtn.addEventListener('click', () => {
+      window.open('/api/backup/database', '_blank', 'noopener');
+      Toast.success('正在下载数据库备份…');
+    });
+  }
+
+  // 导出 JSON 备份
+  const jsonBackupBtn = document.getElementById('sys-db-json-btn');
+  if (jsonBackupBtn) {
+    jsonBackupBtn.addEventListener('click', () => {
+      window.open('/api/backup', '_blank', 'noopener');
+      Toast.success('正在导出 JSON 备份…');
+    });
+  }
+
+  // 加载日志
+  const loadLogsBtn = document.getElementById('sys-load-logs-btn');
+  if (loadLogsBtn) {
+    loadLogsBtn.addEventListener('click', () => loadSystemLogs());
+  }
+
+  // 刷新日志
+  const refreshLogsBtn = document.getElementById('sys-refresh-logs-btn');
+  if (refreshLogsBtn) {
+    refreshLogsBtn.addEventListener('click', () => loadSystemLogs());
+  }
+
+  // 刷新网络信息
+  const refreshNetBtn = document.getElementById('sys-refresh-network-btn');
+  if (refreshNetBtn) {
+    refreshNetBtn.addEventListener('click', () => loadNetworkInfo());
+  }
 }
 

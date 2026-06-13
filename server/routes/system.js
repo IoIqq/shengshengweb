@@ -2,12 +2,15 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { all, get, run, saveDatabase, transaction } = require('../models/database');
 const { media: mediaModel, todo: todoModel, team: teamModel, device: deviceModel, borrow: borrowModel, settings: settingsModel } = require('../models');
 const config = require('../config');
 const { hasPermission } = require('../config/permissions');
 const { nowIso } = require('../utils');
+const { getLanAddresses } = require('../utils/network');
+const { toSvg: qrToSvg } = require('../utils/qr-code');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 
@@ -467,6 +470,113 @@ router.post('/client-log', clientLogLimiter, (req, res) => {
     res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ error: '日志记录失败。' });
+  }
+});
+
+// ── 系统管理面板 API ──
+
+// GET /api/system/info — 系统详情（管理员）
+router.get('/system/info', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const mem = process.memoryUsage();
+    const dbExists = fs.existsSync(config.DB_PATH);
+    let dbSize = 0;
+    if (dbExists) {
+      try { dbSize = fs.statSync(config.DB_PATH).size; } catch (e) { /* ignore */ }
+    }
+
+    const uploadCount = (() => {
+      let n = 0;
+      if (fs.existsSync(config.UPLOAD_DIR)) {
+        try {
+          const walk = (dir) => {
+            fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+              if (e.isDirectory()) walk(path.join(dir, e.name));
+              else n++;
+            });
+          };
+          walk(config.UPLOAD_DIR);
+        } catch (e) { /* ignore */ }
+      }
+      return n;
+    })();
+
+    res.json({
+      nodeVersion: process.version,
+      platform: process.platform,
+      hostname: os.hostname(),
+      cpuCores: os.cpus().length,
+      memory: {
+        rss: Math.round(mem.rss / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+      },
+      uptime: Math.round(process.uptime()),
+      port: config.PORT,
+      database: {
+        path: config.DB_PATH.replace(/\\/g, '/'),
+        sizeBytes: dbSize,
+        exists: dbExists,
+      },
+      uploadDir: {
+        path: config.UPLOAD_DIR.replace(/\\/g, '/'),
+        fileCount: uploadCount,
+      },
+      pm2: {
+        isPM2: !!(process.env.pm_id || process.env.PM2_HOME),
+        id: process.env.pm_id || null,
+      },
+      lanAddresses: getLanAddresses(),
+    });
+  } catch (error) {
+    res.status(500).json({ error: '获取系统信息失败。' });
+  }
+});
+
+// GET /api/system/logs — 查看最近日志（管理员）
+router.get('/system/logs', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const maxLines = Math.min(parseInt(req.query.lines, 10) || 50, 200);
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const logFile = path.join(config.ROOT_DIR, 'server', 'logs', `${dateStr}.log`);
+
+    if (!fs.existsSync(logFile)) {
+      return res.json({ lines: [], file: `${dateStr}.log`, totalLines: 0, message: '今日暂无日志' });
+    }
+
+    const content = fs.readFileSync(logFile, 'utf-8');
+    const allLines = content.split(/\r?\n/).filter(Boolean);
+    const totalLines = allLines.length;
+    const lines = allLines.slice(-maxLines);
+
+    res.json({ lines, file: `${dateStr}.log`, totalLines });
+  } catch (error) {
+    res.status(500).json({ error: '读取日志失败。' });
+  }
+});
+
+// GET /api/system/network — 网络信息 + 二维码（管理员）
+router.get('/system/network', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const lan = getLanAddresses();
+    const primary = lan.length > 0 ? lan[0].address : 'localhost';
+    const url = `http://${primary}:${config.PORT}`;
+    let qrSvg = '';
+    try {
+      qrSvg = qrToSvg(url, 4);
+    } catch (e) {
+      qrSvg = '';
+    }
+
+    res.json({
+      lanAddresses: lan,
+      primaryUrl: url,
+      qrSvg,
+      port: config.PORT,
+    });
+  } catch (error) {
+    res.status(500).json({ error: '获取网络信息失败。' });
   }
 });
 

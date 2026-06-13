@@ -90,3 +90,9 @@ export const loadAuditLogs = (...args) => m()?.audit?.loadAuditLogs?.(...args);
 export const loadStorageStatus = (...args) => m()?.storage?.loadStorageStatus?.(...args);
 export const bindStorageEvents = (...args) => m()?.storage?.bindStorageEvents?.(...args);
 export const initWishWall = (...args) => m()?.wishWall?.initWishWall?.(...args);
+
+// systemAdmin
+export const renderSystemPanel = (...args) => m()?.systemAdmin?.renderSystemPanel?.(...args);
+export const refreshSystemInfo = (...args) => m()?.systemAdmin?.refreshSystemInfo?.(...args);
+export const loadSystemLogs = (...args) => m()?.systemAdmin?.loadSystemLogs?.(...args);
+export const loadNetworkInfo = (...args) => m()?.systemAdmin?.loadNetworkInfo?.(...args);

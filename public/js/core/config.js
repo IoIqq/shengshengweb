@@ -36,6 +36,7 @@ export const VIEW_LABELS = {
   team: '团队协作',
   topics: '选题库',
   settings: '系统设置',
+  admin: '系统管理',
 };
 
 // 验证规则

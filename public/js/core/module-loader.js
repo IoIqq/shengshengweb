@@ -31,6 +31,7 @@ export async function ensureModulesLoaded() {
     storage,
     wishWall,
     topics,
+    systemAdmin,
   ] = await Promise.all([
     import('../modules/dashboard.js'),
     import('../modules/media.js'),
@@ -44,8 +45,9 @@ export async function ensureModulesLoaded() {
     import('../modules/storage.js'),
     import('../modules/wish-wall.js'),
     import('../modules/topics.js'),
+    import('../modules/system-admin.js'),
   ]);
-  mods = { dashboard, media, todo, team, device, borrow, settings, users, audit, storage, wishWall, topics };
+  mods = { dashboard, media, todo, team, device, borrow, settings, users, audit, storage, wishWall, topics, systemAdmin };
   return mods;
 }
 

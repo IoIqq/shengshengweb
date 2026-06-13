@@ -42,6 +42,7 @@ echo.
 echo    [6] 首次安装（装依赖 + 初始化数据库）
 echo    [7] 放行 Windows 防火墙（自动提权）
 echo    [8] 健康检查（访问 /api/health）
+echo    [9] PM2 守护启动（生产级，开机自启）
 echo.
 echo    [0] 退出
 echo.
@@ -49,7 +50,7 @@ echo  ============================================================
 echo.
 
 set "choice="
-set /p "choice=  请选择 [0-8]："
+set /p "choice=  请选择 [0-9]："
 if "!choice!"=="" goto :menu
 if "!choice!"=="1" goto :all_in_one
 if "!choice!"=="2" goto :start_prod
@@ -59,6 +60,7 @@ if "!choice!"=="5" goto :stop_server
 if "!choice!"=="6" goto :setup
 if "!choice!"=="7" goto :firewall
 if "!choice!"=="8" goto :health
+if "!choice!"=="9" goto :pm2_start
 if "!choice!"=="0" goto :end
 echo.
 echo   [!] 无效选项，请重新输入。
@@ -324,6 +326,29 @@ if "!HEALTH_OK!"=="0" (
 )
 echo.
 pause
+goto :menu
+
+
+:: ============================================================
+:: [9] PM2 守护启动
+:: ============================================================
+:pm2_start
+cls
+echo.
+echo  ============================================================
+echo    PM2 守护启动（生产级）
+echo  ============================================================
+echo.
+echo   提示：PM2 会在后台守护服务进程，关闭窗口不影响服务。
+echo         支持开机自启、零停机重启、日志管理等。
+echo.
+if exist "%~dp0start-pm2.bat" (
+    call "%~dp0start-pm2.bat"
+) else (
+    echo   [X] 未找到 start-pm2.bat
+    echo.
+    pause
+)
 goto :menu
 
 
