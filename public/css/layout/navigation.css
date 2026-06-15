@@ -156,17 +156,7 @@
   }
 }
 
-/* 概览提醒区域 */
-.overview-alerts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.overview-alerts:empty {
-  display: none;
-}
+/* 概览提醒区域样式由 pages/overview.css 管理 */
 
 /* 设置标签页 */
 .settings-tabs {
@@ -217,16 +207,6 @@
 /* 快捷操作按钮 */
 .shortcut-btn:active {
   transform: translateY(0) scale(0.97);
-}
-
-.shortcut-icon {
-  font-size: 26px;
-}
-
-.shortcut-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
 }
 
 /* 工具栏 */

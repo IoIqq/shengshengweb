@@ -306,7 +306,7 @@ export function renderMediaChart() {
 }
 
 // 活动日志分页状态
-const ACTIVITY_PAGE_SIZE = 20;
+const ACTIVITY_PER_PAGE = 10;
 let activityPage = 1;
 let activityFilter = 'all';
 
@@ -340,53 +340,80 @@ function filterActivity(items) {
 }
 
 /**
- * 渲染最近动态
+ * 渲染最近动态（翻页模式）
  */
 export function renderActivity() {
   const allActivity = state.bootstrap?.activity || [];
   const filtered = filterActivity(allActivity);
-  const paged = filtered.slice(0, activityPage * ACTIVITY_PAGE_SIZE);
-  const hasMore = paged.length < filtered.length;
+  const totalPages = Math.ceil(filtered.length / ACTIVITY_PER_PAGE) || 1;
+  // clamp page to valid range
+  if (activityPage > totalPages) activityPage = totalPages;
+  if (activityPage < 1) activityPage = 1;
+
+  const start = (activityPage - 1) * ACTIVITY_PER_PAGE;
+  const paged = filtered.slice(start, start + ACTIVITY_PER_PAGE);
 
   if (els.activityList) {
     els.activityList.setAttribute('aria-busy', 'true');
     const html = paged.length
-      ? `<ol class="timeline">${paged
+      ? paged
         .map(
           (item) => {
             const type = getActivityType(item);
             const typeLabel = getActivityTypeLabel(type);
             return `
-              <li class="timeline-item" tabindex="-1" data-activity-type="${escapeHtml(type)}">
-                <span class="timeline-dot" aria-hidden="true"></span>
-                <article class="activity-item" data-activity-type="${escapeHtml(type)}" aria-label="${escapeHtml(typeLabel)}动态：${escapeHtml(item.title || '')}">
-                  <div class="activity-item-head">
-                    <span class="activity-type-label">${escapeHtml(typeLabel)}</span>
-                    <strong>${escapeHtml(item.title)}</strong>
-                  </div>
-                  <p>${escapeHtml(item.meta || '')}</p>
-                  <small>${escapeHtml(item.detail || '')}</small>
-                </article>
-              </li>
+              <div class="time-item" data-activity-type="${escapeHtml(type)}" aria-label="${escapeHtml(typeLabel)}动态：${escapeHtml(item.title || '')}">
+                <span class="time-dot" aria-hidden="true"></span>
+                <div class="time-body">
+                  <span class="time-tag">${escapeHtml(typeLabel)}</span>
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <span class="time-meta">${escapeHtml(item.meta || '')}</span>
+                  <span class="time-detail">${escapeHtml(item.detail || '')}</span>
+                </div>
+              </div>
             `;
           },
         )
-        .join('')}</ol>`
+        .join('')
       : '<div class="empty-state">暂无动态</div>';
     requestAnimationFrame(() => {
+      els.activityList.style.opacity = '0';
       els.activityList.innerHTML = html;
+      requestAnimationFrame(() => {
+        els.activityList.style.transition = 'opacity 0.18s ease';
+        els.activityList.style.opacity = '1';
+      });
       els.activityList.setAttribute('aria-busy', 'false');
     });
   }
 
-  const loadMore = document.getElementById('activity-load-more');
-  if (loadMore) {
-    loadMore.hidden = !hasMore;
-  }
+  updateActivityPagination(filtered.length, totalPages);
 }
 
 /**
- * 初始化活动日志交互
+ * 更新翻页控件状态
+ */
+function updateActivityPagination(totalCount, totalPages) {
+  const pagination = document.getElementById('activity-pagination');
+  if (!pagination) return;
+
+  if (totalCount <= ACTIVITY_PER_PAGE) {
+    pagination.hidden = true;
+    return;
+  }
+
+  pagination.hidden = false;
+  const prevBtn = pagination.querySelector('.pagination__prev');
+  const nextBtn = pagination.querySelector('.pagination__next');
+  const info = pagination.querySelector('.pagination__info');
+
+  if (prevBtn) prevBtn.disabled = activityPage <= 1;
+  if (nextBtn) nextBtn.disabled = activityPage >= totalPages;
+  if (info) info.textContent = `第 ${activityPage} / ${totalPages} 页`;
+}
+
+/**
+ * 初始化活动日志交互（筛选 + 翻页）
  */
 export function initActivityFilters() {
   const filterRow = document.getElementById('activity-filters');
@@ -405,16 +432,19 @@ export function initActivityFilters() {
     });
   }
 
-  const loadMoreBtn = document.getElementById('activity-load-more-btn');
-  if (loadMoreBtn) {
-    loadMoreBtn.addEventListener('click', () => {
-      const previousCount = Math.max(0, activityPage * ACTIVITY_PAGE_SIZE);
-      activityPage++;
-      renderActivity();
-      setTimeout(() => {
-        const nextItem = els.activityList?.querySelectorAll('.timeline-item')?.[previousCount];
-        nextItem?.focus?.();
-      }, 80);
+  const pagination = document.getElementById('activity-pagination');
+  if (pagination) {
+    pagination.addEventListener('click', (e) => {
+      const prev = e.target.closest('.pagination__prev');
+      const next = e.target.closest('.pagination__next');
+      if (prev && !prev.disabled) {
+        activityPage--;
+        renderActivity();
+      }
+      if (next && !next.disabled) {
+        activityPage++;
+        renderActivity();
+      }
     });
   }
 }

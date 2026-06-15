@@ -556,7 +556,7 @@
   .team-card:active,
   .device-item:active,
   .borrow-item:active,
-  .activity-item:active {
+  .time-item:active {
     transform: scale(0.98);
     box-shadow: var(--shadow);
   }

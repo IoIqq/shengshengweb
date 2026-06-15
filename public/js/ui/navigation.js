@@ -198,3 +198,40 @@ export function applyNavMode(mode) {
   requestAnimationFrame(() => updateNavIndicator());
 }
 
+/**
+ * 初始化导航栏悬浮窗滚动隐藏
+ * 向下滚动超过阈值时自动隐藏，向上滚动时显示，隐藏时 sticky 占位同步收起
+ */
+export function initScrollHide() {
+  const topbar = document.getElementById('topbar');
+  if (!topbar) return;
+
+  const HIDE_THRESHOLD = 60;
+  const SHOW_AT_TOP = 30;
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollY;
+
+        if (currentY <= SHOW_AT_TOP) {
+          topbar.classList.remove('is-scrolled-down');
+        } else if (delta > HIDE_THRESHOLD) {
+          topbar.classList.add('is-scrolled-down');
+        } else if (delta < -8) {
+          topbar.classList.remove('is-scrolled-down');
+        }
+
+        lastScrollY = currentY;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
+

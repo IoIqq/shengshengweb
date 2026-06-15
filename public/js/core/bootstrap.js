@@ -12,7 +12,7 @@ import { state } from './state.js';
 import { els, clearDOMCache } from './dom.js';
 import { request, requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
-import { setActiveView, setShellLoggedIn } from '../ui/navigation.js';
+import { setActiveView, setShellLoggedIn, initScrollHide } from '../ui/navigation.js';
 import { initMobileNav } from '../ui/mobile-nav.js';
 import { setLoginPending } from '../ui/feedback.js';
 import { initRippleEffects, initLazyLoading, loadingBar } from '../ui/loading.js';
@@ -330,6 +330,7 @@ async function start() {
 export function init() {
   bindLoginForm();
   initMobileNav();
+  initScrollHide();
 
   // 绑定展示页入口按钮
   const showcaseToLogin = document.getElementById('showcase-to-login');

@@ -36,7 +36,7 @@
   .device-card:active,
   .borrow-card:active,
   .borrow-item:active,
-  .activity-item:active {
+  .time-item:active {
     transform: scale(0.98);
     box-shadow: var(--shadow);
   }
@@ -136,7 +136,8 @@
   .borrow-item p,
   .borrow-item small,
   .review-copy,
-  .activity-item p {
+  .time-body .time-meta,
+  .time-body .time-detail {
     -webkit-user-select: text;
     user-select: text;
   }

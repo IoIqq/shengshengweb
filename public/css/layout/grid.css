@@ -59,20 +59,6 @@
   gap: var(--spacing-lg);
 }
 
-/* 概览重点卡片网格 */
-.overview-focus {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-/* 快捷操作网格 */
-.overview-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: var(--spacing-md);
-}
-
 /* 素材网格 */
 .media-grid {
   display: grid;

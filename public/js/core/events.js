@@ -81,8 +81,22 @@ import {
 
 /**
  * 绑定所有工作台事件（登录成功后调用）
+ * 幂等：重复调用时跳过，防止登出→再登录产生重复监听器。
  */
+let eventsBound = false;
+
+/** 重置绑定标志（登出时调用，确保重新登录后能重新绑定） */
+export function resetEventsBound() {
+  eventsBound = false;
+}
+
 export function bindAllEvents() {
+  if (eventsBound) {
+    console.log('ℹ️ 事件已绑定，跳过重复绑定');
+    return;
+  }
+  eventsBound = true;
+
   bindNavigation();
   bindGlobalEvents();
   bindProfileEvents();
@@ -250,6 +264,7 @@ function bindNavigation() {
         await requestJSON('/api/logout', { method: 'POST' });
         Toast.success('已退出登录');
         resetState();
+        eventsBound = false;
         showShowcaseShell();
         loadShowcase();
       } catch (error) {

@@ -83,11 +83,11 @@
   gap: 10px;
 }
 
-/* Activity List */
-.activity-list {
+/* Activity Timeline */
+.overview-timeline {
   display: grid;
-  gap: 12px;
-  margin-top: 14px;
+  gap: 0;
+  margin-top: 6px;
 }
 
 /* Review Stack */
@@ -367,35 +367,10 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  position: relative;
 }
 
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 11px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.timeline-dot {
-  position: absolute;
-  left: 5px;
-  top: 10px;
-  width: 12px;
-  height: 12px;
-  background: var(--brand-strong);
-  border: 2px solid #fff;
-  border-radius: 50%;
-  z-index: 1;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-.timeline-item .activity-item {
-  margin: 0;
-}
+/* 经典 timeline 竖线 + 绝对定位圆点样式已迁移至 pages/overview.css，
+   避免与 overview 的 grid 时间轴布局冲突 */
 
 /* Responsive */
 @media (max-width: 1024px) {

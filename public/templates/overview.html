@@ -1,11 +1,9 @@
-<article class="workspace-panel reveal active" data-panel="overview" aria-labelledby="overview-title">
-  <header class="overview-work-head">
-    <div class="overview-work-head-text">
-      <p class="eyebrow">Today / Production desk</p>
-      <h1 id="overview-title">2026 / 06 / 14 · 工作台值班</h1>
-    </div>
-    <div class="overview-date-badge" id="overview-date-badge" role="status" aria-live="polite" aria-label="当前日期和时间"></div>
-  </header>
+<article class="workspace-panel active" data-panel="overview" aria-labelledby="overview-title">
+  <div class="overview-title-text">
+    <p class="eyebrow">Today / Production desk</p>
+    <h1 id="overview-title">2026 / 06 / 14 · 工作台值班</h1>
+  </div>
+  <div class="overview-date-badge" id="overview-date-badge" role="status" aria-live="polite" aria-label="当前日期和时间"></div>
 
   <section class="overview-hero-layout" aria-labelledby="role-title">
     <article class="overview-hero-card">
@@ -72,9 +70,11 @@
           <button class="filter-chip" data-activity-filter="system" type="button" aria-pressed="false">系统</button>
         </div>
       </div>
-      <div class="activity-list" id="activity-list" role="feed" aria-label="最近动态列表" aria-live="polite"></div>
-      <div class="activity-load-more" id="activity-load-more" aria-live="polite" hidden>
-        <button class="ghost-btn" id="activity-load-more-btn" type="button" aria-label="加载更多最近动态">加载更多</button>
+      <div class="overview-timeline" id="activity-list" role="feed" aria-label="最近动态列表" aria-live="polite"></div>
+      <div class="pagination activity-pagination" id="activity-pagination" aria-label="最近动态分页" hidden>
+        <button class="pagination__prev" type="button" aria-label="上一页">←</button>
+        <span class="pagination__info" aria-live="polite">第 1 页</span>
+        <button class="pagination__next" type="button" aria-label="下一页">→</button>
       </div>
     </article>
   </section>
