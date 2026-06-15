@@ -22,7 +22,7 @@
 .search-field input {
   width: 100%;
   min-height: var(--touch-target-min);
-  border: 1px solid rgba(23, 24, 26, 0.08);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 0 var(--spacing-lg);
   background: rgba(255, 255, 255, 0.94);
@@ -37,7 +37,7 @@
 .field input:hover,
 .field select:hover,
 .search-field input:hover {
-  border-color: rgba(23, 24, 26, 0.14);
+  border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.98);
 }
 
@@ -45,7 +45,7 @@
 .field select:focus,
 .search-field input:focus {
   outline: none;
-  border-color: rgba(58, 90, 122, 0.34);
+  border-color: var(--brand-line-strong);
   box-shadow: var(--focus-ring);
   background: #ffffff;
   transform: translateY(-1px);
@@ -91,8 +91,8 @@
 
 /* Login Card Input Focus */
 .login-card .field input:focus {
-  border-color: rgba(58, 90, 122, 0.45);
-  box-shadow: 0 0 0 4px rgba(58, 90, 122, 0.1);
+  border-color: var(--brand-line-strong);
+  box-shadow: var(--focus-ring);
 }
 
 /* Caps Lock Hint */
@@ -122,7 +122,7 @@
 /* Remember Me Checkbox */
 
 .login-remember:hover {
-  background-color: rgba(58, 90, 122, 0.04);
+  background-color: var(--brand-softer);
 }
 
 .login-remember input[type="checkbox"] {
@@ -134,7 +134,7 @@
 .login-remember-box {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(23, 24, 26, 0.2);
+  border: 2px solid var(--line-strong);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
@@ -152,8 +152,8 @@
 }
 
 .login-remember input:checked + .login-remember-box {
-  background: linear-gradient(135deg, #2b3036 0%, #17181a 100%);
-  border-color: #17181a;
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
 }
 
 .login-remember input:checked + .login-remember-box svg {
@@ -167,8 +167,8 @@
 }
 
 .login-remember input[type="checkbox"]:focus-visible + .login-remember-box {
-  border-color: rgba(58, 90, 122, 0.45);
-  box-shadow: 0 0 0 3px rgba(58, 90, 122, 0.18);
+  border-color: var(--brand-line-strong);
+  box-shadow: var(--focus-ring);
 }
 
 .login-remember-text {
@@ -336,7 +336,7 @@
   margin-bottom: 12px;
   padding: 11px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(23, 24, 26, 0.08);
+  border: 1px solid var(--line);
   background: rgba(17, 18, 20, 0.03);
   color: var(--text-soft);
   font-size: 13px;
@@ -470,8 +470,8 @@
 
 .wish-form textarea:focus {
   outline: none;
-  border-color: rgba(58, 90, 122, 0.4);
-  box-shadow: 0 0 0 3px rgba(58, 90, 122, 0.1);
+  border-color: rgba(138, 145, 138, 0.4);
+  box-shadow: 0 0 0 3px rgba(138, 145, 138, 0.1);
 }
 
 .wish-form-row {
@@ -508,7 +508,7 @@
 .wish-checkbox-box {
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(23, 24, 26, 0.2);
+  border: 2px solid var(--line-strong);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
@@ -530,8 +530,8 @@
 }
 
 .wish-anonymous input:checked + .wish-checkbox-box {
-  background: linear-gradient(135deg, #3a5a7a 0%, #2f4a66 100%);
-  border-color: #3a5a7a;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border-color: var(--brand);
   transform: scale(1.05);
 }
 

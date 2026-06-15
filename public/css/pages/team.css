@@ -4,7 +4,7 @@
   position: relative;
   padding: 20px 18px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
+  background: var(--surface-gradient-soft);
   border: 1px solid var(--line);
   text-align: center;
   transition: all var(--motion-medium) var(--motion-ease);
@@ -38,8 +38,8 @@
 
 .team-card:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 42px rgba(17, 18, 20, 0.12);
-  border-color: rgba(58, 90, 122, 0.25);
+  box-shadow: var(--shadow);
+  border-color: rgba(138, 145, 138, 0.25);
 }
 
 .team-card small {
@@ -91,9 +91,9 @@
   color: var(--text-soft);
   margin: 8px 0;
   padding: 8px 12px;
-  background: rgba(23, 24, 26, 0.025);
+  background: var(--surface-soft);
   border-radius: 8px;
-  border-left: 3px solid rgba(58, 90, 122, 0.15);
+  border-left: 3px solid rgba(138, 145, 138, 0.15);
 }
 
 /* Skill Tags */
@@ -107,7 +107,7 @@
 .skill-tag {
   display: inline-block;
   padding: 3px 10px;
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.08), rgba(200, 165, 90, 0.10));
+  background: var(--brand-softer);
   color: var(--brand);
   border-radius: 999px;
   font-size: 11px;
@@ -118,7 +118,7 @@
 
 /* Student Collaboration Enhancements */
 .skill-tag:hover {
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.18), rgba(200, 165, 90, 0.20));
+  background: var(--brand-soft);
   transform: translateY(-1px);
 }
 
@@ -131,8 +131,8 @@
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-vermilion) 14%, var(--surface)), color-mix(in srgb, var(--accent-gold) 18%, var(--surface)));
-  border: 1px solid color-mix(in srgb, var(--accent-gold) 30%, var(--line));
+  background: var(--surface-gradient-soft);
+  border: 1px solid var(--line);
   box-shadow: var(--shadow-soft);
 }
 
@@ -148,7 +148,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  color: var(--accent-vermilion);
+  color: var(--brand-strong);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -198,7 +198,7 @@
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--accent-blue) 5%, var(--surface-strong));
+  background: var(--brand-softer);
 }
 
 .leaderboard-rank {
@@ -207,7 +207,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-vermilion), var(--accent-gold));
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
   color: #fff;
   font-weight: 800;
 }
@@ -222,18 +222,18 @@
 }
 
 .leaderboard-item b {
-  color: var(--accent-blue);
+  color: var(--brand-strong);
   font-family: var(--font-mono);
 }
 
-.team-badge[data-grade="大一"] { background: linear-gradient(135deg, var(--accent-gold), #d9bd84); }
+.team-badge[data-grade="大一"] { background: linear-gradient(135deg, var(--brand), var(--brand-strong)); }
 .team-badge[data-grade="大二"] { background: linear-gradient(135deg, var(--success), #3f8a68); }
-.team-badge[data-grade="大三"] { background: linear-gradient(135deg, #3f6b66, #5a8a84); }
-.team-badge[data-grade="大四"] { background: linear-gradient(135deg, var(--accent-vermilion), #e06352); }
+.team-badge[data-grade="大三"] { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); }
+.team-badge[data-grade="大四"] { background: linear-gradient(135deg, var(--warning), #a08445); }
 .team-badge[data-grade="研一"],
 .team-badge[data-grade="研二"],
-.team-badge[data-grade="研三"] { background: linear-gradient(135deg, #875528, var(--accent-gold)); }
-.team-badge[data-grade="博士"] { background: linear-gradient(135deg, #2d2420, var(--accent-vermilion)); }
+.team-badge[data-grade="研三"] { background: linear-gradient(135deg, var(--brand), var(--success)); }
+.team-badge[data-grade="博士"] { background: linear-gradient(135deg, var(--text-soft), var(--brand-strong)); }
 
 .team-status-wrap {
   display: grid;
@@ -244,8 +244,8 @@
 .team-role-pill {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-blue) 10%, var(--surface-strong));
-  color: var(--accent-blue);
+  background: var(--brand-softer);
+  color: var(--brand-strong);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -261,7 +261,7 @@
 .team-group-chip {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-gold) 16%, var(--surface-strong));
+  background: color-mix(in srgb, var(--warning) 12%, var(--surface-strong));
   color: var(--warning);
   font-size: 12px;
   font-weight: 700;
@@ -275,13 +275,13 @@
   margin: var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-blue) 7%, var(--surface-strong)), color-mix(in srgb, var(--accent-gold) 8%, var(--surface-strong)));
+  background: linear-gradient(135deg, var(--brand-softer), color-mix(in srgb, var(--warning) 8%, var(--surface-strong)));
 }
 
 .team-contribution strong {
   font-family: var(--font-mono);
   font-size: 20px;
-  color: var(--accent-blue);
+  color: var(--brand-strong);
 }
 
 .team-contribution span {

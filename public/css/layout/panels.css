@@ -5,16 +5,15 @@
 .workspace-panel {
   display: none;
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   padding: var(--spacing-panel);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px);
-  scroll-margin-top: 84px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--panel-shadow);
+  scroll-margin-top: 112px;
   opacity: 0;
-  transform: translateY(12px) scale(0.98);
+  transform: translateY(12px) scale(0.99);
   will-change: transform, opacity;
 }
 
@@ -26,44 +25,32 @@
 
 /* 页面退出动画 */
 .workspace-panel.page-exit {
-  animation: pageExitSmooth 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: pageExitSmooth 180ms cubic-bezier(0.4, 0, 1, 1) forwards;
   pointer-events: none;
 }
 
 /* 页面进入动画 */
 .workspace-panel.page-enter {
-  animation: pageEnterSmooth 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: pageEnterSmooth 360ms var(--motion-ease) forwards;
 }
 
 /* 子元素 stagger 动画 */
 .workspace-panel.active > * {
   opacity: 0;
   transform: translateY(8px);
-  animation: childFadeIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: childFadeIn 350ms var(--motion-ease) forwards;
 }
 
-.workspace-panel.active > *:nth-child(1) { animation-delay: 50ms; }
-.workspace-panel.active > *:nth-child(2) { animation-delay: 100ms; }
-.workspace-panel.active > *:nth-child(3) { animation-delay: 150ms; }
-.workspace-panel.active > *:nth-child(4) { animation-delay: 200ms; }
-.workspace-panel.active > *:nth-child(5) { animation-delay: 250ms; }
-.workspace-panel.active > *:nth-child(6) { animation-delay: 300ms; }
-.workspace-panel.active > *:nth-child(7) { animation-delay: 350ms; }
+.workspace-panel.active > *:nth-child(1) { animation-delay: 40ms; }
+.workspace-panel.active > *:nth-child(2) { animation-delay: 80ms; }
+.workspace-panel.active > *:nth-child(3) { animation-delay: 120ms; }
+.workspace-panel.active > *:nth-child(4) { animation-delay: 160ms; }
+.workspace-panel.active > *:nth-child(5) { animation-delay: 200ms; }
+.workspace-panel.active > *:nth-child(6) { animation-delay: 240ms; }
+.workspace-panel.active > *:nth-child(7) { animation-delay: 280ms; }
 
-/* 概览面板特殊样式 */
-
-.workspace-panel[data-panel="overview"] .overview-grid {
-  margin-top: 4px;
-}
-
-.workspace-panel[data-panel="overview"] .activity-list {
-  margin-top: 16px;
-}
-
-.workspace-panel[data-panel="overview"] .hero-stats {
-  margin-top: 0;
-  margin-bottom: 4px;
-}
+/* overview 面板的 stagger 节奏由 pages/overview.css 自行控制，
+   避免父子布局重排后旧节奏对 C19 hero/side-stack 出现错位 */
 
 /* 面板加载状态 */
 .workspace-panel[data-state="loading"]::after {
@@ -72,13 +59,13 @@
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(120deg, transparent 0%, rgba(23, 24, 26, 0.03) 50%, transparent 100%);
+  background: linear-gradient(120deg, transparent 0%, rgba(70, 70, 66, 0.03) 50%, transparent 100%);
   animation: panel-sheen 1.2s ease-in-out infinite;
 }
 
 /* 面板错误状态 */
 .workspace-panel[data-state="error"] {
-  border-color: rgba(154, 62, 62, 0.26);
+  border-color: rgba(160, 82, 82, 0.26);
 }
 
 .workspace-panel[data-state="error"]::after {
@@ -87,110 +74,12 @@
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(154, 62, 62, 0.04), transparent);
+  background: linear-gradient(180deg, rgba(160, 82, 82, 0.04), transparent);
 }
 
 .workspace-panel[data-state="loading"] .panel-feedback,
 .workspace-panel[data-state="error"] .panel-feedback {
   margin-bottom: var(--spacing-lg);
-}
-
-/* 面板编号装饰 */
-.workspace-panel[data-panel="media"]::after,
-.workspace-panel[data-panel="review"]::after,
-.workspace-panel[data-panel="todo"]::after,
-.workspace-panel[data-panel="device"]::after,
-.workspace-panel[data-panel="borrow"]::after,
-.workspace-panel[data-panel="team"]::after,
-.workspace-panel[data-panel="settings"]::after {
-  content: attr(data-panel-number);
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  color: rgba(23, 24, 26, 0.18);
-  pointer-events: none;
-  letter-spacing: -0.02em;
-}
-
-.workspace-panel[data-panel="media"]::after {
-  content: "02";
-}
-
-.workspace-panel[data-panel="review"]::after {
-  content: "03";
-}
-
-.workspace-panel[data-panel="todo"]::after {
-  content: "04";
-}
-
-.workspace-panel[data-panel="device"]::after {
-  content: "05";
-}
-
-.workspace-panel[data-panel="borrow"]::after {
-  content: "06";
-}
-
-.workspace-panel[data-panel="team"]::after {
-  content: "07";
-}
-
-.workspace-panel[data-panel="settings"]::after {
-  content: "08";
-}
-
-/* 概览 Hero */
-
-.overview-hero::before {
-  content: "01";
-  position: absolute;
-  top: -28px;
-  right: -8px;
-  font-size: 180px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: rgba(23, 24, 26, 0.035);
-  line-height: 1;
-  pointer-events: none;
-  letter-spacing: -0.05em;
-}
-
-.overview-hero::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 60%;
-  background: linear-gradient(180deg, rgba(58, 90, 122, 0.5), transparent);
-  border-radius: 0 3px 3px 0;
-}
-
-.overview-hero-copy {
-  flex: 1;
-  min-width: 280px;
-}
-
-.overview-hero-copy .hero-text {
-  margin-top: 2px;
-}
-
-.overview-hero-copy strong {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  margin: 8px 0;
-}
-
-.overview-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  align-items: flex-start;
 }
 
 /* 面板头部 */
@@ -199,20 +88,17 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .panel-head h2 {
-  margin-top: 8px;
-  font-size: clamp(25px, 2.4vw, 36px);
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  background: linear-gradient(var(--gradient-text-angle), var(--gradient-text-start) 0%, var(--gradient-text-end) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-weight: 760;
   position: relative;
-  padding-left: 14px;
 }
 
 .panel-actions {
@@ -222,141 +108,83 @@
 }
 
 /* 面板反馈消息 */
-
 .panel-feedback[data-tone="success"] {
-  border-color: rgba(44, 107, 79, 0.18);
-  background: rgba(44, 107, 79, 0.06);
+  border-color: rgba(77, 118, 95, 0.18);
+  background: rgba(77, 118, 95, 0.06);
   color: var(--success);
 }
 
 .panel-feedback[data-tone="error"] {
-  border-color: rgba(154, 62, 62, 0.2);
-  background: rgba(154, 62, 62, 0.06);
+  border-color: rgba(160, 82, 82, 0.2);
+  background: rgba(160, 82, 82, 0.06);
   color: var(--danger);
 }
 
 .panel-feedback[data-tone="loading"] {
-  border-color: rgba(23, 24, 26, 0.12);
-  background: linear-gradient(90deg, rgba(17, 18, 20, 0.04), rgba(255, 255, 255, 0.92));
+  border-color: var(--line-strong);
+  background: linear-gradient(90deg, rgba(70, 70, 66, 0.04), rgba(255, 255, 255, 0.92));
 }
 
-/* 卡片容器 */
-.summary-card,
-.overview-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+/* overview 专属卡片样式由 pages/overview.css 单独管理，
+   layout/panels.css 不再统一定义 overview 卡片背景/圆角/阴影，
+   避免覆盖 C19 hero/side-stack/board 的窗口语言。 */
+
+@keyframes panel-sheen {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
 }
 
-/* 概览区块 */
-.overview-focus-section,
-.overview-shortcuts-section,
-.overview-activity-section {
-  margin-bottom: 32px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid rgba(0,0,0,0.08);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.section-title::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(23, 24, 26, 0.08), transparent);
-}
-
-/* 系统卡片 */
-.system-card {
-  padding: 18px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-
-.system-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.system-row:last-child {
-  border-bottom: none;
-}
-
-.system-row span {
-  font-size: 13px;
-  color: var(--text-soft);
-  font-weight: 600;
-}
-
-/* 公开地址高亮行 */
-.system-row-highlight {
-  background: linear-gradient(90deg, rgba(58, 90, 122, 0.04), transparent);
-  padding: 14px 12px;
-  margin: 0 -12px;
-  border-radius: var(--radius-sm);
-  border-left: 3px solid rgba(58, 90, 122, 0.4);
-}
-
-.system-value-with-action {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 响应式布局 - 面板 */
-@media (max-width: 900px) {
-  .overview-hero {
-
-    padding: 20px;
+@keyframes pageExitSmooth {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+  }
+}
 
-  .overview-hero-copy strong {
-    font-size: 22px;
+@keyframes pageEnterSmooth {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes childFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @media (max-width: 768px) {
-
-}
-
-@media (max-width: 640px) {
-
-}
-
-@media (max-width: 480px) {
-
   .workspace-panel {
-
-    border-radius: 10px;
+    border-radius: 20px;
+    scroll-margin-top: 94px;
   }
 
-  .overview-hero-actions {
+  .panel-head {
     flex-direction: column;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .overview-hero-actions button {
-    width: 100%;
+    gap: 12px;
   }
 }
 
-@media (max-width: 360px) {
-
-}
-
-/* 打印样式 */
-@media print {
-
+@media (prefers-reduced-motion: reduce) {
+  .workspace-panel,
+  .workspace-panel.active > * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1;
+  }
 }

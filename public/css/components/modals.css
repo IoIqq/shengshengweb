@@ -91,7 +91,7 @@
 .wish-modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(23, 24, 26, 0.4);
+  background: rgba(70, 70, 66, 0.16);
   backdrop-filter: blur(20px) saturate(120%);
   animation: overlay-fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -113,12 +113,12 @@
   max-height: 85vh;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(40px) saturate(180%);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-hero);
+  border: 1px solid var(--line);
   box-shadow:
     0 0 0 1px rgba(23, 24, 26, 0.04),
     0 20px 60px rgba(23, 24, 26, 0.12),
-    0 40px 100px rgba(58, 90, 122, 0.08);
+    0 40px 100px rgba(138, 145, 138, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -150,7 +150,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   margin: 0;
-  background: linear-gradient(135deg, #17181a 0%, #3a3d42 100%);
+  background: linear-gradient(135deg, var(--text) 0%, var(--brand-strong) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -197,7 +197,7 @@
 .wish-drawer-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(23, 24, 26, 0.4);
+  background: rgba(70, 70, 66, 0.16);
   backdrop-filter: blur(20px) saturate(120%);
   opacity: 0;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -218,7 +218,7 @@
   border-left: 1px solid rgba(23, 24, 26, 0.08);
   box-shadow:
     -4px 0 24px rgba(23, 24, 26, 0.08),
-    -12px 0 48px rgba(58, 90, 122, 0.06);
+    -12px 0 48px rgba(138, 145, 138, 0.06);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
@@ -309,7 +309,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(70, 70, 66, 0.18);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,8 +330,9 @@
 
 .dialog-container {
   background: var(--surface-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--panel-shadow);
   max-width: 480px;
   width: calc(100% - 32px);
   transform: translateY(20px);
@@ -433,7 +436,7 @@
 }
 
 .dialog-btn-info {
-  background: #3a5a7a;
+  background: var(--brand);
   color: white;
 }
 
@@ -448,7 +451,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(70, 70, 66, 0.18);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -462,13 +467,14 @@
 
 .user-dialog-content {
   background: var(--surface-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 24px;
   max-width: 480px;
   width: calc(100% - 32px);
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--panel-shadow);
   animation: slideUp var(--motion-medium);
 }
 

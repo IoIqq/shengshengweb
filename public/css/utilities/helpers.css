@@ -19,7 +19,7 @@
 }
 
 .empty-state .link-btn {
-  color: #3a5a7a;
+  color: var(--brand);
   text-decoration: underline;
   background: none;
   border: none;

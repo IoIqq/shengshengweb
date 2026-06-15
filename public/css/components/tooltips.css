@@ -15,11 +15,14 @@
   left: 50%;
   transform: translateX(-50%) scale(0.9);
   padding: 6px 12px;
-  background: rgba(23, 24, 26, 0.95);
-  color: white;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  color: var(--text);
   font-size: 12px;
   white-space: nowrap;
-  border-radius: 6px;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(70, 70, 66, 0.08);
+  backdrop-filter: blur(12px);
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -33,7 +36,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: rgba(23, 24, 26, 0.95);
+  border-top-color: rgba(255, 255, 255, 0.96);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -105,8 +108,8 @@
 }
 
 .toast[data-tone="info"] .toast-icon {
-  background: rgba(58, 90, 122, 0.15);
-  color: #3a5a7a;
+  background: rgba(138, 145, 138, 0.15);
+  color: var(--brand);
 }
 
 .toast[data-tone="warning"] .toast-icon {
@@ -194,11 +197,13 @@
   left: 50%;
   transform: translateX(-50%) translateY(-8px);
   padding: 6px 10px;
-  background: rgba(17, 18, 20, 0.95);
-  color: white;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  color: var(--text);
   font-size: 11px;
   white-space: nowrap;
-  border-radius: 6px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(70, 70, 66, 0.07);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -212,7 +217,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: rgba(17, 18, 20, 0.95);
+  border-top-color: rgba(255, 255, 255, 0.96);
 }
 
 /* Notification Badge */
@@ -254,8 +259,8 @@
   width: 16px;
   height: 16px;
   margin-left: 6px;
-  background: rgba(58, 90, 122, 0.1);
-  color: #3a5a7a;
+  background: rgba(138, 145, 138, 0.1);
+  color: var(--brand);
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
@@ -264,7 +269,7 @@
 }
 
 .info-tooltip:hover {
-  background: rgba(58, 90, 122, 0.2);
+  background: rgba(138, 145, 138, 0.2);
   transform: scale(1.1);
 }
 
@@ -292,8 +297,8 @@
 /* Dropdown Hint */
 .dropdown-hint {
   padding: 8px 12px;
-  background: rgba(58, 90, 122, 0.08);
-  border-left: 3px solid #3a5a7a;
+  background: rgba(138, 145, 138, 0.08);
+  border-left: 3px solid var(--brand);
   border-radius: 6px;
   font-size: 12px;
   color: var(--text-soft);
@@ -313,11 +318,13 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 12px;
-  background: rgba(17, 18, 20, 0.95);
-  color: white;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  color: var(--text);
   font-size: 12px;
   white-space: nowrap;
-  border-radius: 8px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(70, 70, 66, 0.08);
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 100;
@@ -330,7 +337,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: rgba(17, 18, 20, 0.95);
+  border-top-color: rgba(255, 255, 255, 0.96);
 }
 
 .inline-tooltip:hover .inline-tooltip-text {
@@ -405,7 +412,7 @@
   }
 
   .dropdown-hint {
-    background: rgba(58, 90, 122, 0.15);
+    background: rgba(138, 145, 138, 0.15);
   }
 }
 

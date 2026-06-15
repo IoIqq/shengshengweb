@@ -6,9 +6,7 @@
 
 /* 1200px - Tablet Landscape */
 @media (max-width: 1200px) {
-  .hero-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  /* overview 响应式由 pages/overview.css 管理 */
 
   .workspace-shell {
     padding: 16px;
@@ -46,7 +44,7 @@
   /* Topbar */
   .topbar-shell {
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
+    gap: 8px;
   }
 
   .topbar-actions {
@@ -59,23 +57,7 @@
     justify-content: flex-start;
   }
 
-  /* Overview */
-  .hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .overview-hero {
-    grid-template-columns: 1fr;
-  }
-
-  .overview-hero-actions {
-    justify-content: flex-start;
-  }
-
-  .overview-focus,
-  .overview-shortcuts {
-    grid-template-columns: 1fr;
-  }
+  /* Overview 响应式由 pages/overview.css 管理 */
 
   /* Review Items */
   .review-item {
@@ -267,13 +249,13 @@
   /* Topbar */
   .topbar {
     height: auto;
-    min-height: 60px;
-    padding: 8px 12px;
+    min-height: 0;
+    padding: 0;
   }
 
   .topbar-shell {
-    padding: 10px 12px;
-    gap: 12px;
+    padding: 8px;
+    gap: 8px;
   }
 
   .topbar-brand {
@@ -282,7 +264,7 @@
   }
 
   .brand-text {
-    display: none;
+    display: grid;
     max-width: 200px;
   }
 
@@ -291,8 +273,8 @@
   }
 
   .brand-icon {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 
   /* Navigation - Hide, Use Hamburger */

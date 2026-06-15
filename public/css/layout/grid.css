@@ -3,63 +3,55 @@
 
 /* 容器变量 */
 :root {
-  --container: min(1440px, calc(100vw - 32px));
+  --container: min(1460px, calc(100vw - 52px));
 }
-
-/* 登录页面网格布局 */
-
-/* 品牌要点网格 */
 
 /* 工作区主容器 */
 .workspace-main {
   width: var(--container);
   margin: 0 auto;
-  padding: 8px 0 64px;
+  padding: 0 0 72px;
 }
 
 /* 工作区网格 */
 .workspace-grid {
   display: grid;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-grid-gap);
   position: relative;
 }
 
 /* 概览统计网格 */
-
 .hero-stats li {
-
   text-align: center;
   position: relative;
-
   transition:
     transform var(--motion-fast) var(--motion-ease),
     box-shadow var(--motion-fast) var(--motion-ease),
     border-color var(--motion-fast) var(--motion-ease);
-
   animation-delay: calc(var(--stat-index, 0) * 60ms);
 }
 
 .hero-stats li:focus-visible {
-  outline: 2px solid rgba(58, 90, 122, 0.4);
+  outline: 2px solid var(--brand-line-strong);
   outline-offset: 3px;
 }
 
 .hero-stats li[data-tone="warning"]::before {
-  background: linear-gradient(90deg, transparent, rgba(124, 100, 47, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(139, 116, 62, 0.55), transparent);
 }
 
 .hero-stats li[data-tone="success"]::before {
-  background: linear-gradient(90deg, transparent, rgba(44, 107, 79, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(77, 118, 95, 0.55), transparent);
 }
 
 .hero-stats li[data-tone="primary"]::before {
-  background: linear-gradient(90deg, transparent, rgba(58, 90, 122, 0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(138, 145, 138, 0.6), transparent);
 }
 
 .hero-stats li[data-tone="warning"] strong { color: var(--warning); }
-.hero-stats li[data-tone="success"] strong { color: #10b981; }
+.hero-stats li[data-tone="success"] strong { color: var(--success); }
 .hero-stats li[data-tone="info"] strong { color: var(--brand); }
-.hero-stats li[data-tone="primary"] strong { color: #2f4a66; }
+.hero-stats li[data-tone="primary"] strong { color: var(--brand-strong); }
 
 /* 概览网格 */
 .overview-grid {
@@ -77,7 +69,7 @@
 /* 快捷操作网格 */
 .overview-shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -115,32 +107,30 @@
 
 .profile-meta div {
   padding: 12px;
-  border-radius: 14px;
-  background: rgba(17, 18, 20, 0.03);
-  border: 1px solid rgba(23, 24, 26, 0.05);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
 }
 
 /* 响应式网格布局 */
 @media (max-width: 1200px) {
-
+  :root {
+    --container: min(100vw - 32px, 1120px);
+  }
 }
 
 @media (max-width: 900px) {
-
-}
-
-@media (max-width: 768px) {
-
+  :root {
+    --container: calc(100vw - 28px);
+  }
 }
 
 @media (max-width: 640px) {
+  :root {
+    --container: calc(100vw - 20px);
+  }
 
-}
-
-@media (max-width: 480px) {
-
-}
-
-@media (max-width: 360px) {
-
+  .workspace-main {
+    padding-bottom: 48px;
+  }
 }

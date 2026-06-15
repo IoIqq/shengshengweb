@@ -4,19 +4,19 @@
 /* 导航芯片和筛选芯片基础 */
 .nav-chip,
 .filter-chip {
-
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
-  font-weight: 600;
+  border: 1px solid transparent;
+  font-weight: 720;
   position: relative;
   overflow: hidden;
   transition:
-    transform var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-spring),
     background-color 220ms var(--motion-ease),
     color 220ms var(--motion-ease),
-    border-color 220ms var(--motion-ease);
+    border-color 220ms var(--motion-ease),
+    box-shadow 220ms var(--motion-ease);
 }
 
 .nav-chip::before,
@@ -24,7 +24,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent);
   opacity: 0;
   transition: opacity var(--motion-fast) var(--motion-ease);
   pointer-events: none;
@@ -38,9 +38,9 @@
 .nav-chip:hover,
 .filter-chip:hover {
   transform: translateY(-1px);
-  border-color: rgba(23, 24, 26, 0.16);
-  background: rgba(58, 90, 122, 0.05);
-  color: var(--text);
+  border-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--text-soft);
 }
 
 .nav-chip:active,
@@ -50,7 +50,7 @@
 
 .nav-chip:focus-visible,
 .filter-chip:focus-visible {
-  outline: 2px solid var(--accent-blue);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
@@ -58,22 +58,40 @@
 /* 导航芯片激活状态 */
 .nav-chip.is-active,
 .filter-chip.is-active {
-
   transform: translateY(-1px);
+  background: var(--nav-active-bg);
+  color: var(--nav-active-text);
+  border-color: var(--brand-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-.nav-chip:hover {
-  background: rgba(58, 90, 122, 0.05);
-  color: var(--text);
+.nav-chip {
+  height: 42px;
+  min-width: 58px;
+  padding: 0 14px;
+  border-radius: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.filter-chip {
+  min-height: var(--touch-target-min);
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-color: var(--line);
+  font-size: 13px;
 }
 
 /* 导航滑动指示器 */
 .nav-indicator {
   position: absolute;
-  bottom: -1px;
+  bottom: 5px;
   left: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(58, 90, 122, 0.2), #3a5a7a, rgba(58, 90, 122, 0.2));
+  background: rgba(138, 145, 138, 0.62);
   border-radius: 999px;
   opacity: 0;
   transition:
@@ -93,34 +111,33 @@
 }
 
 /* 提醒徽章 */
-
 .alert-chip:active {
   transform: translateY(0) scale(0.98);
 }
 
 .alert-chip[data-active="true"] {
-  border-color: #2f4a66;
-  background: rgba(58, 90, 122, 0.06);
+  border-color: var(--brand-line);
+  background: var(--brand-softer);
 }
 
 .alert-chip[data-tone="pending"][data-active="true"],
 .alert-chip[data-tone="pending"]:hover {
-  background: rgba(124, 100, 47, 0.1);
-  border-color: rgba(124, 100, 47, 0.22);
+  background: rgba(139, 116, 62, 0.1);
+  border-color: rgba(139, 116, 62, 0.22);
   color: var(--warning);
 }
 
 .alert-chip[data-tone="todo"][data-active="true"],
 .alert-chip[data-tone="todo"]:hover {
-  background: rgba(58, 90, 122, 0.08);
-  border-color: rgba(58, 90, 122, 0.18);
-  color: #3a5a7a;
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+  color: var(--brand-strong);
 }
 
 .alert-chip[data-tone="danger"][data-active="true"],
 .alert-chip[data-tone="danger"]:hover {
-  background: rgba(154, 62, 62, 0.1);
-  border-color: rgba(154, 62, 62, 0.24);
+  background: rgba(160, 82, 82, 0.1);
+  border-color: rgba(160, 82, 82, 0.24);
   color: var(--danger);
 }
 
@@ -155,7 +172,7 @@
 .settings-tabs {
   display: flex;
   gap: 8px;
-  border-bottom: 2px solid var(--line);
+  border-bottom: 1px solid var(--line);
   margin-bottom: 24px;
 }
 
@@ -165,10 +182,10 @@
   background: transparent;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  margin-bottom: -1px;
   transition: all var(--motion-fast);
   color: var(--text-soft);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
 }
 
@@ -181,7 +198,7 @@
 .settings-tab.active {
   border-bottom-color: var(--accent);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .settings-content {
@@ -193,27 +210,22 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* 快捷操作按钮 */
-
 .shortcut-btn:active {
   transform: translateY(0) scale(0.97);
 }
 
 .shortcut-icon {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .shortcut-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -258,7 +270,7 @@
 .filter-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(45, 49, 55, 0.1);
+  box-shadow: var(--focus-ring);
 }
 
 /* 分页 */
@@ -286,8 +298,8 @@
 
 .pagination button:hover:not(:disabled) {
   border-color: var(--accent);
-  background: var(--accent);
-  color: white;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .pagination button:disabled {
@@ -302,25 +314,14 @@
 }
 
 /* 响应式布局 - 导航 */
-@media (max-width: 900px) {
-
-}
-
-@media (max-width: 768px) {
-
-}
-
 @media (max-width: 640px) {
   .search-field {
     flex: 1 1 100%;
     max-width: none;
-
   }
-
 }
 
 @media (max-width: 480px) {
-
   .filter-chip {
     min-height: var(--touch-target-min);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -350,11 +351,6 @@
   }
 }
 
-/* 移动端滚动优化 */
-@media (max-width: 768px) {
-
-}
-
 /* 减少动画模式 */
 @media (prefers-reduced-motion: reduce) {
   .nav-chip,
@@ -375,9 +371,4 @@
   .filter-chip {
     border-width: 2px;
   }
-}
-
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-
 }

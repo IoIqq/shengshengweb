@@ -25,9 +25,10 @@ export function updateNavIndicator() {
 
   const navRect = nav.getBoundingClientRect();
   const btnRect = active.getBoundingClientRect();
-  const left = btnRect.left - navRect.left + nav.scrollLeft;
+  const indicatorWidth = 14;
+  const left = btnRect.left - navRect.left + nav.scrollLeft + (btnRect.width - indicatorWidth) / 2;
   indicator.style.opacity = '1';
-  indicator.style.width = `${btnRect.width}px`;
+  indicator.style.width = `${indicatorWidth}px`;
   indicator.style.transform = `translateX(${left}px)`;
 }
 

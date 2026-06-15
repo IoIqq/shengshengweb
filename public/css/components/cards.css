@@ -3,11 +3,11 @@
    通用卡片、列表项、统计卡片等
    ======================================== */
 
-/* Base Card Styles */
+/* Base Card Styles
+   Note: .workspace-panel 不在此通用组内，由 layout/panels.css 单独管理，
+   避免通用卡片样式覆盖工作台面板的 C19 视觉。 */
 .login-brand-panel,
 .login-card,
-.workspace-panel,
-.activity-item,
 .todo-item,
 .team-card {
   background: var(--surface);
@@ -45,12 +45,12 @@
 }
 
 .media-card--enhanced.is-selected {
-  border-color: var(--accent-blue);
+  border-color: var(--brand);
   box-shadow: 0 0 0 2px var(--brand-line-strong);
 }
 
 .media-card--enhanced.is-selected .media-thumb-wrapper {
-  border: 2px solid var(--accent-blue);
+  border: 2px solid var(--brand);
 }
 
 /* Media Card Parts */
@@ -100,86 +100,9 @@
   flex-wrap: wrap;
 }
 
-/* Activity Item */
+/* Activity Item: overview 专属 timeline 样式由 pages/overview.css 提供 */
 
-.activity-item strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-/* Stat Card */
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.04), transparent);
-  opacity: 0;
-  transition: opacity var(--motion-medium) var(--motion-ease);
-  z-index: -1;
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 32px rgba(17, 18, 20, 0.1);
-  border-color: rgba(58, 90, 122, 0.2);
-}
-
-.stat-card:active {
-  transform: translateY(-2px) scale(1.01);
-}
-
-.stat-card[data-tone='success'] {
-  border-color: rgba(44, 107, 79, 0.15);
-}
-
-.stat-card[data-tone='success']::before {
-  background: linear-gradient(135deg, rgba(44, 107, 79, 0.08), transparent);
-}
-
-.stat-card[data-tone='success'] strong {
-  background: linear-gradient(
-    135deg,
-    var(--gradient-success-start) 0%,
-    var(--gradient-success-end) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.stat-card[data-tone='warning'] {
-  border-color: rgba(124, 100, 47, 0.15);
-}
-
-.stat-card[data-tone='warning']::before {
-  background: linear-gradient(135deg, rgba(124, 100, 47, 0.08), transparent);
-}
-
-.stat-card[data-tone='warning'] strong {
-  background: linear-gradient(
-    135deg,
-    var(--gradient-warning-start) 0%,
-    var(--gradient-warning-end) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.stat-card[data-tone='neutral'] {
-  border-color: rgba(23, 24, 26, 0.1);
-}
-
-.stat-card[data-tone='neutral']::before {
-  background: linear-gradient(135deg, rgba(23, 24, 26, 0.04), transparent);
-}
+/* Stat Card / Focus Card：overview 专属样式由 pages/overview.css 提供 */
 
 /* Review Item */
 
@@ -267,8 +190,8 @@
   display: block;
   padding: 16px;
   cursor: default;
-  border-color: var(--accent, #24282e);
-  box-shadow: 0 0 0 3px rgba(45, 49, 55, 0.12);
+  border-color: var(--brand-line-strong);
+  box-shadow: var(--focus-ring);
 }
 
 .todo-check {
@@ -378,7 +301,7 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, rgba(58, 90, 122, 0.7), rgba(58, 90, 122, 0.3));
+  background: linear-gradient(180deg, rgba(138, 145, 138, 0.7), rgba(138, 145, 138, 0.3));
   opacity: 0;
   transition: opacity var(--motion-medium) var(--motion-ease);
   z-index: 1;
@@ -388,7 +311,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.03), transparent);
+  background: linear-gradient(135deg, rgba(138, 145, 138, 0.03), transparent);
   opacity: 0;
   transition: opacity var(--motion-medium) var(--motion-ease);
   z-index: -1;
@@ -404,7 +327,7 @@
 
 .team-card:hover .team-badge {
   transform: scale(1.08) rotate(-3deg);
-  box-shadow: 0 8px 20px rgba(58, 90, 122, 0.35);
+  box-shadow: 0 8px 20px rgba(106, 112, 106, 0.35);
 }
 
 .team-card:active {
@@ -435,12 +358,12 @@
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.95), rgba(58, 90, 122, 0.9));
+  background: linear-gradient(135deg, rgba(106, 112, 106, 0.95), rgba(106, 112, 106, 0.9));
   color: #fff;
   font-size: 18px;
   font-weight: 900;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(58, 90, 122, 0.25);
+  box-shadow: 0 6px 16px rgba(106, 112, 106, 0.25);
   transition: all var(--motion-medium) var(--motion-ease);
   position: relative;
   overflow: hidden;
@@ -489,9 +412,9 @@
   margin-bottom: 12px;
   min-height: 22px;
   padding: 10px 12px;
-  background: rgba(23, 24, 26, 0.025);
+  background: var(--surface-soft);
   border-radius: 10px;
-  border-left: 3px solid rgba(58, 90, 122, 0.15);
+  border-left: 3px solid var(--brand-line);
 }
 
 .team-meta {
@@ -524,33 +447,7 @@
   padding-top: 4px;
 }
 
-/* Focus Card */
-
-.focus-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 60%;
-  border-radius: 0 3px 3px 0;
-}
-
-.focus-card[data-tone='warning']::before {
-  background: linear-gradient(180deg, rgba(124, 100, 47, 0.55), transparent);
-}
-
-.focus-card[data-tone='info']::before {
-  background: linear-gradient(180deg, rgba(58, 90, 122, 0.55), transparent);
-}
-
-.focus-card[data-tone='primary']::before {
-  background: linear-gradient(180deg, rgba(44, 107, 79, 0.55), transparent);
-}
-
-.focus-card[data-tone='danger']::before {
-  background: linear-gradient(180deg, rgba(58, 90, 122, 0.6), transparent);
-}
+/* Focus Card：所有装饰由 pages/overview.css 自行定义，避免覆盖 C19 row 视觉 */
 
 .user-filter-row {
   display: flex;

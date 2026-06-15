@@ -111,8 +111,7 @@
   }
 
   /* Horizontal Scroll Containers */
-  .filter-row,
-  .overview-shortcuts {
+  .filter-row {
     scroll-snap-type: x proximity;
   }
 

@@ -58,7 +58,7 @@
   padding: 14px 18px;
   border-radius: var(--radius-lg);
 
-  border: 1px solid rgba(58, 90, 122, 0.16);
+  border: 1px solid rgba(138, 145, 138, 0.16);
   margin-bottom: 8px;
   position: sticky;
   top: 0;
@@ -67,7 +67,7 @@
   color: white;
   box-shadow: var(--shadow);
   animation: slideDown var(--motion-medium) var(--motion-ease);
-  background: linear-gradient(135deg, rgba(58, 90, 122, 0.96), rgba(36, 40, 46, 0.96));
+  background: linear-gradient(135deg, rgba(138, 145, 138, 0.96), rgba(106, 112, 106, 0.96));
 }
 
 .batch-actions-bar span {
@@ -116,7 +116,7 @@
 
 .media-card.is-selected {
   background: var(--brand-soft);
-  border-color: var(--accent-blue);
+  border-color: var(--brand);
   box-shadow: 0 0 0 2px var(--brand-line-strong);
 }
 
@@ -445,9 +445,9 @@
 }
 
 .review-note-input:focus-visible {
-  outline: 3px solid rgba(58, 90, 122, 0.32);
+  outline: 3px solid rgba(138, 145, 138, 0.32);
   outline-offset: 2px;
-  border-color: var(--accent-blue);
+  border-color: var(--brand);
 }
 
 /* ========================================
@@ -550,9 +550,9 @@
 
 .upload-dropzone:hover,
 .upload-dropzone.is-dragover {
-  border-color: var(--accent-blue, #3a5a7a);
-  background: rgba(58, 90, 122, 0.04);
-  color: var(--accent-blue, #3a5a7a);
+  border-color: var(--brand);
+  background: rgba(138, 145, 138, 0.04);
+  color: var(--brand);
 }
 
 .upload-dropzone svg {
@@ -670,7 +670,7 @@
   display: block;
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #3a5a7a, #2f4a66);
+  background: linear-gradient(90deg, var(--brand), var(--brand-strong));
   border-radius: 999px;
   transition: width 0.2s ease;
 }

@@ -42,8 +42,23 @@
       "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/server/uploads/**)",
       "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/node_modules/**)",
       "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/.audit/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/design-previews/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/.codegraph/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/.git/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/server/data/**)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/package-lock.json)",
+      "Read(//c/Users/Adm/Documents/New project 5/shengsheng-ideology-studio-site/.mobile-access.html)",
       "Bash(grep -r *)",
-      "Bash(grep -rn *)"
+      "Bash(grep -rn *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -rf /*)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -f *)",
+      "Bash(git branch -D *)",
+      "Bash(git commit --amend *)",
+      "Bash(git commit --no-verify *)"
     ]
   }
 }

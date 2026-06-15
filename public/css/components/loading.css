@@ -22,11 +22,11 @@
 
 .loading-bar-progress {
   height: 100%;
-  background: linear-gradient(90deg, #3a5a7a 0%, #2f4a66 50%, #3a5a7a 100%);
+  background: linear-gradient(90deg, var(--brand) 0%, var(--brand-strong) 50%, var(--brand) 100%);
   background-size: 200% 100%;
   animation: loading-bar-shimmer 1.5s ease-in-out infinite;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(58, 90, 122, 0.5);
+  box-shadow: 0 0 10px rgba(138, 145, 138, 0.5);
 }
 
 .loading-bar.is-error .loading-bar-progress {
@@ -287,7 +287,7 @@
 }
 
 .progress-ring-circle-progress {
-  stroke: #3a5a7a;
+  stroke: var(--brand);
   stroke-linecap: round;
   transition: stroke-dashoffset 0.3s ease;
 }

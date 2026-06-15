@@ -1,12 +1,14 @@
 /* ========== Base: Variables ========== */
-/* CSS变量定义 - 全局设计令牌 */
+/* CSS 变量定义 - 全局设计令牌 */
 
 :root {
   color-scheme: light;
 
   /* 字体族 */
   --font-sans:
-    "DM Sans",
+    "Aptos Display",
+    "Satoshi",
+    "Plus Jakarta Sans",
     "PingFang SC",
     "Hiragino Sans GB",
     "Microsoft YaHei",
@@ -14,12 +16,7 @@
     "Source Han Sans SC",
     system-ui,
     sans-serif;
-  --font-display:
-    "Noto Serif SC",
-    "Source Han Serif SC",
-    "Songti SC",
-    "STSong",
-    serif;
+  --font-display: var(--font-sans);
   --font-mono:
     "JetBrains Mono",
     "SFMono-Regular",
@@ -28,86 +25,107 @@
     "Liberation Mono",
     monospace;
 
-  /* 颜色 —— 冷调净白基底 + 单一静谧蓝强调（克制专业风） */
-  --bg: #f6f7f9;
+  /* 基础颜色：白色 Studio OS */
+  --canvas: #ffffff;
+  --canvas-soft: #fdfdfd;
   --surface: rgba(255, 255, 255, 0.94);
   --surface-strong: #ffffff;
-  --surface-soft: #eef1f4;
-  --text: #1a1c1f;
-  --text-soft: #5b626b;
-  --text-muted: #8b929b;
-  --line: rgba(20, 28, 40, 0.08);
-  --line-strong: rgba(20, 28, 40, 0.14);
-  --accent: #24282e;
-  --accent-vermilion: #3a5a7a;
-  --accent-gold: #c8a55a;
-  --success: #2c6b4f;
-  --warning: #7c642f;
-  --danger: #9a3e3e;
+  --surface-soft: #f7f7f6;
+  --surface-muted: #f1f3f0;
+  --text: #373735;
+  --text-soft: #5e5e5b;
+  --text-muted: #969590;
+  --text-faint: #bfbeb8;
+  --line: rgba(70, 70, 66, 0.08);
+  --line-strong: rgba(70, 70, 66, 0.14);
+  --accent: #6a706a;
+  --accent-soft: #f0f3ef;
+  --accent-line: rgba(138, 145, 138, 0.24);
 
-  /* 品牌强调语义令牌（全站唯一交互强调色 = 静谧蓝） */
-  --brand: #3a5a7a;
-  --brand-strong: #2f4a66;
-  --brand-soft: rgba(58, 90, 122, 0.08);
-  --brand-softer: rgba(58, 90, 122, 0.04);
-  --brand-line: rgba(58, 90, 122, 0.18);
-  --brand-line-strong: rgba(58, 90, 122, 0.34);
+  /* 兼容语义令牌 */
+  --bg: #ffffff;
+  --success: #4d765f;
+  --warning: #8b743e;
+  --danger: #a05252;
+
+  /* 品牌强调语义令牌（全站唯一交互强调色 = 低饱和灰绿） */
+  --brand: #8a918a;
+  --brand-strong: #6a706a;
+  --brand-soft: rgba(138, 145, 138, 0.12);
+  --brand-softer: rgba(138, 145, 138, 0.06);
+  --brand-line: rgba(138, 145, 138, 0.22);
+  --brand-line-strong: rgba(138, 145, 138, 0.34);
 
   /* 渐变文字令牌 */
   --gradient-text-angle: 180deg;
-  --gradient-text-start: #1a1c1f;
-  --gradient-text-end: #3a3f47;
-  --gradient-success-start: #2c6b4f;
-  --gradient-success-end: #1e4d38;
-  --gradient-warning-start: #7c642f;
-  --gradient-warning-end: #5a4822;
+  --gradient-text-start: #373735;
+  --gradient-text-end: #5e5e5b;
+  --gradient-success-start: #4d765f;
+  --gradient-success-end: #365742;
+  --gradient-warning-start: #8b743e;
+  --gradient-warning-end: #67542b;
 
-  /* 表面渐变令牌（冷调） */
-  --surface-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(246, 247, 249, 0.96));
-  --surface-gradient-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(238, 241, 244, 0.96));
+  /* 表面渐变令牌 */
+  --surface-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 247, 246, 0.94));
+  --surface-gradient-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 243, 240, 0.9));
 
-  /* 统一强调色 —— 收敛到品牌静谧蓝（原朱砂已退役） */
-  --accent-blue: #3a5a7a;
-  --accent-blue-hover: #2f4a66;
+  /* 统一强调色兼容令牌 */
+  --accent-blue: var(--brand);
+  --accent-blue-hover: var(--brand-strong);
 
-  /* 阴影 —— 冷灰蓝调,贴净白底（非纯黑） */
-  --shadow: 0 12px 30px rgba(30, 38, 50, 0.08);
-  --shadow-soft: 0 8px 20px rgba(30, 38, 50, 0.06);
-  --shadow-strong: 0 18px 48px rgba(30, 38, 50, 0.11);
-  /* 玻璃边缘内高光 */
-  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  /* 工作台主题令牌 */
+  --topbar-bg: rgba(255, 255, 255, 0.72);
+  --topbar-border: rgba(70, 70, 66, 0.09);
+  --topbar-shadow: 0 18px 50px rgba(70, 70, 66, 0.07), 0 2px 6px rgba(70, 70, 66, 0.04);
+  --nav-active-bg: var(--accent-soft);
+  --nav-active-text: var(--brand-strong);
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --panel-border: var(--line);
+  --panel-shadow: 0 22px 56px rgba(70, 70, 66, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  --card-bg: #ffffff;
+  --card-border: var(--line);
+  --card-shadow: 0 12px 32px rgba(70, 70, 66, 0.04);
+  --hero-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(247, 247, 246, 0.78)), linear-gradient(155deg, #ffffff 0%, #fcfcfb 44%, #eef0eb 100%);
+
+  /* 阴影 */
+  --shadow: 0 16px 38px rgba(70, 70, 66, 0.08);
+  --shadow-soft: 0 10px 24px rgba(70, 70, 66, 0.055);
+  --shadow-strong: 0 24px 64px rgba(70, 70, 66, 0.11);
+  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   /* 圆角 */
-  --radius-xl: 14px;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --radius-hero: 26px;
+  --radius-xl: 24px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-control: 14px;
+  --radius-sm: 12px;
+  --radius-chip: 11px;
 
   /* 8px 基础网格间距系统 */
-  --spacing-xs: 4px;    /* 仅用于超小细节 */
-  --spacing-sm: 8px;    /* 最小间距阈值 */
-  --spacing-md: 12px;   /* 标准间距 */
-  --spacing-lg: 16px;   /* 主要间距 */
-  --spacing-xl: 24px;   /* 组之间间距 */
-  --spacing-2xl: 32px;  /* 大块区分 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
 
-  /* 流体间距（使用clamp） */
-  --spacing-panel: clamp(10px, 2vw, 22px);    /* 面板padding */
-  --spacing-card-gap: clamp(8px, 1.5vw, 16px); /* 卡片间距 */
-  --spacing-grid-gap: clamp(10px, 2vw, 18px);  /* 网格间距 */
-  --spacing-form-gap: clamp(6px, 1vw, 10px);   /* 表单字段间距 */
+  /* 流体间距 */
+  --spacing-panel: clamp(18px, 2.3vw, 32px);
+  --spacing-card-gap: clamp(12px, 1.6vw, 18px);
+  --spacing-grid-gap: clamp(14px, 2vw, 22px);
+  --spacing-form-gap: clamp(8px, 1vw, 12px);
 
   /* 布局 */
-
   --touch-target-min: 44px;
-  --focus-ring: 0 0 0 3px rgba(58, 90, 122, 0.24);
-  --focus-ring-strong: 0 0 0 4px rgba(58, 90, 122, 0.30);
+  --focus-ring: 0 0 0 3px rgba(138, 145, 138, 0.24);
+  --focus-ring-strong: 0 0 0 4px rgba(138, 145, 138, 0.30);
 
-  /* 弹性缓动(高端微动) */
+  /* 弹性缓动 */
   --motion-fast: 160ms;
   --motion-medium: 260ms;
   --motion-slow: 520ms;
-  --motion-ease: cubic-bezier(0.2, 0.7, 0.15, 1);
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --motion-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -126,10 +144,14 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 12% -8%, rgba(240, 243, 239, 0.92), transparent 30vw),
+    radial-gradient(circle at 92% -4%, rgba(247, 247, 246, 0.95), transparent 32vw),
+    linear-gradient(135deg, #ffffff 0%, #fdfdfd 56%, #f8f8f7 100%);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  letter-spacing: -0.014em;
 }
 
 /* ========== 通用样式 ========== */
@@ -141,7 +163,6 @@ img {
 
 button {
   font-family: inherit;
-
   border: none;
   background: none;
 }

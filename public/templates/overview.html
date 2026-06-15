@@ -1,63 +1,81 @@
 <article class="workspace-panel reveal active" data-panel="overview" aria-labelledby="overview-title">
-  <div class="panel-head">
-    <div>
-      <p class="eyebrow">工作台概览</p>
-      <h2 id="overview-title">摘要、动态与快捷入口</h2>
+  <header class="overview-work-head">
+    <div class="overview-work-head-text">
+      <p class="eyebrow">Today / Production desk</p>
+      <h1 id="overview-title">2026 / 06 / 14 · 工作台值班</h1>
     </div>
     <div class="overview-date-badge" id="overview-date-badge" role="status" aria-live="polite" aria-label="当前日期和时间"></div>
-  </div>
+  </header>
 
-  <section class="overview-hero" aria-labelledby="role-title">
-    <div class="overview-hero-copy">
+  <section class="overview-hero-layout" aria-labelledby="role-title">
+    <article class="overview-hero-card">
       <p class="eyebrow" id="role-pill">管理员工作台</p>
-      <strong id="role-title">欢迎回来</strong>
-      <span id="role-description">先看总览，再进入站点配置、素材审核、借出审批和设备管理。</span>
-      <p class="hero-text" id="home-hero-message">这里显示管理员配置的首页说明。</p>
-    </div>
-    <div class="overview-hero-actions" aria-label="概览主要操作">
-      <button class="primary-btn" data-jump="media" type="button">查看素材库</button>
-      <button class="ghost-btn" data-jump="review" type="button">进入审片中心</button>
-    </div>
-  </section>
+      <h2 class="overview-hero-title" id="role-title">把今天的素材、审片和交付放在同一张桌面上。</h2>
+      <p class="overview-hero-lede" id="role-description">先看总览，再进入素材审核、借出审批、设备管理和系统配置。</p>
+      <p class="overview-hero-message" id="home-hero-message">这里显示管理员配置的首页说明。</p>
+      <ul class="hero-stats" id="dashboard-stats" aria-label="工作台概览统计"></ul>
+      <div class="overview-hero-actions" aria-label="概览主要操作">
+        <button class="primary-btn" data-jump="media" type="button">查看素材库</button>
+        <button class="ghost-btn" data-jump="review" type="button">进入审片中心</button>
+      </div>
+    </article>
 
-  <section class="overview-alerts" id="overview-alerts" aria-label="待处理提醒" aria-live="polite"></section>
-
-  <ul class="hero-stats" id="dashboard-stats" aria-label="工作台概览统计"></ul>
-
-  <div class="overview-with-chart">
-    <div class="overview-main-content">
-      <section class="overview-focus-section" aria-labelledby="overview-focus-title">
-        <h3 class="section-title" id="overview-focus-title">今日重点</h3>
-        <div class="overview-focus" id="overview-focus"></div>
+    <aside class="overview-side-stack" aria-label="侧边面板">
+      <section class="overview-panel" id="overview-alerts-panel" aria-labelledby="overview-alerts-title">
+        <div class="overview-panel-head">
+          <h3 id="overview-alerts-title">待处理提醒</h3>
+          <span class="overview-panel-meta">Alerts</span>
+        </div>
+        <div class="overview-alerts" id="overview-alerts" aria-live="polite"></div>
       </section>
 
-      <section class="overview-shortcuts-section" aria-labelledby="overview-shortcuts-title">
-        <h3 class="section-title" id="overview-shortcuts-title">快捷操作</h3>
+      <section class="overview-panel" id="overview-chart-panel" aria-labelledby="overview-chart-title">
+        <div class="overview-panel-head">
+          <h3 id="overview-chart-title">素材分类</h3>
+          <span class="overview-panel-meta">Media</span>
+        </div>
+        <div id="media-chart-container" aria-label="素材分类统计"></div>
+      </section>
+
+      <section class="overview-panel" id="overview-shortcuts-panel" aria-labelledby="overview-shortcuts-title">
+        <div class="overview-panel-head">
+          <h3 id="overview-shortcuts-title">快捷操作</h3>
+          <span class="overview-panel-meta">Actions</span>
+        </div>
         <div class="overview-shortcuts" id="overview-shortcuts" aria-label="常用快捷操作"></div>
       </section>
-    </div>
-
-    <aside class="overview-sidebar">
-      <div id="media-chart-container" aria-label="素材分类统计"></div>
     </aside>
-  </div>
+  </section>
 
-  <section class="overview-activity-section" aria-labelledby="overview-activity-title">
-    <div class="section-title-row">
-      <h3 class="section-title" id="overview-activity-title">最近动态</h3>
-      <div class="activity-filter-row" id="activity-filters" role="group" aria-label="筛选最近动态类型">
-        <button class="filter-chip is-active" data-activity-filter="all" type="button" aria-pressed="true">全部</button>
-        <button class="filter-chip" data-activity-filter="media" type="button" aria-pressed="false">素材</button>
-        <button class="filter-chip" data-activity-filter="device" type="button" aria-pressed="false">设备</button>
-        <button class="filter-chip" data-activity-filter="borrow" type="button" aria-pressed="false">借用</button>
-        <button class="filter-chip" data-activity-filter="review" type="button" aria-pressed="false">审核</button>
-        <button class="filter-chip" data-activity-filter="member" type="button" aria-pressed="false">成员</button>
-        <button class="filter-chip" data-activity-filter="system" type="button" aria-pressed="false">系统</button>
+  <section class="overview-board" aria-label="工作台下方面板">
+    <article class="overview-panel overview-board-panel" aria-labelledby="overview-focus-title">
+      <div class="overview-panel-head">
+        <h3 id="overview-focus-title">今日重点</h3>
+        <span class="overview-panel-meta">Focus</span>
       </div>
-    </div>
-    <div class="activity-list" id="activity-list" role="feed" aria-label="最近动态列表" aria-live="polite"></div>
-    <div class="activity-load-more" id="activity-load-more" aria-live="polite" hidden>
-      <button class="ghost-btn" id="activity-load-more-btn" type="button" aria-label="加载更多最近动态">加载更多</button>
-    </div>
+      <div class="overview-focus" id="overview-focus"></div>
+    </article>
+
+    <article class="overview-panel overview-board-panel" aria-labelledby="overview-activity-title">
+      <div class="overview-panel-head">
+        <div class="overview-panel-head-text">
+          <h3 id="overview-activity-title">最近动态</h3>
+          <span class="overview-panel-meta">Timeline</span>
+        </div>
+        <div class="activity-filter-row" id="activity-filters" role="group" aria-label="筛选最近动态类型">
+          <button class="filter-chip is-active" data-activity-filter="all" type="button" aria-pressed="true">全部</button>
+          <button class="filter-chip" data-activity-filter="media" type="button" aria-pressed="false">素材</button>
+          <button class="filter-chip" data-activity-filter="device" type="button" aria-pressed="false">设备</button>
+          <button class="filter-chip" data-activity-filter="borrow" type="button" aria-pressed="false">借用</button>
+          <button class="filter-chip" data-activity-filter="review" type="button" aria-pressed="false">审核</button>
+          <button class="filter-chip" data-activity-filter="member" type="button" aria-pressed="false">成员</button>
+          <button class="filter-chip" data-activity-filter="system" type="button" aria-pressed="false">系统</button>
+        </div>
+      </div>
+      <div class="activity-list" id="activity-list" role="feed" aria-label="最近动态列表" aria-live="polite"></div>
+      <div class="activity-load-more" id="activity-load-more" aria-live="polite" hidden>
+        <button class="ghost-btn" id="activity-load-more-btn" type="button" aria-label="加载更多最近动态">加载更多</button>
+      </div>
+    </article>
   </section>
 </article>

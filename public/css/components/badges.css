@@ -91,13 +91,13 @@
 }
 
 .user-badge.admin {
-  background: rgba(58, 90, 122, 0.1);
+  background: var(--brand-soft);
   color: var(--danger);
 }
 
 .user-badge.editor {
-  background: rgba(58, 90, 122, 0.1);
-  color: #3a5a7a;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
 }
 
 .user-badge.guest {
@@ -116,13 +116,13 @@
 }
 
 .user-role-badge.admin {
-  background: rgba(58, 90, 122, 0.1);
+  background: var(--brand-soft);
   color: var(--danger);
 }
 
 .user-role-badge.editor {
-  background: rgba(58, 90, 122, 0.1);
-  color: #3a5a7a;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
 }
 
 .user-role-badge.guest {
@@ -168,8 +168,8 @@
 }
 
 .action-badge.update {
-  background: rgba(58, 90, 122, 0.1);
-  color: #3a5a7a;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
 }
 
 .action-badge.login {
@@ -229,30 +229,7 @@
   }
 }
 
-/* Stat Dot */
-.stat-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: var(--danger);
-  border-radius: 50%;
-  animation: alert-pulse 2s ease-in-out infinite;
-}
-
-/* Overview Date Badge */
-.overview-date-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--surface-2, rgba(255, 255, 255, 0.6));
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-2, #5b626b);
-}
+/* Stat Dot / Overview Date Badge：overview 专属样式由 pages/overview.css 提供 */
 
 /* User Avatar */
 .user-avatar {
@@ -281,7 +258,7 @@
   padding: 17px;
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 245, 247, 0.86));
-  border: 1px solid rgba(23, 24, 26, 0.05);
+  border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition:
     transform var(--motion-fast) var(--motion-ease),
@@ -291,7 +268,7 @@
 
 .brand-points div:hover {
   transform: translateY(-2px);
-  border-color: rgba(58, 90, 122, 0.18);
+  border-color: rgba(138, 145, 138, 0.18);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 8px 22px rgba(23, 24, 26, 0.08);
@@ -310,39 +287,7 @@
   font-size: 13px;
 }
 
-/* Hero Stats Badge */
-.hero-stats li::before {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(58, 90, 122, 0.4), transparent);
-  border-radius: 0 0 999px 999px;
-}
-
-.hero-stats li[data-tone='warning'] .stat-dot {
-  background: rgba(124, 100, 47, 0.7);
-  box-shadow: 0 0 0 3px rgba(124, 100, 47, 0.14);
-}
-
-/* Focus Card Badge */
-.focus-card[data-tone='warning'] {
-  border-left: 4px solid var(--warning);
-}
-
-.focus-card[data-tone='info'] {
-  border-left: 4px solid var(--brand);
-}
-
-.focus-card[data-tone='primary'] {
-  border-left: 4px solid #2f4a66;
-}
-
-.focus-card[data-tone='danger'] {
-  border-left: 4px solid #3a5a7a;
-}
+/* Hero Stats / Focus Card 装饰：overview 专属样式由 pages/overview.css 提供 */
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -366,11 +311,6 @@
 @media (max-width: 640px) {
   .eyebrow {
     font-size: 10px;
-  }
-
-  .overview-date-badge {
-    padding: 6px 12px;
-    font-size: 12px;
   }
 }
 

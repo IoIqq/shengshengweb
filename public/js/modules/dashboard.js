@@ -88,12 +88,12 @@ export function renderDashboard() {
           const hasAttention = item.value > 0 && (item.tone === 'warning' || item.tone === 'primary');
           const stateText = hasAttention ? '需要关注' : '查看详情';
           return `
-          <li data-tone="${escapeHtml(item.tone)}">
-            <button class="stat-card-btn" data-jump="${escapeHtml(item.jump)}" type="button" aria-label="查看${escapeHtml(item.label)}，当前 ${safeText(item.value)} 项">
-              <strong>${safeText(item.value)}</strong>
-              <span>${escapeHtml(item.label)}</span>
-              <small class="stat-status">${stateText}</small>
-              ${hasAttention ? '<span class="stat-dot" aria-hidden="true"></span>' : ''}
+          <li class="metric" data-tone="${escapeHtml(item.tone)}">
+            <button class="metric-btn" data-jump="${escapeHtml(item.jump)}" type="button" aria-label="查看${escapeHtml(item.label)}，当前 ${safeText(item.value)} 项">
+              <strong class="metric-num">${safeText(item.value)}</strong>
+              <span class="metric-hint">${escapeHtml(item.label)}</span>
+              <small class="metric-state">${stateText}</small>
+              ${hasAttention ? '<span class="metric-dot" aria-hidden="true"></span>' : ''}
             </button>
           </li>
         `;
@@ -127,12 +127,12 @@ export function renderDashboard() {
       .slice(0, 3);
 
     focusEl.innerHTML = `
-      <article class="focus-card" data-tone="warning">
-        <div class="focus-head">
+      <section class="focus-group" data-tone="warning">
+        <header class="focus-group-head">
           <p class="eyebrow">最新待审</p>
           <button class="focus-link" data-jump="review" type="button" aria-label="查看全部待审素材">全部 →</button>
-        </div>
-        <div class="focus-body">
+        </header>
+        <div class="focus-rows">
           ${
   pendingMedia.length
     ? pendingMedia
@@ -151,13 +151,13 @@ export function renderDashboard() {
     : '<p class="focus-empty">没有待审素材</p>'
 }
         </div>
-      </article>
-      <article class="focus-card" data-tone="${focusTodoTone}">
-        <div class="focus-head">
+      </section>
+      <section class="focus-group" data-tone="${focusTodoTone}">
+        <header class="focus-group-head">
           <p class="eyebrow">${overdueTodos.length ? `逾期 ${overdueTodos.length} 项` : (todayTodos.length ? '今日截止' : '未完成待办')}</p>
           <button class="focus-link" data-jump="todo" type="button" aria-label="查看全部待办事项">全部 →</button>
-        </div>
-        <div class="focus-body">
+        </header>
+        <div class="focus-rows">
           ${
   focusTodos.length
     ? focusTodos
@@ -180,13 +180,13 @@ export function renderDashboard() {
     : `<p class="focus-empty">${escapeHtml(focusTodoEmpty)}</p>`
 }
         </div>
-      </article>
-      <article class="focus-card" data-tone="primary">
-        <div class="focus-head">
+      </section>
+      <section class="focus-group" data-tone="primary">
+        <header class="focus-group-head">
           <p class="eyebrow">即将归还</p>
           <button class="focus-link" data-jump="borrow" type="button" aria-label="查看全部借出申请">全部 →</button>
-        </div>
-        <div class="focus-body">
+        </header>
+        <div class="focus-rows">
           ${
   upcomingBorrows.length
     ? upcomingBorrows
@@ -206,7 +206,7 @@ export function renderDashboard() {
     : '<p class="focus-empty">没有借出中的设备</p>'
 }
         </div>
-      </article>
+      </section>
     `;
   }
 
@@ -281,15 +281,14 @@ export function renderMediaChart() {
   const photoOffset = -videoDash;
 
   chartEl.innerHTML = `
-    <article class="media-chart-card">
-      <p class="eyebrow">素材分类</p>
+    <div class="media-chart-body">
       <div class="media-chart-svg-wrap">
         <svg class="media-chart-svg" viewBox="0 0 ${center * 2} ${center * 2}" aria-label="素材分类环形图">
-          <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#e5e7eb" stroke-width="${strokeWidth}" />
-          <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#3b82f6" stroke-width="${strokeWidth}"
+          <circle class="media-chart-track" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}" />
+          <circle class="media-chart-segment media-chart-segment--video" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}"
                   stroke-dasharray="${videoDash} ${circumference}" stroke-dashoffset="${videoOffset}"
                   transform="rotate(-90 ${center} ${center})" stroke-linecap="round" />
-          <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#10b981" stroke-width="${strokeWidth}"
+          <circle class="media-chart-segment media-chart-segment--photo" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}"
                   stroke-dasharray="${photoDash} ${circumference}" stroke-dashoffset="${photoOffset}"
                   transform="rotate(-90 ${center} ${center})" stroke-linecap="round" />
         </svg>
@@ -299,10 +298,10 @@ export function renderMediaChart() {
         </div>
       </div>
       <ul class="media-chart-legend">
-        <li><span class="legend-dot" style="background:#3b82f6"></span><span>视频</span><strong>${videoCount}</strong></li>
-        <li><span class="legend-dot" style="background:#10b981"></span><span>图片</span><strong>${photoCount}</strong></li>
+        <li><span class="legend-dot legend-dot--video" aria-hidden="true"></span><span>视频</span><strong>${videoCount}</strong></li>
+        <li><span class="legend-dot legend-dot--photo" aria-hidden="true"></span><span>图片</span><strong>${photoCount}</strong></li>
       </ul>
-    </article>
+    </div>
   `;
 }
 

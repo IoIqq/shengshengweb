@@ -56,14 +56,7 @@
   display: block;
 }
 
-/* Focus Thumbnail */
-.focus-thumb {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
+/* Focus Thumbnail / Focus Row：overview 专属样式由 pages/overview.css 提供 */
 
 /* Tag Row */
 .tag-row {
@@ -87,7 +80,7 @@
 .media-card :is(button, input, textarea, select):focus-visible,
 .review-item :is(button, input, textarea, select):focus-visible,
 .batch-actions-bar :is(button, input):focus-visible {
-  outline: 3px solid rgba(58, 90, 122, 0.42);
+  outline: 3px solid rgba(138, 145, 138, 0.42);
   outline-offset: 3px;
 }
 
@@ -105,7 +98,7 @@
   display: grid;
   place-items: center;
   padding: clamp(16px, 4vw, 40px);
-  background: rgba(4, 8, 18, 0.68);
+  background: rgba(55, 55, 53, 0.48);
   backdrop-filter: blur(14px);
   opacity: 0;
   transition: opacity var(--motion-medium) var(--motion-ease);
@@ -125,7 +118,7 @@
   border-radius: var(--radius-xl);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 251, 0.94)), var(--surface);
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--shadow-strong);
   transform: translateY(18px) scale(0.98);
   transition:
     transform var(--motion-medium) var(--motion-ease),
@@ -199,7 +192,7 @@
   min-height: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top, rgba(58, 90, 122, 0.18), transparent 34%), #090d16;
+  background: radial-gradient(circle at top, rgba(138, 145, 138, 0.16), transparent 34%), #f7f7f6;
 }
 
 .media-preview-image,
@@ -208,7 +201,7 @@
   height: 100%;
   max-height: 68vh;
   object-fit: contain;
-  background: #090d16;
+  background: var(--surface-soft);
 }
 
 .media-preview-fallback {
@@ -231,7 +224,7 @@
 }
 
 .media-preview-dialog :is(button, a):focus-visible {
-  outline: 3px solid rgba(58, 90, 122, 0.42);
+  outline: 3px solid rgba(138, 145, 138, 0.42);
   outline-offset: 3px;
 }
 
@@ -343,113 +336,8 @@ img[data-src]::before {
   }
 }
 
-/* Alert Chip (Media Overview) */
-.alert-chip {
-  gap: 10px;
-}
-
-.alert-value {
-  display: inline-grid;
-  place-items: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-
-  color: inherit;
-}
-
-.alert-value {
-  font-size: 20px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.alert-label {
-  letter-spacing: 0.02em;
-}
-
-.alert-label {
-  color: var(--text-2, #5b626b);
-}
-
-.alert-pulse {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-
-  opacity: 0.5;
-}
-
-.alert-pulse {
-  width: 8px;
-  height: 8px;
-  background: var(--danger);
-  border-radius: 50%;
-  animation: alert-pulse 2s ease-in-out infinite;
-}
-
-@keyframes alert-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.3);
-  }
-}
-
-/* Focus Row */
-
-.focus-row:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.focus-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.focus-priority {
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.focus-priority[data-priority='高'] {
-  background: rgba(154, 62, 62, 0.12);
-  color: var(--danger);
-}
-
-.focus-priority[data-priority='中'] {
-  background: rgba(168, 123, 31, 0.14);
-  color: var(--warning);
-}
-
-.focus-priority[data-priority='低'] {
-  background: rgba(107, 101, 94, 0.12);
-  color: var(--text-soft);
-}
-
-.focus-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.focus-text strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* Alert Chip / Focus Row：overview 专属样式由 pages/overview.css 提供，
+   alert-pulse keyframes 在 base/animations.css 已有规范定义 */
 
 /* Skeleton Media */
 .skeleton-media {

@@ -19,11 +19,7 @@
   .workspace-panel {
     padding: clamp(10px, 1.5vw, 16px);
   }
-  .overview-hero {
-    padding: clamp(16px, 3vw, 24px);
-    gap: clamp(12px, 2vw, 20px);
-    margin-bottom: clamp(16px, 3vw, 24px);
-  }
+  /* overview 响应式由 pages/overview.css 管理 */
   .media-grid {
     gap: clamp(8px, 1.5vw, 12px);
   }
@@ -60,8 +56,8 @@
 
   /* Topbar */
   .topbar-shell {
-    padding: 8px 10px;
-    border-radius: 16px;
+    padding: 6px;
+    border-radius: 20px;
   }
 
   .topbar-brand {
@@ -87,11 +83,7 @@
     min-width: 0;
   }
 
-  /* Stats */
-  .hero-stats {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  /* Stats — overview 响应式由 pages/overview.css 管理 */
 
   .stats-grid {
     grid-template-columns: 1fr;
@@ -107,12 +99,6 @@
     padding: 12px;
   }
 
-  .overview-hero {
-
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
   .field {
 
     margin-top: 12px;
@@ -120,7 +106,7 @@
 
   /* Workspace */
   .workspace-shell {
-    padding: 8px;
+    padding: 0;
   }
 
   .workspace-panel[data-panel="overview"] {
@@ -211,25 +197,7 @@
     display: none;
   }
 
-  /* Overview */
-  .overview-hero {
-    padding: 20px;
-  }
-
-  .overview-hero-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .overview-hero-actions button {
-    width: 100%;
-  }
-
-  .overview-shortcuts {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
+  /* Overview 响应式由 pages/overview.css 管理 */
 
   /* Review Center */
   .review-item {
@@ -289,7 +257,7 @@
     gap: 8px;
   }
 
-  .topbar-actions .ghost-btn {
+  .topbar-actions .ghost-btn:not(.topbar-sync) {
     display: none;
   }
 
@@ -367,8 +335,8 @@
 
   /* Topbar */
   .topbar {
-    min-height: 56px;
-    padding: 6px;
+    min-height: 0;
+    padding: 0;
   }
 
   .hamburger-btn {
@@ -388,7 +356,7 @@
 
   /* Workspace */
   .workspace-shell {
-    padding: 6px;
+    padding: 0;
   }
 
   .view-panel {
@@ -409,10 +377,9 @@
     padding: 12px;
   }
 
-  .overview-hero {
-    padding: 14px;
-    gap: 10px;
-    margin-bottom: 14px;
+  .overview-hero,
+  .overview-hero-actions {
+    /* overview 响应式由 pages/overview.css 管理 */
   }
 
   .field {
@@ -555,7 +522,7 @@
 
   /* Topbar */
   .topbar-shell {
-    padding: 6px 8px;
+    padding: 6px;
     gap: 8px;
   }
 
@@ -596,9 +563,7 @@
   }
 
   .overview-hero {
-    padding: 12px;
-    gap: 10px;
-    margin-bottom: 12px;
+    /* overview 响应式由 pages/overview.css 管理 */
   }
 
   .panel-head h2 {
