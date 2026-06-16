@@ -200,7 +200,7 @@ export function applyNavMode(mode) {
 
 /**
  * 初始化导航栏悬浮窗滚动隐藏
- * 向下滚动超过阈值时自动隐藏，向上滚动时显示，隐藏时 sticky 占位同步收起
+ * 向下滚动超过阈值时收成右上角圆球，向上滚动时还原；点圆球可持久展开
  */
 export function initScrollHide() {
   const topbar = document.getElementById('topbar');
@@ -219,10 +219,13 @@ export function initScrollHide() {
 
         if (currentY <= SHOW_AT_TOP) {
           topbar.classList.remove('is-scrolled-down');
+          topbar.classList.remove('is-expanded');
         } else if (delta > HIDE_THRESHOLD) {
           topbar.classList.add('is-scrolled-down');
+          topbar.classList.remove('is-expanded');
         } else if (delta < -8) {
           topbar.classList.remove('is-scrolled-down');
+          topbar.classList.remove('is-expanded');
         }
 
         lastScrollY = currentY;
@@ -233,5 +236,17 @@ export function initScrollHide() {
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  topbar.addEventListener('click', (e) => {
+    if (!topbar.classList.contains('is-scrolled-down')) return;
+    if (e.target.closest('.nav-chip, .topbar-actions, .hamburger-btn, .avatar-btn')) return;
+    topbar.classList.toggle('is-expanded');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!topbar.classList.contains('is-expanded')) return;
+    if (topbar.contains(e.target)) return;
+    topbar.classList.remove('is-expanded');
+  });
 }
 

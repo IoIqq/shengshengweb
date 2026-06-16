@@ -285,7 +285,7 @@
   width: 280px;
   max-width: 85vw;
   height: 100%;
-  padding: 20px;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -585,7 +585,7 @@
   }
 
   .dialog-footer {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 
   .dialog-btn {

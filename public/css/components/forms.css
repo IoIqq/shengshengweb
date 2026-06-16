@@ -598,10 +598,6 @@
 
 }
 
-@media (max-width: 640px) {
-
-}
-
 @media (max-width: 480px) {
 
   .wish-form-row {
@@ -611,9 +607,4 @@
   .wish-anonymous {
     justify-self: start;
   }
-}
-
-/* Touch Devices */
-@media (hover: none) and (pointer: coarse) {
-
 }

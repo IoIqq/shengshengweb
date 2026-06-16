@@ -7,7 +7,7 @@
  * - Stale While Revalidate: HTML（返回缓存，后台更新）
  */
 
-const CACHE_NAME = 'shengsheng-c19-ui-r10';
+const CACHE_NAME = 'shengsheng-__ASSET_VERSION__';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

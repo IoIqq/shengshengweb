@@ -141,26 +141,15 @@
     -webkit-user-select: text;
     user-select: text;
   }
-
-  /* GPU Acceleration for Smooth Animations */
-  .media-card,
-  .todo-item,
-  .team-card,
-  .device-card,
-  .borrow-card,
-  .borrow-item,
-  .nav-chip,
-  .filter-chip,
-  button {
-    will-change: transform;
-  }
 }
 
-/* Reduce Animation Complexity on Mobile */
-@media (max-width: 768px) {
-  @media (prefers-reduced-motion: no-preference) {
-    * {
-      transition-duration: 0.2s !important;
-    }
+/* Reduce Animation Complexity on Mobile — 仅收紧较长的过渡，保留组件级节奏 */
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .wish-drawer-content,
+  .wish-modal-overlay,
+  .dialog-overlay,
+  .mobile-nav-content,
+  .profile-popover-inner {
+    transition-duration: 0.28s;
   }
 }

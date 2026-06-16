@@ -21,7 +21,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="favicon.svg" />
 
-    <link rel="stylesheet" href="css/main.css?v=20260615-c19r10" />
+    <link rel="stylesheet" href="css/main.css?v=__ASSET_VERSION__" />
   </head>
   <body class="workspace-body">
     <a class="skip-link" href="#content">跳到主要内容</a>
@@ -457,20 +457,45 @@
     </div>
 
     <!-- 集中配置（挂到 window.shengshengConfig） -->
-    <script src="config.js?v=20260608"></script>
+    <script src="config.js?v=__ASSET_VERSION__"></script>
 
     <!-- Service Worker 注册（离线支持） -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('service-worker.js?v=20260615-c19r10')
-            .then(reg => console.log('Service Worker 注册成功'))
-            .catch(err => console.log('Service Worker 注册失败:', err));
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+
+        var host = window.location.hostname;
+        var isDev = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+
+        if (isDev) {
+          // 开发机：清掉已注册的 SW 与缓存，避免旧版资源挡住代码改动
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) { reg.unregister(); });
+          });
+          if (window.caches && caches.keys) {
+            caches.keys().then(function (names) {
+              names.forEach(function (n) { caches.delete(n); });
+            });
+          }
+          console.log('[dev] Service Worker disabled on ' + host);
+          return;
+        }
+
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
         });
-      }
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('service-worker.js?v=__ASSET_VERSION__')
+            .then(function () { console.log('Service Worker 注册成功'); })
+            .catch(function (err) { console.log('Service Worker 注册失败:', err); });
+        });
+      })();
     </script>
 
     <!-- 主应用逻辑（模块化） -->
-    <script type="module" src="js/app-modular.js?v=20260615-c19r10"></script>
+    <script type="module" src="js/app-modular.js?v=__ASSET_VERSION__"></script>
   </body>
 </html>

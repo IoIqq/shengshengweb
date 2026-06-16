@@ -730,17 +730,17 @@
 
 .time-item {
   display: grid;
-  grid-template-columns: 24px 1fr;
-  gap: 14px;
+  grid-template-columns: 20px 1fr;
+  gap: 12px;
   align-items: start;
-  padding: 14px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--line);
   animation: stagger-fade-in 0.35s ease backwards;
 }
 
 .time-item:first-of-type {
   border-top: 0;
-  padding-top: 6px;
+  padding-top: 4px;
 }
 
 .time-item:nth-of-type(2) { animation-delay: 40ms; }
@@ -797,27 +797,36 @@
   color: #54534f;
   font-size: 14px;
   font-weight: 720;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .time-meta {
-  display: block;
-  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  margin-top: 2px;
   color: var(--text-soft);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow: hidden;
 }
 
 .time-detail {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
   margin-top: 2px;
   color: var(--text-muted);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.45;
+  overflow: hidden;
 }
 
 .activity-pagination {
-  margin-top: 14px;
-  padding-top: 14px;
+  margin-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--line);
 }
 
@@ -896,9 +905,9 @@
 
   /* 时间轴响应式缩放 */
   .time-item {
-    grid-template-columns: 20px 1fr;
+    grid-template-columns: 18px 1fr;
     gap: 10px;
-    padding: 12px 0;
+    padding: 8px 0;
   }
 
   .time-dot {
@@ -986,5 +995,28 @@
   .metric-btn:hover,
   .shortcut-btn:hover {
     transform: none;
+  }
+}
+
+/* 360px - 超小屏：统计改为横向滑动条，避免数字被挤压 */
+@media (max-width: 360px) {
+  .hero-stats {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 72%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+
+  .hero-stats::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-stats .metric {
+    scroll-snap-align: center;
   }
 }

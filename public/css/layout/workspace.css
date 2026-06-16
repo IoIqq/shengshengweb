@@ -36,14 +36,94 @@
   width: min(1200px, calc(100vw - 32px));
   margin: 18px auto 22px;
   isolation: isolate;
-  transition: transform 0.35s ease, opacity 0.3s ease, margin 0.35s ease;
+  transition: width 0.35s ease, margin 0.35s ease;
 }
 
+/* —— 收纳为右上角圆球 —— */
 .topbar.is-scrolled-down {
-  transform: translateY(calc(-100% - 28px));
-  opacity: 0;
-  pointer-events: none;
+  width: 56px;
+  margin-left: auto;
+  margin-right: 18px;
   margin-bottom: 0;
+}
+
+.topbar.is-scrolled-down .topbar-shell {
+  grid-template-columns: 1fr;
+  padding: 6px;
+  border-radius: 999px;
+  min-height: 56px;
+  height: 56px;
+  justify-items: center;
+  align-items: center;
+}
+
+.topbar.is-scrolled-down .topnav,
+.topbar.is-scrolled-down .topbar-actions,
+.topbar.is-scrolled-down .brand-text,
+.topbar.is-scrolled-down .hamburger-btn {
+  display: none;
+}
+
+.topbar.is-scrolled-down .topbar-brand {
+  border-right: 0;
+  padding: 0;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.topbar.is-scrolled-down .brand-icon {
+  width: 40px;
+  height: 40px;
+}
+
+/* 展开态：悬停 / 焦点 / 持久点开 */
+.topbar.is-scrolled-down:hover,
+.topbar.is-scrolled-down:focus-within,
+.topbar.is-scrolled-down.is-expanded {
+  width: min(1200px, calc(100vw - 32px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.topbar.is-scrolled-down:hover .topbar-shell,
+.topbar.is-scrolled-down:focus-within .topbar-shell,
+.topbar.is-scrolled-down.is-expanded .topbar-shell {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 8px;
+  border-radius: 24px;
+  min-height: unset;
+  height: auto;
+  justify-items: stretch;
+}
+
+.topbar.is-scrolled-down:hover .topnav,
+.topbar.is-scrolled-down:focus-within .topnav,
+.topbar.is-scrolled-down.is-expanded .topnav,
+.topbar.is-scrolled-down:hover .topbar-actions,
+.topbar.is-scrolled-down:focus-within .topbar-actions,
+.topbar.is-scrolled-down.is-expanded .topbar-actions {
+  display: flex;
+}
+
+.topbar.is-scrolled-down:hover .brand-text,
+.topbar.is-scrolled-down:focus-within .brand-text,
+.topbar.is-scrolled-down.is-expanded .brand-text {
+  display: grid;
+}
+
+.topbar.is-scrolled-down:hover .topbar-brand,
+.topbar.is-scrolled-down:focus-within .topbar-brand,
+.topbar.is-scrolled-down.is-expanded .topbar-brand {
+  border-right: 1px solid var(--line);
+  padding: 0 14px 0 10px;
+  justify-content: flex-start;
+}
+
+.topbar.is-scrolled-down:hover .brand-icon,
+.topbar.is-scrolled-down:focus-within .brand-icon,
+.topbar.is-scrolled-down.is-expanded .brand-icon {
+  width: 34px;
+  height: 34px;
 }
 
 .topbar-shell {
@@ -58,6 +138,7 @@
   backdrop-filter: blur(22px) saturate(120%);
   -webkit-backdrop-filter: blur(22px) saturate(120%);
   box-shadow: var(--topbar-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  transition: border-radius 0.35s ease, padding 0.35s ease, height 0.35s ease;
 }
 
 /* 品牌标识 */
@@ -518,8 +599,11 @@
   }
 }
 
-/* 移动端底部安全区域 */
+/* 移动端底部安全区域（底部 Tab 栏 + Home Indicator） */
 @media (max-width: 768px) {
+  .workspace-main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
 }
 
 /* 减少动画模式 */

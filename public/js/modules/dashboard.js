@@ -306,7 +306,7 @@ export function renderMediaChart() {
 }
 
 // 活动日志分页状态
-const ACTIVITY_PER_PAGE = 10;
+const ACTIVITY_PER_PAGE = 5;
 let activityPage = 1;
 let activityFilter = 'all';
 

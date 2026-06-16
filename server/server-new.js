@@ -4,12 +4,14 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
+const fs = require('fs');
 
 // 导入配置和工具
 const config = require('./config');
 const { ensureDir } = require('./utils');
 const { getLanAddresses, findAvailablePort } = require('./utils/network');
 const { cleanupOldLogs, logServerEvent } = require('./utils/logger');
+const { getAssetVersion } = require('./utils/asset-version');
 const { requestLogger, errorHandler, notFoundHandler } = require('./middleware');
 const { csrfProtect } = require('./middleware/csrf');
 const { setSessionGetter } = require('./middleware/auth');
@@ -146,6 +148,29 @@ async function initApp() {
 
     // 静态资源服务（带缓存策略）
     const STATIC_CACHE_MAX_AGE = 24 * 60 * 60; // 1天
+
+    // —— 资产版本注入：index.html 与 service-worker.js 启动时按 mtime 自动改版 ——
+    const ASSET_VERSION = getAssetVersion();
+    const PUBLIC_DIR = path.join(config.ROOT_DIR, 'public');
+    const indexHtmlTemplate = fs
+      .readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8')
+      .replace(/__ASSET_VERSION__/g, ASSET_VERSION);
+    const serviceWorkerTemplate = fs
+      .readFileSync(path.join(PUBLIC_DIR, 'service-worker.js'), 'utf8')
+      .replace(/__ASSET_VERSION__/g, ASSET_VERSION);
+    console.log(`✓ ASSET_VERSION = ${ASSET_VERSION}`);
+
+    app.get(['/', '/index.html'], (req, res) => {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.type('html').send(indexHtmlTemplate);
+    });
+
+    app.get('/service-worker.js', (req, res) => {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Service-Worker-Allowed', '/');
+      res.type('application/javascript').send(serviceWorkerTemplate);
+    });
+
     app.use(
       express.static(path.join(config.ROOT_DIR, 'public'), {
         index: 'index.html',

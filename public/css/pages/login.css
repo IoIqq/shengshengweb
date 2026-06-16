@@ -196,6 +196,10 @@
 }
 
 @media (max-width: 900px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+
   .registration-form {
     grid-column: 1;
     margin-top: 0;

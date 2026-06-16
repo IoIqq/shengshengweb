@@ -228,6 +228,7 @@
   .wish-drawer-content {
     width: 100vw;
     border-left: none;
+    padding-right: env(safe-area-inset-right);
   }
 
   .wish-drawer-header,
@@ -597,13 +598,14 @@
 /* Landscape Mode (Height < 500px) */
 @media (max-height: 500px) and (orientation: landscape) {
   .login-layout {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 20px;
     padding: 12px;
   }
 
   .login-brand-panel {
     padding: 16px;
+    min-height: auto;
   }
 
   .login-card {
