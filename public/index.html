@@ -318,6 +318,40 @@
         </nav>
       </div>
 
+      <!-- 移动端底部 Tab 导航栏 -->
+      <nav class="mobile-tab-bar" id="mobile-tab-bar" aria-label="快捷导航">
+        <button class="tab-item is-active" data-view="overview" type="button">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M2 8h16M7 8v9" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          <span class="tab-label">概览</span>
+        </button>
+        <button class="tab-item" data-view="media" type="button">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="6.5" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M2 14l4-4 3 3 3-4 6 5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <span class="tab-label">素材</span>
+        </button>
+        <button class="tab-item" data-view="todo" type="button">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6 10l2.5 2.5L14 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="tab-label">待办</span>
+        </button>
+        <button class="tab-item" id="tab-more-btn" type="button">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+            <circle cx="4.5" cy="10" r="1.5" fill="currentColor"/>
+            <circle cx="15.5" cy="10" r="1.5" fill="currentColor"/>
+          </svg>
+          <span class="tab-label">更多</span>
+        </button>
+      </nav>
+
       <div class="profile-popover" id="profile-popover" role="dialog" aria-modal="false" aria-label="账户详情" hidden>
         <div class="profile-popover-inner">
           <div class="profile-popover-head">

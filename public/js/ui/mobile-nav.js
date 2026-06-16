@@ -86,4 +86,79 @@ export function initMobileNav() {
 
   updateVisibility();
   window.addEventListener('resize', updateVisibility);
+
+  // ========== 底部 Tab 导航栏逻辑 ==========
+  initTabBar(topnav, drawer);
+}
+
+function initTabBar(topnav, drawer) {
+  const tabBar = document.getElementById('mobile-tab-bar');
+  const tabButtons = tabBar?.querySelectorAll('.tab-item[data-view]');
+  const moreBtn = document.getElementById('tab-more-btn');
+
+  if (!tabBar || !tabButtons || !tabButtons.length) return;
+
+  // 点击普通 Tab 按钮 → 触发对应的 topnav chip
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      const targetChip = topnav.querySelector(`.nav-chip[data-view="${view}"]`);
+      if (targetChip) {
+        targetChip.click();
+        syncTabActiveState(view);
+      }
+    });
+  });
+
+  // 点击"更多"按钮 → 打开抽屉
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      if (hamburgerBtn && !drawer.hidden) {
+        // 抽屉已打开，不做任何事
+        return;
+      }
+      hamburgerBtn?.click();
+      // 临时将"更多"设为激活态
+      moreBtn.classList.add('is-active');
+      tabButtons.forEach((btn) => {
+        if (btn !== moreBtn) btn.classList.remove('is-active');
+      });
+    });
+  }
+
+  // 监听视图切换 → 同步 Tab 选中状态
+  // 通过 MutationObserver 观察 topnav 中 .is-active 的变化
+  const navChips = topnav.querySelectorAll('.nav-chip');
+  const observer = new MutationObserver(() => {
+    navChips.forEach((chip) => {
+      if (chip.classList.contains('is-active')) {
+        syncTabActiveState(chip.dataset.view);
+      }
+    });
+  });
+
+  navChips.forEach((chip) => {
+    observer.observe(chip, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // 初始化时同步一次状态
+  const activeChip = topnav.querySelector('.nav-chip.is-active');
+  if (activeChip) {
+    syncTabActiveState(activeChip.dataset.view);
+  }
+}
+
+function syncTabActiveState(activeView) {
+  const tabBar = document.getElementById('mobile-tab-bar');
+  if (!tabBar) return;
+
+  const tabButtons = tabBar.querySelectorAll('.tab-item[data-view]');
+  tabButtons.forEach((btn) => {
+    if (btn.dataset.view === activeView) {
+      btn.classList.add('is-active');
+    } else {
+      btn.classList.remove('is-active');
+    }
+  });
 }

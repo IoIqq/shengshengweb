@@ -352,3 +352,113 @@
     border-width: 2px;
   }
 }
+
+/* ========== 移动端底部 Tab 导航栏 ========== */
+.mobile-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: none; /* 默认隐藏，仅移动端显示 */
+  height: 56px;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--line-soft);
+  box-shadow: 0 -2px 12px rgba(138, 145, 138, 0.08);
+  justify-content: space-around;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 仅在 ≤768px 显示 */
+@media (max-width: 768px) {
+  .mobile-tab-bar {
+    display: flex;
+  }
+}
+
+/* 单个 Tab 按钮 */
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color var(--motion-medium) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-spring);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+/* 图标容器 */
+.tab-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform var(--motion-fast) var(--motion-spring);
+}
+
+/* 文字标签 */
+.tab-label {
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 选中状态 */
+.tab-item.is-active {
+  color: var(--brand-strong);
+}
+
+.tab-item.is-active .tab-icon {
+  transform: translateY(-2px);
+}
+
+/* 点击反馈 */
+.tab-item:active {
+  transform: scale(0.92);
+}
+
+.tab-item:active .tab-icon {
+  transform: translateY(-1px) scale(0.95);
+}
+
+/* 焦点样式 */
+.tab-item:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* 禁用状态 */
+.tab-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .tab-item,
+  .tab-icon {
+    transition: none;
+  }
+  
+  .tab-item:active,
+  .tab-item:active .tab-icon,
+  .tab-item.is-active .tab-icon {
+    transform: none;
+  }
+}

@@ -17,7 +17,7 @@
 /* 768px - Large Mobile (iPhone 12+) */
 @media (max-width: 768px) {
   .workspace-panel {
-    padding: clamp(10px, 1.5vw, 16px);
+    padding: clamp(12px, 2.5vw, 18px);
   }
   /* overview 响应式由 pages/overview.css 管理 */
   .media-grid {
@@ -68,7 +68,7 @@
   .panel-head {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
   }
 
   .panel-actions {
@@ -94,13 +94,7 @@
     padding: 14px;
   }
 
-  /* 优化：改进工作区间距 */
-  .workspace-panel {
-    padding: 12px;
-  }
-
   .field {
-
     margin-top: 12px;
   }
 
@@ -368,16 +362,6 @@
     font-size: 22px;
   }
 
-  /* 优化：改进间距 */
-  .workspace-panel {
-    padding: 12px;
-  }
-
-  .overview-hero,
-  .overview-hero-actions {
-    /* overview 响应式由 pages/overview.css 管理 */
-  }
-
   .field {
     gap: 6px;
     margin-top: 12px;
@@ -551,15 +535,6 @@
   .search-field input {
     min-height: var(--touch-target-min);
     font-size: 14px;
-  }
-
-  /* 优化：改进工作区间距（从8px改为12px） */
-  .workspace-panel {
-    padding: 12px;
-  }
-
-  .overview-hero {
-    /* overview 响应式由 pages/overview.css 管理 */
   }
 
   .panel-head h2 {

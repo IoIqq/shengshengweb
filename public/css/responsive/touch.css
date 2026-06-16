@@ -21,12 +21,13 @@
     min-width: var(--touch-target-min);
   }
 
-  /* Enhanced Touch Feedback */
+  /* Enhanced Touch Feedback — 卡片用降缩放，按钮用 brightness */
   button:active,
   .nav-chip:active,
   .filter-chip:active {
     transform: scale(0.97);
-    opacity: 0.8;
+    filter: brightness(0.94);
+    opacity: 1;
   }
 
   /* Card Touch Feedback */
@@ -74,11 +75,12 @@
     overscroll-behavior: contain;
   }
 
-  /* Touch Feedback for Buttons */
+  /* Touch Feedback for Buttons — 用 brightness 替代 opacity，避免低对比 */
   button:active,
   .btn:active {
-    transform: scale(0.98);
-    opacity: 0.9;
+    transform: scale(0.97);
+    filter: brightness(0.94);
+    opacity: 1;
   }
 }
 
