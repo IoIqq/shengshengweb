@@ -25,6 +25,12 @@ export const clearMediaSelection = (...args) => m()?.media?.clearMediaSelection?
 export const batchReviewMedia = (...args) => m()?.media?.batchReviewMedia?.(...args);
 export const initUploadDialog = (...args) => m()?.media?.initUploadDialog?.(...args);
 export const openUploadDialog = (...args) => m()?.media?.openUploadDialog?.(...args);
+export const initMediaViewSwitcher = (...args) => m()?.media?.initMediaViewSwitcher?.(...args);
+export const initDedup = (...args) => m()?.media?.initDedup?.(...args);
+export const openDedupDialog = (...args) => m()?.media?.openDedupDialog?.(...args);
+export const closeDedupDialog = (...args) => m()?.media?.closeDedupDialog?.(...args);
+export const runDedupScan = (...args) => m()?.media?.runDedupScan?.(...args);
+export const renderDedupGroups = (...args) => m()?.media?.renderDedupGroups?.(...args);
 
 // todo
 export const renderTodos = (...args) => m()?.todo?.renderTodos?.(...args);
@@ -81,6 +87,7 @@ export const renderBorrowDeviceSelect = (...args) => m()?.borrow?.renderBorrowDe
 export const renderSettings = (...args) => m()?.settings?.renderSettings?.(...args);
 export const updateSettings = (...args) => m()?.settings?.updateSettings?.(...args);
 export const copyToClipboard = (...args) => m()?.settings?.copyToClipboard?.(...args);
+export const restoreBackup = (...args) => m()?.settings?.restoreBackup?.(...args);
 
 // users / audit / storage / wishWall
 export const initUsers = (...args) => m()?.users?.initUsers?.(...args);
@@ -96,3 +103,18 @@ export const renderSystemPanel = (...args) => m()?.systemAdmin?.renderSystemPane
 export const refreshSystemInfo = (...args) => m()?.systemAdmin?.refreshSystemInfo?.(...args);
 export const loadSystemLogs = (...args) => m()?.systemAdmin?.loadSystemLogs?.(...args);
 export const loadNetworkInfo = (...args) => m()?.systemAdmin?.loadNetworkInfo?.(...args);
+export const restartService = (...args) => m()?.systemAdmin?.restartService?.(...args);
+export const loadLogFileList = (...args) => m()?.systemAdmin?.loadLogFileList?.(...args);
+export const searchLogs = (...args) => m()?.systemAdmin?.searchLogs?.(...args);
+
+// preferences
+export const initPreferencesPanel = (...args) => m()?.preferences?.initPreferencesPanel?.(...args);
+export const loadPreferences = (...args) => m()?.preferences?.loadPreferences?.(...args);
+export const applyTheme = (...args) => m()?.preferences?.applyTheme?.(...args);
+export const confirmIfNeeded = (msg) => {
+  const fn = m()?.preferences?.confirmIfNeeded;
+  return fn ? fn(msg) : window.confirm(msg);
+};
+
+// maintenance
+export const initMaintenancePanel = (...args) => m()?.maintenance?.initMaintenancePanel?.(...args);

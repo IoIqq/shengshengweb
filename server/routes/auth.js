@@ -40,13 +40,19 @@ function createLoginSession(req, res, user) {
   });
 }
 
-// 登录限流：1分钟内最多5次尝试
+// 登录限流：1分钟内最多5次尝试。
+// key 维度同时叠加 IP + 用户名,避免单一 IP 上的不同用户被互相挤掉,
+// 也避免攻击者用一个 IP 桶打掉其他用户的合法登录。
 const loginLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1分钟
   max: 5,
   message: { error: '登录尝试次数过多，请1分钟后再试。' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false },
+  handler: (req, res, _next, _options) => {
+    res.status(429).json({ error: '登录尝试次数过多，请1分钟后再试。' });
+  },
 });
 
 /**

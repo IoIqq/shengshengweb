@@ -52,6 +52,9 @@
     PROFILE_STORAGE_KEY:  "shengsheng.workspace.profile",
     LOGIN_REMEMBER_KEY:   "shengsheng.login.remember",
     LOGIN_PLACEHOLDER:    "请输入管理员账号和密码",
+    // 批量上传：每批文件数与并发批次数（与后端 config 对齐，可经环境变量覆盖）
+    UPLOAD_BATCH_SIZE:     20,
+    TRANSFER_CONCURRENCY:   4,
   };
 
   // ─── 视图标签 ─────────────────────────────────────────────────────────────────

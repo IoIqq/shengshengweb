@@ -228,7 +228,8 @@ goto :menu
 
 
 :: ============================================================
-:: [6] 首次安装
+:: [6] 首次安装（内联自原 setup.bat）
+::   端口、编码、CWD 已在脚本顶部统一处理，这里直接做事
 :: ============================================================
 :setup
 cls
@@ -237,13 +238,91 @@ echo  ============================================================
 echo    首次安装（装依赖 + 初始化数据库）
 echo  ============================================================
 echo.
-if exist "%~dp0setup.bat" (
-    call "%~dp0setup.bat"
-) else (
-    echo   [X] 未找到 setup.bat
+
+node --version >nul 2>&1
+if errorlevel 1 (
+    echo   [X] 未检测到 Node.js，请先安装 Node.js 18+
+    echo       下载地址: https://nodejs.org/
     echo.
     pause
+    goto :menu
 )
+
+npm --version >nul 2>&1
+if errorlevel 1 (
+    echo   [X] 未检测到 npm
+    echo.
+    pause
+    goto :menu
+)
+
+echo   [1/6] 检查环境...
+echo         Node.js 版本：
+node --version
+echo         npm 版本：
+npm --version
+echo.
+
+echo   [2/6] 安装依赖（npm install）...
+call npm install
+if errorlevel 1 (
+    echo.
+    echo   [X] 依赖安装失败，请检查网络连接
+    echo       提示：可以尝试使用国内镜像源
+    echo         npm config set registry https://registry.npmmirror.com
+    echo.
+    pause
+    goto :menu
+)
+echo         依赖安装完成
+echo.
+
+echo   [3/6] 配置环境变量...
+if not exist .env (
+    copy .env.example .env >nul
+    echo         已创建 .env 文件
+    echo         提示：请编辑 .env 文件修改管理员密码和其他配置
+) else (
+    echo         .env 文件已存在，跳过创建
+)
+echo.
+
+echo   [4/6] 创建必要目录...
+if not exist server\data mkdir server\data
+if not exist server\uploads mkdir server\uploads
+if not exist server\uploads\media mkdir server\uploads\media
+if not exist server\uploads\inbox mkdir server\uploads\inbox
+echo         目录结构创建完成
+echo.
+
+echo   [5/6] 初始化数据库...
+if not exist server\data\studio.sqlite (
+    echo         正在创建数据库...
+    node server\scripts\init-db.js
+    if errorlevel 1 (
+        echo         [!] 数据库初始化失败，将在首次启动时自动创建
+    ) else (
+        echo         数据库初始化完成
+    )
+) else (
+    echo         数据库已存在，跳过初始化
+)
+echo.
+
+echo   [6/6] 环境检查...
+node server\scripts\check-env.js
+if errorlevel 1 (
+    echo         [!] 环境检查发现问题，但可以继续
+)
+echo.
+
+echo  ============================================================
+echo    部署完成！
+echo  ============================================================
+echo.
+echo   下一步：回到主菜单选 [1] 一键启动，或 [2] 生产启动。
+echo.
+pause
 goto :menu
 
 
@@ -330,7 +409,7 @@ goto :menu
 
 
 :: ============================================================
-:: [9] PM2 守护启动
+:: [9] PM2 守护启动（内联自原 start-pm2.bat）
 :: ============================================================
 :pm2_start
 cls
@@ -342,13 +421,37 @@ echo.
 echo   提示：PM2 会在后台守护服务进程，关闭窗口不影响服务。
 echo         支持开机自启、零停机重启、日志管理等。
 echo.
-if exist "%~dp0start-pm2.bat" (
-    call "%~dp0start-pm2.bat"
-) else (
-    echo   [X] 未找到 start-pm2.bat
+
+where pm2 >nul 2>nul
+if errorlevel 1 (
+    echo   [X] 未找到 PM2，请先在管理员命令行执行：
+    echo         npm install -g pm2
     echo.
     pause
+    goto :menu
 )
+
+echo   [→] 通过 PM2 启动服务（生产模式）...
+pm2 start ecosystem.config.js --env production
+if errorlevel 1 (
+    echo.
+    echo   [X] PM2 启动失败，请查看上方输出。
+    echo.
+    pause
+    goto :menu
+)
+
+echo.
+echo   [√] 服务已交给 PM2 守护，关闭此窗口不会影响服务。
+echo.
+echo   常用命令：
+echo     pm2 status                    查看服务状态
+echo     pm2 logs shengsheng-studio    查看实时日志
+echo     pm2 reload shengsheng-studio  零停机重启
+echo     pm2 stop shengsheng-studio    停止服务
+echo     pm2 startup                   配置开机自启（按提示执行回显命令）
+echo.
+pause
 goto :menu
 
 

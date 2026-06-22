@@ -103,7 +103,7 @@
     padding: 0;
   }
 
-  .workspace-panel[data-panel="overview"] {
+  .workspace-panel[data-panel='overview'] {
     padding: 14px;
   }
 
@@ -241,6 +241,21 @@
   .profile-popover-inner {
     padding: 16px;
     max-height: calc(100vh - 90px);
+  }
+
+  .profile-popover-head {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .profile-avatar-large {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+
+  .profile-meta {
+    grid-template-columns: 1fr 1fr;
   }
 
   .topbar-actions {

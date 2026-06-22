@@ -7,6 +7,7 @@
 
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 /**
  * 格式化秒数为可读时间
@@ -57,8 +58,24 @@ export async function refreshSystemInfo() {
     setText('sys-cpu-cores', String(info.cpuCores));
     setText('sys-uptime', formatUptime(info.uptime));
     setText('sys-port', String(info.port));
-    setText('sys-mem-rss', `${info.memory.rss} MB`);
-    setText('sys-mem-heap', `${info.memory.heapUsed} / ${info.memory.heapTotal} MB`);
+
+    // 内存使用进度条
+    const memText = document.getElementById('sys-mem-text');
+    const memBar = document.getElementById('sys-mem-bar');
+    if (memText && memBar && info.totalMemory > 0) {
+      const memPercent = Math.min(100, Math.round((info.memory.rss / info.totalMemory) * 100));
+      memText.textContent = `${info.memory.rss} MB / ${info.totalMemory} MB (${memPercent}%)`;
+      memBar.style.width = `${memPercent}%`;
+    }
+
+    // CPU 使用率进度条
+    const cpuText = document.getElementById('sys-cpu-text');
+    const cpuBar = document.getElementById('sys-cpu-bar');
+    if (cpuText && cpuBar) {
+      const cpuPercent = info.cpuUsage || 0;
+      cpuText.textContent = `${cpuPercent}%`;
+      cpuBar.style.width = `${cpuPercent}%`;
+    }
 
     // PM2 状态
     const pm2El = document.getElementById('sys-pm2');
@@ -80,6 +97,9 @@ export async function refreshSystemInfo() {
         : '<span class="sys-badge sys-badge-err">不存在</span>';
     }
     setText('sys-upload-count', String(info.uploadDir.fileCount));
+
+    // 堆内存
+    setText('sys-mem-heap', `${info.memory.heapUsed} / ${info.memory.heapTotal} MB`);
 
   } catch (error) {
     console.error('获取系统信息失败:', error);
@@ -136,33 +156,191 @@ export async function loadNetworkInfo() {
 }
 
 /**
- * 加载并显示最近日志
+ * 渲染日志行为着色
+ * @param {string[]} lines - 日志行
+ * @returns {string} HTML 内容
  */
-export async function loadSystemLogs() {
+function renderLogLines(lines) {
+  return lines.map(line => {
+    const lower = line.toLowerCase();
+    if (lower.includes('[error]') || lower.includes('err!') || lower.includes('error:')) {
+      return `<span class="sys-log-line sys-log-line--error">${escapeHtml(line)}</span>`;
+    }
+    if (lower.includes('[warn]') || lower.includes('warning:') || lower.includes('warn:')) {
+      return `<span class="sys-log-line sys-log-line--warn">${escapeHtml(line)}</span>`;
+    }
+    if (lower.includes('[debug]') || lower.includes('debug:')) {
+      return `<span class="sys-log-line sys-log-line--debug">${escapeHtml(line)}</span>`;
+    }
+    return `<span class="sys-log-line sys-log-line--info">${escapeHtml(line)}</span>`;
+  }).join('\n');
+}
+
+/**
+ * 加载并渲染日志
+ * @param {string} [date] - 日期 YYYY-MM-DD，默认今天
+ * @param {number} [lines] - 行数，默认 200
+ */
+export async function loadSystemLogs(date, lines = 200) {
   const viewer = document.getElementById('sys-log-viewer');
   if (!viewer) return;
 
   viewer.textContent = '加载中…';
 
   try {
-    const data = await requestJSON('/api/system/logs?lines=50');
+    const params = new URLSearchParams({ lines: String(lines) });
+    if (date) params.set('date', date);
+
+    const data = await requestJSON(`/api/system/logs?${params}`);
     const fileEl = document.getElementById('sys-log-file');
     if (fileEl) fileEl.textContent = data.file;
 
+    // 存储原始日志内容用于搜索
+    viewer.dataset.rawContent = data.lines.join('\n');
+
     if (data.lines.length === 0) {
-      viewer.textContent = data.message || '暂无日志记录。';
+      viewer.innerHTML = `<span class="sys-log-line sys-log-line--info">${escapeHtml(data.message || '暂无日志记录。')}</span>`;
     } else {
-      viewer.textContent = data.lines.join('\n');
+      viewer.innerHTML = renderLogLines(data.lines);
       viewer.scrollTop = viewer.scrollHeight;
     }
+
+    // 显示"加载全部"按钮（如果总行数超过已加载行数）
+    const loadAllBtn = document.getElementById('sys-load-all-logs-btn');
+    if (loadAllBtn) {
+      if (data.totalLines > lines) {
+        loadAllBtn.hidden = false;
+        loadAllBtn.textContent = ` 加载全部 (${data.totalLines} 行)`;
+      } else {
+        loadAllBtn.hidden = true;
+      }
+    }
+
+    // 显示搜索按钮
+    const searchBtn = document.getElementById('sys-log-search-btn');
+    if (searchBtn) searchBtn.hidden = false;
+
+    return data;
   } catch (error) {
     console.error('获取日志失败:', error);
-    viewer.textContent = '加载日志失败: ' + (error.message || '未知错误');
+    viewer.innerHTML = `<span class="sys-log-line sys-log-line--error">${escapeHtml('加载日志失败: ' + (error.message || '未知错误'))}</span>`;
   }
+}
+
+/**
+ * 加载可用日志文件列表
+ */
+export async function loadLogFileList() {
+  const select = document.getElementById('sys-log-file-list');
+  if (!select) return;
+
+  try {
+    const data = await requestJSON('/api/system/logs/list');
+    const files = data.files || [];
+
+    select.innerHTML = files.length === 0
+      ? '<option value="">无日志文件</option>'
+      : files.map(f => `<option value="${f.date}">${f.date} (${f.filename})</option>`).join('');
+
+    // 绑定选择事件
+    select.onchange = () => {
+      const date = select.value;
+      if (date) loadSystemLogs(date);
+    };
+  } catch (error) {
+    console.error('获取日志列表失败:', error);
+    select.innerHTML = '<option value="">加载失败</option>';
+  }
+}
+
+/**
+ * 在日志中搜索
+ */
+export function searchLogs(keyword) {
+  const viewer = document.getElementById('sys-log-viewer');
+  const countEl = document.getElementById('sys-log-search-count');
+  if (!viewer || !countEl) return;
+
+  const rawContent = viewer.dataset.rawContent || '';
+  if (!rawContent) return;
+
+  if (!keyword || keyword.trim() === '') {
+    viewer.innerHTML = renderLogLines(rawContent.split('\n'));
+    countEl.textContent = '';
+    return;
+  }
+
+  const lines = rawContent.split('\n');
+  const matchedLines = lines.filter(line =>
+    line.toLowerCase().includes(keyword.toLowerCase())
+  );
+
+  if (matchedLines.length === 0) {
+    viewer.innerHTML = `<span class="sys-log-line sys-log-line--info">${escapeHtml('未找到匹配内容')}</span>`;
+  } else {
+    viewer.innerHTML = renderLogLines(matchedLines);
+  }
+
+  countEl.textContent = `${matchedLines.length} / ${lines.length} 行`;
 }
 
 /** 辅助：安全设置文本内容 */
 function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
+}
+
+/**
+ * 重启服务
+ */
+export async function restartService() {
+  const btn = document.getElementById('sys-restart-btn');
+  if (!btn) return;
+
+  // 15 秒冷却期
+  if (btn.disabled || btn.classList.contains('is-cooling')) {
+    Toast.warning('重启冷却中，请稍后再试');
+    return;
+  }
+
+  const confirmed = confirm('确认要重启服务吗？\n\n重启期间服务将短暂不可用（约 3-5 秒）。');
+  if (!confirmed) return;
+
+  try {
+    btn.disabled = true;
+    btn.classList.add('is-cooling');
+    btn.textContent = '⏳ 重启中...';
+
+    const result = await requestJSON('/api/system/restart', { method: 'POST' });
+
+    Toast.success('服务将在 2 秒后重启，页面将自动刷新');
+
+    // 15 秒冷却
+    let cooldown = 15;
+    btn.textContent = `冷却中 (${cooldown}s)`;
+
+    const cooldownInterval = setInterval(() => {
+      cooldown--;
+      if (cooldown <= 0) {
+        clearInterval(cooldownInterval);
+        btn.disabled = false;
+        btn.classList.remove('is-cooling');
+        btn.textContent = '⚠ 重启服务';
+      } else {
+        btn.textContent = `冷却中 (${cooldown}s)`;
+      }
+    }, 1000);
+
+    // 3 秒后自动刷新页面
+    setTimeout(() => {
+      window.location.reload();
+    }, 3000);
+
+  } catch (error) {
+    console.error('重启失败:', error);
+    Toast.error(error.message || '重启失败');
+    btn.disabled = false;
+    btn.classList.remove('is-cooling');
+    btn.textContent = '⚠ 重启服务';
+  }
 }

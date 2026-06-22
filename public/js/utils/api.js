@@ -3,6 +3,8 @@
  * 封装所有 HTTP 请求逻辑，包含错误处理、重试和超时控制
  */
 
+import * as log from './log.js';
+
 // 配置
 const API_CONFIG = {
   timeout: 30000, // 30秒超时
@@ -103,7 +105,7 @@ export async function request(path, options = {}) {
     try {
       // 如果是重试，先延迟
       if (attempt > 0) {
-        console.log(`🔄 重试请求 ${path} (${attempt}/${maxAttempts})`);
+        log.log(`🔄 重试请求 ${path} (${attempt}/${maxAttempts})`);
         await delay(API_CONFIG.retryDelay * attempt);
       }
 

@@ -11,9 +11,11 @@ import { els } from './dom.js';
 import { $$, debounce } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import * as log from '../utils/log.js';
 import { setActiveView } from '../ui/navigation.js';
 import { openMediaPreview } from '../ui/media-preview.js';
 import { setPending, showFeedback } from '../ui/feedback.js';
+import { flashSuccess } from '../ui/animations.js';
 import { loadShowcase } from '../modules/showcase.js';
 import {
   canAccessView,
@@ -28,6 +30,8 @@ import {
   renderActivity,
   initActivityFilters,
   initUploadDialog,
+  initDedup,
+  initMediaViewSwitcher,
   openUploadDialog,
   renderMedia,
   reviewMedia,
@@ -67,6 +71,7 @@ import {
   moveTeamMember,
   updateSettings,
   copyToClipboard,
+  restoreBackup,
   initUsers,
   initAuditLogs,
   loadStorageStatus,
@@ -77,6 +82,11 @@ import {
   refreshSystemInfo,
   loadSystemLogs,
   loadNetworkInfo,
+  restartService,
+  loadLogFileList,
+  searchLogs,
+  initPreferencesPanel,
+  initMaintenancePanel,
 } from './proxies.js';
 
 /**
@@ -92,7 +102,7 @@ export function resetEventsBound() {
 
 export function bindAllEvents() {
   if (eventsBound) {
-    console.log('ℹ️ 事件已绑定，跳过重复绑定');
+    log.log('ℹ️ 事件已绑定，跳过重复绑定');
     return;
   }
   eventsBound = true;
@@ -124,7 +134,7 @@ function bindGlobalEvents() {
       const view = jumpBtn.dataset.jump;
       if (view && canAccessView(view)) {
         setActiveView(view);
-        console.log('🔗 跳转到视图:', view);
+        log.log('🔗 跳转到视图:', view);
       }
     }
 
@@ -153,12 +163,7 @@ function bindGlobalEvents() {
     });
   }
 
-  // 同步按钮
-  if (els.syncBtn) {
-    els.syncBtn.addEventListener('click', () => {
-      handleShortcut('sync');
-    });
-  }
+  // 同步按钮 — 已禁用（点击不再触发视图切换）
 
   document.addEventListener('activity-updated', () => {
     renderActivity();
@@ -167,7 +172,7 @@ function bindGlobalEvents() {
 
 // 处理快捷操作
 async function handleShortcut(action) {
-  console.log('🎯 快捷操作:', action);
+  log.log('🎯 快捷操作:', action);
 
   switch (action) {
     case 'upload':
@@ -221,6 +226,7 @@ async function handleShortcut(action) {
       // 下载备份
       window.open('/api/backup', '_blank', 'noopener');
       Toast.success('正在准备备份文件...');
+      flashSuccess(document.querySelector('[data-shortcut="backup"]'));
       break;
 
     default:
@@ -236,26 +242,12 @@ function bindNavigation() {
       const view = chip.dataset.view;
       if (view && canAccessView(view)) {
         setActiveView(view);
-        console.log('📍 切换到视图:', view, VIEW_LABELS[view]);
+        log.log('📍 切换到视图:', view, VIEW_LABELS[view]);
       }
     });
   });
 
-  // 刷新按钮
-  if (els.refreshBtn) {
-    els.refreshBtn.addEventListener('click', async () => {
-      try {
-        setPending(true);
-        showFeedback('正在刷新...', 'info', state.activeView);
-        await loadBootstrap();
-        showFeedback('刷新成功', 'success', state.activeView);
-      } catch (error) {
-        Toast.error('刷新失败: ' + error.message);
-      } finally {
-        setPending(false);
-      }
-    });
-  }
+  // 刷新按钮 — 已禁用（不再触发数据刷新）
 
   // 登出按钮
   if (els.logoutBtn) {
@@ -283,6 +275,8 @@ function bindNavigation() {
 function bindMediaEvents() {
   // 初始化上传对话框
   initUploadDialog();
+  initDedup();
+  initMediaViewSwitcher();
   initActivityFilters();
 
   // 素材搜索
@@ -777,7 +771,7 @@ function bindSettingsEvents() {
     els.settingsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(els.settingsForm);
-      await updateSettings(formData);
+      await updateSettings(formData, els.settingsForm);
     });
   }
 
@@ -786,7 +780,7 @@ function bindSettingsEvents() {
     showcaseSettingsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(showcaseSettingsForm);
-      await updateSettings(formData);
+      await updateSettings(formData, showcaseSettingsForm);
     });
   }
 
@@ -807,6 +801,14 @@ function bindSettingsEvents() {
       }
     });
   }
+
+  // 恢复备份按钮
+  const restoreBtn = document.getElementById('restore-backup-btn');
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', async () => {
+      await restoreBackup();
+    });
+  }
 }
 
 // 绑定设置页标签页切换
@@ -818,9 +820,13 @@ function bindSettingsTabs() {
     tab.addEventListener('click', () => {
       const targetTab = tab.dataset.tab;
 
-      // 切换激活状态
-      tabs.forEach(t => t.classList.remove('active'));
+      // 切换激活状态与 ARIA
+      tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
 
       // 切换内容显示
       contents.forEach(content => {
@@ -838,6 +844,10 @@ function bindSettingsTabs() {
         initAuditLogs();
       } else if (targetTab === 'storage') {
         loadStorageStatus();
+      } else if (targetTab === 'preferences') {
+        initPreferencesPanel();
+      } else if (targetTab === 'maintenance') {
+        initMaintenancePanel();
       }
     });
   });
@@ -860,6 +870,7 @@ function bindSystemAdminEvents() {
     dbBackupBtn.addEventListener('click', () => {
       window.open('/api/backup/database', '_blank', 'noopener');
       Toast.success('正在下载数据库备份…');
+      flashSuccess(dbBackupBtn);
     });
   }
 
@@ -869,25 +880,70 @@ function bindSystemAdminEvents() {
     jsonBackupBtn.addEventListener('click', () => {
       window.open('/api/backup', '_blank', 'noopener');
       Toast.success('正在导出 JSON 备份…');
+      flashSuccess(jsonBackupBtn);
     });
   }
 
   // 加载日志
   const loadLogsBtn = document.getElementById('sys-load-logs-btn');
   if (loadLogsBtn) {
-    loadLogsBtn.addEventListener('click', () => loadSystemLogs());
+    loadLogsBtn.addEventListener('click', () => {
+      const dateInput = document.getElementById('sys-log-date');
+      loadSystemLogs(dateInput?.value || undefined);
+    });
+  }
+
+  // 加载全部日志
+  const loadAllLogsBtn = document.getElementById('sys-load-all-logs-btn');
+  if (loadAllLogsBtn) {
+    loadAllLogsBtn.addEventListener('click', () => {
+      const dateInput = document.getElementById('sys-log-date');
+      loadSystemLogs(dateInput?.value || undefined, 10000);
+    });
   }
 
   // 刷新日志
   const refreshLogsBtn = document.getElementById('sys-refresh-logs-btn');
   if (refreshLogsBtn) {
-    refreshLogsBtn.addEventListener('click', () => loadSystemLogs());
+    refreshLogsBtn.addEventListener('click', () => {
+      const dateInput = document.getElementById('sys-log-date');
+      loadSystemLogs(dateInput?.value || undefined);
+    });
+  }
+
+  // 日志搜索按钮
+  const searchBtn = document.getElementById('sys-log-search-btn');
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      const searchContainer = searchBtn.closest('.sys-card')?.querySelector('.sys-log-search');
+      if (searchContainer) {
+        searchContainer.hidden = !searchContainer.hidden;
+        if (!searchContainer.hidden) {
+          const input = document.getElementById('sys-log-search-input');
+          if (input) input.focus();
+        }
+      }
+    });
+  }
+
+  // 日志搜索输入
+  const searchInput = document.getElementById('sys-log-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchLogs(e.target.value);
+    });
   }
 
   // 刷新网络信息
   const refreshNetBtn = document.getElementById('sys-refresh-network-btn');
   if (refreshNetBtn) {
     refreshNetBtn.addEventListener('click', () => loadNetworkInfo());
+  }
+
+  // 重启服务
+  const restartBtn = document.getElementById('sys-restart-btn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => restartService());
   }
 }
 

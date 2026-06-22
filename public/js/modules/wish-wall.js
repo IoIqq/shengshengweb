@@ -1,6 +1,7 @@
 import { state } from '../core/state.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 let initialized = false;
 let modal = null;
@@ -156,15 +157,6 @@ async function handleWishActions(event) {
   } catch (error) {
     showToast(error.message || '删除失败', 'error');
   }
-}
-
-function escapeHtml(text) {
-  return String(text || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 }
 
 function isWishAdmin() {

@@ -11,7 +11,7 @@ const config = require('./config');
 const { ensureDir } = require('./utils');
 const { getLanAddresses, findAvailablePort } = require('./utils/network');
 const { cleanupOldLogs, logServerEvent } = require('./utils/logger');
-const { getAssetVersion } = require('./utils/asset-version');
+const { getAssetVersion, refreshAssetVersion } = require('./utils/asset-version');
 const { requestLogger, errorHandler, notFoundHandler } = require('./middleware');
 const { csrfProtect } = require('./middleware/csrf');
 const { setSessionGetter } = require('./middleware/auth');
@@ -19,6 +19,7 @@ const { startMaintenanceScheduler, stopMaintenanceScheduler } = require('./utils
 
 // 导入模型
 const models = require('./models');
+const transfer = require('./models/transfer');
 
 // 导入路由
 const authRoutes = require('./routes/auth');
@@ -65,11 +66,13 @@ ensureOptionalStorageDir('媒体目录', config.MEDIA_DIR);
 ensureOptionalStorageDir('头像目录', config.AVATAR_DIR);
 ensureOptionalStorageDir('设备图片目录', config.DEVICE_IMAGE_DIR);
 ensureOptionalStorageDir('Inbox 目录', config.INBOX_DIR);
+ensureOptionalStorageDir('暂存目录', config.STAGING_DIR);
 config.STORAGE_DIR_STATUS = storageDirStatus;
 
 const app = express();
 let httpServer = null;
 let shuttingDown = false;
+let hasherTimer = null;
 
 // ========== 初始化数据库 ==========
 async function initApp() {
@@ -85,6 +88,26 @@ async function initApp() {
     // 清理过期会话和旧日志
     models.session.cleanupExpiredSessions();
     cleanupOldLogs();
+
+    // 恢复上次中断的传输任务
+    try {
+      const recovered = transfer.recoverPendingTransfers();
+      if (recovered.recovered) console.log(`✓ 恢复 ${recovered.recovered} 个中断传输任务`);
+    } catch (error) {
+      console.warn('传输恢复失败：', error.message);
+    }
+
+    // 空闲渐进哈希定时器：周期性为未哈希素材补算 SHA-256
+    function tickHasher() {
+      models.media.scanHashes(config.TRANSFER_HASH_BATCH)
+        .catch(() => {})
+        .finally(() => {
+          hasherTimer = setTimeout(tickHasher, config.AUTO_SCAN_SECONDS * 1000);
+          if (typeof hasherTimer.unref === 'function') hasherTimer.unref();
+        });
+    }
+    hasherTimer = setTimeout(tickHasher, config.AUTO_SCAN_SECONDS * 1000);
+    if (typeof hasherTimer.unref === 'function') hasherTimer.unref();
 
     // 周期性维护：清理 sessions / audit_logs / activity
     startMaintenanceScheduler(models);
@@ -161,14 +184,24 @@ async function initApp() {
     console.log(`✓ ASSET_VERSION = ${ASSET_VERSION}`);
 
     app.get(['/', '/index.html'], (req, res) => {
+      // 开发模式：每次请求重新计算版本号，确保文件改动后立即生效
+      const currentVersion = refreshAssetVersion();
+      const currentTemplate = fs
+        .readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8')
+        .replace(/__ASSET_VERSION__/g, currentVersion);
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.type('html').send(indexHtmlTemplate);
+      res.type('html').send(currentTemplate);
     });
 
     app.get('/service-worker.js', (req, res) => {
+      // 开发模式：每次请求重新计算版本号，确保 Service Worker 缓存更新
+      const currentVersion = refreshAssetVersion();
+      const currentTemplate = fs
+        .readFileSync(path.join(PUBLIC_DIR, 'service-worker.js'), 'utf8')
+        .replace(/__ASSET_VERSION__/g, currentVersion);
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Service-Worker-Allowed', '/');
-      res.type('application/javascript').send(serviceWorkerTemplate);
+      res.type('application/javascript').send(currentTemplate);
     });
 
     app.use(
@@ -283,6 +316,7 @@ function gracefulShutdown(reason, exitCode = 0) {
 
   const finalize = () => {
     try {
+      if (hasherTimer) { clearTimeout(hasherTimer); hasherTimer = null; }
       stopMaintenanceScheduler();
       models.database.saveDatabaseNow();
     } catch (error) {

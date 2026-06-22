@@ -158,51 +158,12 @@
 
 /* 概览提醒区域样式由 pages/overview.css 管理 */
 
-/* 设置标签页 */
-.settings-tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 24px;
-}
-
-.settings-tab {
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: all var(--motion-fast);
-  color: var(--text-soft);
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.settings-tab:hover {
-  color: var(--accent);
-  background: var(--surface-soft);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-}
-
-.settings-tab.active {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.settings-content {
-  animation: fadeIn var(--motion-medium);
-}
-
-.settings-content.hidden {
-  display: none;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+/* 设置标签页 → 已迁移至 pages/settings.css */
+/*
+ * .settings-tabs / .settings-tab / .settings-tab:hover / .settings-tab.active
+ * .settings-content / .settings-content.hidden
+ * @keyframes settingsFadeIn（替代原 fadeIn）
+ */
 
 /* 快捷操作按钮 */
 .shortcut-btn:active {

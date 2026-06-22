@@ -1,6 +1,12 @@
 /* ========== Base: Animations ========== */
 /* 关键帧动画定义 */
 
+/* 淡入（通用） */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 摇晃动画 */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -382,4 +388,41 @@
 @keyframes overdue-pulse-border {
   0%, 100% { border-left-color: rgba(239, 68, 68, 0.4); }
   50% { border-left-color: rgba(239, 68, 68, 0.85); }
+}
+
+/* 按钮"运行中"光斑 */
+@keyframes btn-running {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(120%); }
+}
+
+/* Hero 「今日清零」能量条扫过 */
+@keyframes hero-sweep {
+  0%   { transform: translateX(-110%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+
+/* 「同步/备份成功」勾路径绘制 */
+@keyframes check-draw {
+  from { stroke-dashoffset: 18; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* 「同步/备份成功」按钮外圈柔光 */
+@keyframes success-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(77, 118, 95, 0.30); }
+  60%  { box-shadow: 0 0 0 8px rgba(77, 118, 95, 0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(77, 118, 95, 0); }
+}
+
+/* 减少动画偏好兜底：失活本次新增的 keyframe */
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::after,
+  .overview-hero-card.is-cleared::after,
+  .btn.is-success,
+  .btn.is-success .btn-check {
+    animation: none !important;
+  }
 }

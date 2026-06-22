@@ -1,0 +1,529 @@
+/**
+ * Settings Page Styles · Studio OS
+ * 集中管理"系统设置"面板下 5 个标签页的全部样式
+ * 唯一所有者：所有 settings- 前缀规则集中在本文件
+ *
+ * 标签页：站点设置 / 展示页内容 / 用户管理 / 存储管理 / 操作日志
+ */
+
+/* ========== 标签页导航 ========== */
+
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-tab {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color 200ms var(--motion-ease),
+    border-color 200ms var(--motion-ease),
+    background 200ms var(--motion-ease);
+  will-change: border-color;
+  color: var(--text-muted);
+  font-weight: 620;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.settings-tab:hover {
+  color: var(--brand-strong);
+  background: var(--brand-softer);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.settings-tab.active {
+  border-bottom-color: var(--brand);
+  color: var(--brand-strong);
+  font-weight: 720;
+}
+
+/* ========== 标签页内容切换 ========== */
+
+.settings-content {
+  animation: settingsFadeIn 0.28s var(--motion-ease);
+}
+
+.settings-content.hidden {
+  display: none;
+}
+
+@keyframes settingsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== 标签页内层标题栏 ========== */
+/* 与外层 .panel-head 区分，用于用户管理/操作日志/存储管理的标题行 */
+
+.settings-content-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: 20px;
+}
+
+.settings-content-head h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+}
+
+.settings-content-head .panel-badge,
+.settings-content-head .ghost-btn {
+  flex-shrink: 0;
+}
+
+/* ========== 设置表单 ========== */
+
+.settings-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+/* 全宽字段工具类（替代脆弱的 nth-child 选择器） */
+.settings-form .field-full {
+  grid-column: 1 / -1;
+}
+
+.settings-form select,
+.settings-form textarea {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+}
+
+.settings-form textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.settings-form small {
+  display: block;
+  margin-top: var(--spacing-xs);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* 设置表单双列网格（展示页设置页的数量/类型字段） */
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Toggle 字段 */
+.settings-toggle-field select {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ========== 表单操作栏 ========== */
+/* 从 forms.css 迁入，与 .login-actions 解耦 */
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+/* ========== Section 标题 ========== */
+
+.settings-section-head,
+.settings-account-note {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-gradient-soft);
+}
+
+.settings-account-note {
+  border-left: 3px solid var(--brand);
+}
+
+.settings-section-head h3,
+.settings-account-note strong {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--text);
+}
+
+.settings-section-head p,
+.settings-account-note p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+/* ========== 系统信息卡键值行 ========== */
+
+.system-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  min-height: 40px;
+}
+
+.system-row:last-child {
+  border-bottom: 0;
+}
+
+.system-row > span {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.system-row > strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+  text-align: right;
+}
+
+/* 高亮行（公开地址） */
+.system-row-highlight {
+  background: var(--brand-softer);
+  border-radius: var(--radius-sm);
+  margin: 4px -8px;
+  padding: 12px 16px;
+  border-bottom: 0;
+}
+
+/* 值 + 行内操作按钮的布局 */
+.system-value-with-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: right;
+}
+
+.system-value-with-action strong {
+  word-break: break-all;
+}
+
+.system-value-with-action .copy-btn {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.system-value-with-action .copy-btn:hover {
+  opacity: 1;
+}
+
+/* ========== 恢复备份 ========== */
+
+.restore-section {
+  margin-bottom: 24px;
+}
+
+.restore-tables {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.restore-actions {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* ========== 响应式 ========== */
+
+@media (max-width: 768px) {
+  .settings-section-head,
+  .settings-account-note {
+    flex-direction: column;
+  }
+
+  .settings-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restore-tables {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .settings-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .restore-tables {
+    grid-template-columns: 1fr;
+  }
+
+  .system-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .system-row > strong,
+  .system-value-with-action {
+    text-align: left;
+  }
+}
+
+/* ========== 减少动画 ========== */
+@media (prefers-reduced-motion: reduce) {
+  .settings-content {
+    animation: none;
+  }
+
+  .settings-tab {
+    transition: none;
+  }
+}
+
+/* ========== 偏好标签 ========== */
+.preferences-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.preference-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  transition: border-color 0.2s var(--motion-ease), background 0.2s var(--motion-ease);
+}
+
+.preference-row:hover {
+  border-color: var(--brand-line);
+  background: var(--brand-softer);
+}
+
+.preference-row-text h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.preference-row-text p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.preference-row .filter-select {
+  min-width: 160px;
+}
+
+.preference-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+}
+
+.preference-toggle input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-strong);
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .preference-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .preference-row .filter-select,
+  .preference-toggle {
+    width: 100%;
+  }
+}
+
+/* ========== 维护标签 ========== */
+.maintenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.maintenance-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.maintenance-card header h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.maintenance-card header p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.maintenance-card code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.maintenance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.maintenance-banner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  font-size: 12.5px;
+  color: var(--text-soft);
+}
+
+.maintenance-banner-warning {
+  background: rgba(160, 82, 82, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(160, 82, 82, 0.18);
+}
+
+.maintenance-card-danger {
+  border-color: rgba(160, 82, 82, 0.32);
+}
+
+.maintenance-card-danger header h4 {
+  color: var(--danger);
+}
+
+.maintenance-snap-list {
+  display: grid;
+  gap: var(--spacing-xs);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-soft);
+}
+
+.maintenance-snap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 12.5px;
+}
+
+.maintenance-snap strong {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.maintenance-snap small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.danger-btn {
+  padding: 8px 18px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s var(--motion-ease), color 0.18s var(--motion-ease);
+}
+
+.danger-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}

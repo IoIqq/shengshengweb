@@ -5,6 +5,15 @@
       <h2 id="media-title">图片与视频素材</h2>
     </div>
     <div class="panel-actions" aria-label="素材库主要操作">
+      <div class="view-switcher" role="group" aria-label="素材显示方式">
+        <button class="view-switcher-btn is-active" id="view-list-btn" type="button" data-view="list" aria-pressed="true" aria-label="列表视图" title="列表视图">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button class="view-switcher-btn" id="view-grid-btn" type="button" data-view="grid" aria-pressed="false" aria-label="大图标视图" title="大图标视图">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+      </div>
+      <button class="ghost-btn" id="dedup-btn" type="button">查重</button>
       <button class="ghost-btn" id="upload-btn" type="button">上传素材</button>
       <button class="ghost-btn" id="sync-btn" type="button">同步服务器照片</button>
     </div>
@@ -35,5 +44,24 @@
     </label>
   </section>
 
-  <div class="media-grid" id="media-grid"></div>
+  <div class="media-list" id="media-grid"></div>
 </article>
+
+<!-- 查重弹窗 -->
+<div class="upload-overlay dedup-overlay" id="dedup-overlay" hidden>
+  <div class="upload-dialog dedup-dialog" role="dialog" aria-modal="true" aria-label="素材查重">
+    <div class="upload-dialog-head">
+      <h3>素材查重</h3>
+      <button class="upload-dialog-close" id="dedup-dialog-close" type="button" aria-label="关闭查重弹窗">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dedup-dialog-body">
+      <div class="dedup-toolbar">
+        <small class="dedup-progress" id="dedup-progress" hidden></small>
+        <button class="primary-btn" id="dedup-scan-btn" type="button">开始查重</button>
+      </div>
+      <div class="dedup-groups" id="dedup-groups"></div>
+    </div>
+  </div>
+</div>

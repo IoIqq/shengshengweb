@@ -113,10 +113,21 @@ npm run maintenance              # 日志清理 + 数据维护
 
 | 方法 | 路径 | 权限 |
 |------|------|------|
+| GET | `/api/media/showcase` | 公开 |
 | POST | `/api/media/sync` | 编辑及以上 |
 | POST | `/api/media/upload` | 编辑及以上，限流 |
+| GET | `/api/media/transfer-states?ids=a,b` | 登录 |
+| GET | `/api/media/folders` | 登录 |
+| POST | `/api/media/dedup/scan` | 编辑及以上 |
+| GET | `/api/media/dedup/groups` | 编辑及以上 |
 | POST | `/api/media/:id/review` | 编辑及以上 |
 | DELETE | `/api/media/:id` | 管理员 |
+
+- `POST /api/media/upload` — 分批暂存上传。表单字段：`files`（多文件）、`mode`（`new`/`existing`）、`date`、`eventName`、`existingPath`、`deviceId`、`deviceName`。文件先落暂存区，后台传到 `media/{年}/{YYYYMMDD活动名}/{设备名}/`，记录 `transfer_state=staging`，传输完成置 `ready`。返回 `{ ok, items, jobId }`。
+- `GET /api/media/transfer-states?ids=a,b` — 批量查传输态，供前端轮询刷新徽标。
+- `GET /api/media/folders` — 已有 `年/活动` 文件夹列表，供上传时选择。
+- `POST /api/media/dedup/scan` — 触发未哈希素材的流式 SHA-256 计算并返回重复组数（`{ hashed, remaining, groups }`）。
+- `GET /api/media/dedup/groups` — 重复分组（同 `file_hash`），含每组成员与未哈希计数。
 
 ### 设备 `/api/devices`
 

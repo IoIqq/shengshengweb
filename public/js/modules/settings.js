@@ -8,6 +8,7 @@ import { els } from '../core/dom.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { Dialog } from '../ui/dialog.js';
 import { setPending, showFeedback } from '../ui/feedback.js';
 
 /**
@@ -41,11 +42,16 @@ export function renderSettings() {
     const publicUrl = settings.publicUrl || '';
     const hasPublicUrl = publicUrl.trim().length > 0;
 
+    const fmt = (value, unit) => {
+      if (value === null || value === undefined || value === '') return '-';
+      return `${escapeHtml(value)}${unit ? ` ${unit}` : ''}`;
+    };
+
     els.systemCard.innerHTML = `
       <div class="system-row"><span>数据库</span><strong>${escapeHtml(sys.databasePath || '-')}</strong></div>
       <div class="system-row"><span>上传目录</span><strong>${escapeHtml(sys.uploadDir || '-')}</strong></div>
-      <div class="system-row"><span>自动扫描</span><strong>${escapeHtml(sys.inboxAutoScanSeconds ?? '-')} 秒</strong></div>
-      <div class="system-row"><span>上传上限</span><strong>${escapeHtml(sys.maxUploadMb ?? '-')} MB</strong></div>
+      <div class="system-row"><span>自动扫描</span><strong>${fmt(sys.inboxAutoScanSeconds, '秒')}</strong></div>
+      <div class="system-row"><span>上传上限</span><strong>${fmt(sys.maxUploadMb, 'MB')}</strong></div>
       <div class="system-row system-row-highlight">
         <span>公开地址</span>
         <div class="system-value-with-action">
@@ -60,14 +66,16 @@ export function renderSettings() {
 /**
  * 更新系统设置
  * @param {FormData} formData - 表单数据
+ * @param {HTMLFormElement} [form] - 表单元素，用于读取 dataset.formKind 区分站点/展示页
  */
-export async function updateSettings(formData) {
+export async function updateSettings(formData, form) {
+  const formKind = form?.dataset?.formKind || 'site';
+  const isShowcaseForm = formKind === 'showcase';
+
   const siteTitle = formData.get('siteTitle')?.trim();
   const siteSubtitle = formData.get('siteSubtitle')?.trim();
   const homeHeroMessage = formData.get('homeHeroMessage')?.trim();
   const publicUrl = formData.get('publicUrl')?.trim();
-
-  const isShowcaseForm = formData.has('showcaseTitle') || formData.has('showcaseEnabled');
 
   if (!isShowcaseForm && !siteTitle) {
     Toast.warning('请输入站点标题');
@@ -158,14 +166,87 @@ export async function copyToClipboard(text) {
 }
 
 /**
- * 下载备份
+ * 恢复备份 — 选择 JSON 文件并按勾选表恢复
  */
-export async function downloadBackup() {
-  try {
-    Toast.info('正在准备备份文件...');
-    window.open('/api/backup', '_blank', 'noopener');
-  } catch (error) {
-    Toast.error('备份下载失败');
-    throw error;
+export async function restoreBackup() {
+  const fileInput = document.getElementById('restore-file-input');
+  if (!fileInput) return;
+
+  // 收集勾选的表
+  const checkedTables = Array.from(
+    document.querySelectorAll('input[name="restore_table"]:checked')
+  ).map(cb => cb.value);
+
+  if (checkedTables.length === 0) {
+    Toast.warning('请至少选择一个要恢复的数据表');
+    return;
   }
+
+  // 触发文件选择
+  fileInput.value = '';
+  fileInput.click();
+
+  fileInput.onchange = async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    // 确认弹窗（使用自定义 Dialog 替代原生 confirm）
+    const confirmed = await Dialog.confirm({
+      title: '恢复数据备份',
+      message:
+        `即将从 "${file.name}" 恢复以下数据表：\n\n` +
+        `${checkedTables.map(t => '  • ' + t).join('\n')}\n\n` +
+        `⚠️ 选中的数据表将被清空并替换为备份内容。\n` +
+        `此操作不可撤销！`,
+      confirmText: '确认恢复',
+      cancelText: '取消',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
+      fileInput.value = '';
+      return;
+    }
+
+    try {
+      setPending(true);
+      Toast.info('正在读取备份文件...');
+
+      const text = await file.text();
+      let backup;
+      try {
+        backup = JSON.parse(text);
+      } catch (parseErr) {
+        Toast.error('备份文件格式错误，无法解析 JSON');
+        return;
+      }
+
+      if (!backup || typeof backup !== 'object') {
+        Toast.error('备份文件内容无效');
+        return;
+      }
+
+      Toast.info('正在上传并恢复数据...');
+
+      const result = await requestJSON('/api/backup/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tables: checkedTables, data: backup }),
+      });
+
+      Toast.success(`恢复成功，已恢复 ${checkedTables.length} 个数据表`);
+
+      // 刷新页面数据
+      const { loadBootstrap } = await import('../core/bootstrap.js');
+      await loadBootstrap();
+
+      // 重新渲染设置页
+      renderSettings();
+    } catch (error) {
+      Toast.error(error.message || '恢复失败');
+    } finally {
+      setPending(false);
+      fileInput.value = '';
+    }
+  };
 }

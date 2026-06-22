@@ -8,11 +8,12 @@
 
 import { Toast } from './ui/toast.js';
 import { init } from './core/bootstrap.js';
+import * as log from './utils/log.js';
 
 // ============================================================================
 // 全局初始化
 // ============================================================================
-console.log('🚀 模块化应用启动...');
+log.log('🚀 模块化应用启动...');
 Toast.init();
 
 // 暴露到全局（向后兼容）
@@ -60,12 +61,12 @@ window.addEventListener('error', (event) => {
 
 // 监听网络状态变化
 window.addEventListener('online', () => {
-  console.log('✅ 网络已连接');
+  log.log('✅ 网络已连接');
   Toast.success('网络已恢复');
 });
 
 window.addEventListener('offline', () => {
-  console.log('⚠️ 网络已断开');
+  log.log('⚠️ 网络已断开');
   Toast.warning('网络连接已断开，请检查网络');
 });
 
@@ -78,4 +79,4 @@ if (document.readyState === 'loading') {
   init();
 }
 
-console.log('✅ 模块化应用已加载');
+log.log('✅ 模块化应用已加载');

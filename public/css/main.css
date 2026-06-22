@@ -35,6 +35,7 @@
 @import './pages/team.css';
 @import './pages/topics.css';
 @import './pages/system-admin.css';
+@import './pages/settings.css';
 
 /* ========== 响应式 ========== */
 @import './responsive/tablet.css';

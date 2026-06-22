@@ -7,7 +7,10 @@
  * - Stale While Revalidate: HTML（返回缓存，后台更新）
  */
 
-const CACHE_NAME = 'shengsheng-__ASSET_VERSION__';
+// 重要：每次 navigation/profile 等核心模块改动后必须改版本号，触发旧缓存清理。
+// 占位符 __ASSET_VERSION__ 在构建/部署时被替换；本字段同时叠加一个手动 fallback 标记
+// 用于无构建脚本环境（开发态）也能产生新缓存命名。
+const CACHE_NAME = 'shengsheng-__ASSET_VERSION__-2026-06-17a';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

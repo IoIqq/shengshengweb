@@ -224,9 +224,7 @@
   .borrow-form .field:nth-child(3),
   .borrow-form .field:nth-child(6),
   .borrow-form button[type="submit"],
-  .settings-form .field:nth-child(3),
-  .settings-form .field:nth-child(4),
-  .settings-form .field:nth-child(6),
+  .settings-form .field-full,
   .settings-form .settings-actions {
     grid-column: 1;
   }

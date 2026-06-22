@@ -3,6 +3,8 @@
  * 缓存所有常用的 DOM 元素引用，避免重复查询
  */
 
+import * as log from '../utils/log.js';
+
 // 缓存清理钩子：由 createDOMProxy 注册，clearDOMCache() 调用
 let resetCache = () => {};
 
@@ -47,6 +49,14 @@ function createDOMProxy() {
     mediaSearch: 'media-search',
     mediaSort: 'media-sort',
     mediaFilters: 'media-filters',
+    viewListBtn: 'view-list-btn',
+    viewGridBtn: 'view-grid-btn',
+    dedupBtn: 'dedup-btn',
+    dedupOverlay: 'dedup-overlay',
+    dedupDialogClose: 'dedup-dialog-close',
+    dedupScanBtn: 'dedup-scan-btn',
+    dedupProgress: 'dedup-progress',
+    dedupGroups: 'dedup-groups',
     // 审片中心
     reviewStack: 'review-stack',
     reviewCount: 'review-count',
@@ -110,6 +120,13 @@ function createDOMProxy() {
     storageLanList: 'storage-lan-list',
     // 工具栏
     uploadBtn: 'upload-btn',
+    uploadTargetNew: 'upload-target-new',
+    uploadTargetExisting: 'upload-target-existing',
+    uploadEventDate: 'upload-event-date',
+    uploadEventName: 'upload-event-name',
+    uploadFolderPreview: 'upload-folder-preview',
+    uploadDeviceSelect: 'upload-device-select',
+    uploadExistingFolder: 'upload-existing-folder',
     syncBtn: 'sync-btn',
     // 用户资料
     userAvatarBtn: 'user-avatar-btn',
@@ -117,7 +134,10 @@ function createDOMProxy() {
     avatarTooltip: 'avatar-tooltip',
     profilePopover: 'profile-popover',
     profileClose: 'profile-close',
-    profileForm: 'profile-form',
+    // profileForm 已拆为 profileInfoForm + profilePwdForm，保留 profileForm 仅为兼容
+    // （现有代码不再读取 els.profileForm；新代码用 getElementById('profile-info-form') 等）
+    profileInfoForm: 'profile-info-form',
+    profilePwdForm: 'profile-pwd-form',
     profileDisplayName: 'profile-display-name',
     profileSignature: 'profile-signature',
     profileNavMode: 'profile-nav-mode',
@@ -195,7 +215,7 @@ export const els = createDOMProxy();
  */
 export function initDOMRefs() {
   // 清除所有缓存，下次访问时会重新查询
-  console.log('🔄 重新初始化 DOM 引用');
+  log.log('🔄 重新初始化 DOM 引用');
   // Proxy 会自动处理重新查询
 }
 
@@ -205,7 +225,7 @@ export function initDOMRefs() {
  * 需要让之前缓存的 null 失效，使 els 重新命中新挂载的节点）。
  */
 export function clearDOMCache() {
-  console.log('🗑️ 清除 DOM 缓存');
+  log.log('🗑️ 清除 DOM 缓存');
   resetCache();
 }
 

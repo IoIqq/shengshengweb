@@ -36,32 +36,49 @@
   width: min(1200px, calc(100vw - 32px));
   margin: 18px auto 22px;
   isolation: isolate;
-  transition: width 0.35s ease, margin 0.35s ease;
+  transform-origin: top left;
+  will-change: width;
+  transition:
+    width 0.42s var(--motion-spring),
+    margin 0.42s var(--motion-spring),
+    opacity 0.3s ease;
 }
 
-/* —— 收纳为右上角圆球 —— */
+/* —— 收纳为左上角圆球 —— */
 .topbar.is-scrolled-down {
   width: 56px;
-  margin-left: auto;
-  margin-right: 18px;
+  margin-left: 18px;
+  margin-right: auto;
   margin-bottom: 0;
+  cursor: pointer;
+  overflow: hidden;
 }
 
+/* 收缩态：shell 也禁止点击，事件穿透到 .topbar */
 .topbar.is-scrolled-down .topbar-shell {
+  pointer-events: none !important;
   grid-template-columns: 1fr;
+  gap: 0;
   padding: 6px;
   border-radius: 999px;
   min-height: 56px;
   height: 56px;
   justify-items: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .topbar.is-scrolled-down .topnav,
 .topbar.is-scrolled-down .topbar-actions,
 .topbar.is-scrolled-down .brand-text,
 .topbar.is-scrolled-down .hamburger-btn {
-  display: none;
+  /* 先溶解淡出（opacity+scale），JS 在 ~240ms 后补 display:none 彻底隐藏 */
+  opacity: 0;
+  transform: scale(0.92);
+  pointer-events: none !important;
+  transition:
+    opacity 0.22s var(--motion-ease),
+    transform 0.22s var(--motion-ease);
 }
 
 .topbar.is-scrolled-down .topbar-brand {
@@ -76,54 +93,83 @@
   height: 40px;
 }
 
-/* 展开态：悬停 / 焦点 / 持久点开 */
-.topbar.is-scrolled-down:hover,
+/* 展开态：焦点 / 持久点开（从左上角向右展开） */
 .topbar.is-scrolled-down:focus-within,
 .topbar.is-scrolled-down.is-expanded {
-  width: min(1200px, calc(100vw - 32px));
-  margin-left: auto;
-  margin-right: auto;
+  width: min(1200px, calc(100vw - 32px)) !important;
+  margin-left: 18px !important;
+  margin-right: auto !important;
+  pointer-events: auto !important; /* 展开时允许点击 */
 }
 
-.topbar.is-scrolled-down:hover .topbar-shell,
+/* —— 动画过程门控：展开但尚未就绪(is-settled)时，禁用所有后代交互 —— */
+/* 保留 display:flex 维持滑入视觉效果，但杜绝动画中误触同步/退出等按钮 */
+.topbar.is-scrolled-down.is-expanded:not(.is-settled) .topbar-actions,
+.topbar.is-scrolled-down.is-expanded:not(.is-settled) .topnav,
+.topbar.is-scrolled-down.is-expanded:not(.is-settled) .topbar-actions *,
+.topbar.is-scrolled-down.is-expanded:not(.is-settled) .topnav * {
+  pointer-events: none !important;
+}
+
 .topbar.is-scrolled-down:focus-within .topbar-shell,
 .topbar.is-scrolled-down.is-expanded .topbar-shell {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  padding: 8px;
-  border-radius: 24px;
-  min-height: unset;
-  height: auto;
-  justify-items: stretch;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  padding: 8px !important;
+  border-radius: 24px !important;
+  min-height: unset !important;
+  height: auto !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
-.topbar.is-scrolled-down:hover .topnav,
 .topbar.is-scrolled-down:focus-within .topnav,
-.topbar.is-scrolled-down.is-expanded .topnav,
-.topbar.is-scrolled-down:hover .topbar-actions,
+.topbar.is-scrolled-down.is-expanded .topnav {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  transition:
+    opacity 0.28s var(--motion-ease) 0.08s,
+    transform 0.28s var(--motion-spring) 0.08s;
+}
+
 .topbar.is-scrolled-down:focus-within .topbar-actions,
 .topbar.is-scrolled-down.is-expanded .topbar-actions {
-  display: flex;
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  transition:
+    opacity 0.28s var(--motion-ease) 0.08s,
+    transform 0.28s var(--motion-spring) 0.08s;
 }
 
-.topbar.is-scrolled-down:hover .brand-text,
 .topbar.is-scrolled-down:focus-within .brand-text,
 .topbar.is-scrolled-down.is-expanded .brand-text {
-  display: grid;
+  display: grid !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  transition:
+    opacity 0.28s var(--motion-ease) 0.08s,
+    transform 0.28s var(--motion-spring) 0.08s;
 }
 
-.topbar.is-scrolled-down:hover .topbar-brand,
 .topbar.is-scrolled-down:focus-within .topbar-brand,
 .topbar.is-scrolled-down.is-expanded .topbar-brand {
-  border-right: 1px solid var(--line);
-  padding: 0 14px 0 10px;
-  justify-content: flex-start;
+  border-right: 1px solid var(--line) !important;
+  padding: 0 14px 0 10px !important;
+  opacity: 1 !important;
 }
 
-.topbar.is-scrolled-down:hover .brand-icon,
 .topbar.is-scrolled-down:focus-within .brand-icon,
 .topbar.is-scrolled-down.is-expanded .brand-icon {
-  width: 34px;
-  height: 34px;
+  width: 34px !important;
+  height: 34px !important;
 }
 
 .topbar-shell {
@@ -137,8 +183,14 @@
   background: var(--topbar-bg);
   backdrop-filter: blur(22px) saturate(120%);
   -webkit-backdrop-filter: blur(22px) saturate(120%);
-  box-shadow: var(--topbar-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.96);
-  transition: border-radius 0.35s ease, padding 0.35s ease, height 0.35s ease;
+  box-shadow:
+    var(--topbar-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  transition:
+    border-radius 0.42s var(--motion-spring),
+    padding 0.42s var(--motion-spring),
+    height 0.42s var(--motion-spring);
+  transform-origin: top left;
 }
 
 /* 品牌标识 */
@@ -156,11 +208,35 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
-  transition: transform var(--motion-medium) var(--motion-spring);
+  transition:
+    width 0.3s var(--motion-spring),
+    height 0.3s var(--motion-spring),
+    transform var(--motion-medium) var(--motion-spring);
 }
 
 .brand-icon:hover {
   transform: translateY(-1px) rotate(-2deg);
+}
+
+/* —— 圆球态品牌图标微脉冲：暗示可点击 —— */
+@keyframes topbar-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .topbar.is-scrolled-down:not(.is-expanded) .brand-icon {
+    animation: topbar-pulse 3.2s var(--motion-ease) infinite;
+  }
+
+  .topbar.is-scrolled-down:not(.is-expanded) .brand-icon:hover {
+    animation: none;
+  }
 }
 
 .brand-text {
@@ -242,7 +318,7 @@
 }
 
 .topbar-sync::after {
-  content: "";
+  content: '';
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -283,7 +359,8 @@
   position: fixed;
   top: 84px;
   right: 20px;
-  z-index: 90;
+  /* 比 .topbar(z-index:90) 高，避免折叠成圆球时被压在上方 */
+  z-index: 100;
   width: min(400px, calc(100vw - 32px));
   pointer-events: none;
 }
@@ -298,7 +375,7 @@
 }
 
 .profile-avatar-large {
-  box-shadow: var(--shadow-soft);
+  /* box-shadow managed by modals.css for ring effect */
 }
 
 .profile-avatar-large img {
@@ -312,20 +389,54 @@
 
 .avatar-overlay {
   min-height: 26px;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
+  font-size: 10px;
 }
 
 .profile-status-dot {
   position: absolute;
-  right: var(--spacing-xs);
-  bottom: var(--spacing-xs);
+  right: 2px;
+  bottom: 2px;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: var(--success);
-  border: 2px solid var(--surface-strong);
+  border: 2.5px solid var(--surface-strong);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
   z-index: 2;
+}
+
+/* 三态状态点（由 JS 写入 data-status='online'|'away'|'offline'） */
+.profile-status-dot[data-status='online'] {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.profile-status-dot[data-status='away'] {
+  background: #d4a82a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #d4a82a 22%, transparent);
+}
+
+.profile-status-dot[data-status='offline'] {
+  background: var(--text-muted);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+
+/* Status dot pulse */
+@keyframes status-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--success) 6%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 仅在线态需要呼吸动画，离线/离开保持静态 */
+  .profile-status-dot:not([data-status='offline']):not([data-status='away']) {
+    animation: status-pulse 3s var(--motion-ease) infinite;
+  }
 }
 
 .profile-avatar-large:hover .avatar-overlay,
@@ -334,25 +445,15 @@
 }
 
 .avatar-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: inherit;
   object-fit: cover;
 }
 
-.profile-popover-head strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-
-.profile-popover-head span {
-  display: block;
-  margin-top: 6px;
-  color: var(--text-soft);
-  font-size: 13px;
-}
+/* 旧的 .profile-popover-head strong / span 已迁移到 modals.css 的 .profile-head-info 规则 */
 
 .profile-form {
   display: grid;
@@ -369,47 +470,179 @@
 
 .profile-summary-card {
   display: grid;
-  gap: var(--spacing-xs);
+  gap: 6px;
   justify-items: start;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md) calc(var(--spacing-md) - 2px);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface-gradient);
   box-shadow: var(--shadow-soft);
   cursor: pointer;
-  transition: transform var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+/* Accent line at top */
+.profile-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 2.5px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--brand-line) 100%);
+  opacity: 0.6;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .profile-summary-card:hover {
   transform: translateY(-2px);
+  border-color: var(--brand-line);
   box-shadow: var(--shadow);
+}
+
+.profile-summary-card:hover::before {
+  left: 0;
+  right: 0;
+  opacity: 1;
+  border-radius: 0;
+}
+
+.profile-summary-card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Summary icon */
+.summary-icon {
+  color: var(--brand);
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .profile-summary-card strong {
   color: var(--brand-strong);
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 26px;
   line-height: 1;
+  transition: opacity var(--motion-fast) var(--motion-ease);
 }
 
 .profile-summary-card span {
   color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 720;
+  letter-spacing: 0.02em;
+}
+
+/* Staggered entry animation */
+@keyframes summary-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .profile-popover.is-open .profile-summary-card:nth-child(1) {
+    animation: summary-card-enter 0.35s var(--motion-ease) 0.06s both;
+  }
+  .profile-popover.is-open .profile-summary-card:nth-child(2) {
+    animation: summary-card-enter 0.35s var(--motion-ease) 0.12s both;
+  }
+  .profile-popover.is-open .profile-summary-card:nth-child(3) {
+    animation: summary-card-enter 0.35s var(--motion-ease) 0.18s both;
+  }
+}
+
+/* 加载骨架态 */
+.profile-summary-card.is-loading strong {
+  display: inline-block;
+  min-width: 28px;
+  height: 22px;
+  border-radius: 6px;
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 0%,
+    var(--surface-soft) 50%,
+    var(--surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: profile-skeleton-shimmer 1.4s linear infinite;
+}
+
+@keyframes profile-skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-summary-card.is-loading strong {
+    animation: none;
+  }
 }
 
 @media (max-width: 420px) {
   .profile-summary {
     grid-template-columns: 1fr;
   }
+
+  .profile-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-popover-head {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .profile-avatar-large {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
 }
 
+/* Feedback (display/hide with transition, replaces hidden jump) */
 .profile-feedback {
   margin-top: 12px;
   padding: 10px 12px;
   border-radius: 12px;
   font-size: 13px;
+  line-height: 1.5;
   border: 1px solid transparent;
+  opacity: 1;
+  max-height: 200px;
+  overflow: hidden;
+  transition:
+    opacity var(--motion-medium) var(--motion-ease),
+    max-height var(--motion-medium) var(--motion-ease),
+    margin-top var(--motion-medium) var(--motion-ease),
+    padding var(--motion-medium) var(--motion-ease);
+}
+
+.profile-feedback[hidden] {
+  display: block;
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
+  pointer-events: none;
 }
 
 .profile-feedback.is-success {
@@ -424,15 +657,24 @@
   border-color: rgba(160, 82, 82, 0.2);
 }
 
-.profile-section:first-of-type {
-  padding-top: 0;
-  border-top: none;
-}
-
 .profile-pwd-hint {
   margin: 0;
   font-size: 12px;
+  line-height: 1.5;
   color: var(--text-soft);
+  opacity: 1;
+  max-height: 80px;
+  overflow: hidden;
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    max-height var(--motion-fast) var(--motion-ease);
+}
+
+.profile-pwd-hint[hidden] {
+  display: block;
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
 }
 
 .profile-pwd-hint.is-ok {
@@ -455,16 +697,18 @@
   height: 2px;
   background: var(--text);
   border-radius: 2px;
-  transition: transform 0.3s var(--motion-ease), opacity 0.2s var(--motion-ease);
+  transition:
+    transform 0.3s var(--motion-ease),
+    opacity 0.2s var(--motion-ease);
 }
 
-.hamburger-btn[aria-expanded="true"] span:nth-child(1) {
+.hamburger-btn[aria-expanded='true'] span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
-.hamburger-btn[aria-expanded="true"] span:nth-child(2) {
+.hamburger-btn[aria-expanded='true'] span:nth-child(2) {
   opacity: 0;
 }
-.hamburger-btn[aria-expanded="true"] span:nth-child(3) {
+.hamburger-btn[aria-expanded='true'] span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
 
@@ -541,29 +785,71 @@
 }
 
 @media (max-width: 768px) {
-  .topbar {
-    position: sticky;
-    top: 10px;
-    margin-top: 10px;
-    margin-bottom: 16px;
-  }
-
-  .topbar-shell {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    border-radius: 20px;
-  }
-
-  .topnav {
+  /* 移动端 topbar 在滚动时隐藏 */
+  .topbar.is-scrolled-down {
     display: none;
   }
 
-  .topbar-actions {
-    grid-column: auto;
-    gap: 8px;
+  /* 悬浮汉堡按钮（固定在右下角，Tab 栏上方） */
+  .mobile-fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line-soft);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    display: none; /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 99;
+    transition:
+      transform var(--motion-fast) var(--motion-spring),
+      box-shadow 200ms ease,
+      opacity 200ms ease;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  .topbar-actions .ghost-btn:not(.topbar-sync) {
-    display: none;
+  .mobile-fab.is-visible {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-fab:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-fab .hamburger-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mobile-fab .hamburger-icon span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 1px;
+    transition: transform 200ms ease;
+  }
+
+  /* 减少动画模式 */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-fab {
+      transition: none;
+    }
   }
 }
 

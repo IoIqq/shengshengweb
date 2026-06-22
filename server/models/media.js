@@ -134,6 +134,9 @@ function mediaRowToItem(row) {
     uploadedAt: row.created_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    fileHash: row.file_hash || null,
+    transferState: row.transfer_state || 'ready',
+    originalFilename: row.original_filename || '',
   };
 }
 
@@ -143,9 +146,9 @@ function mediaRowToItem(row) {
 function insertMediaRecord(record) {
   run(
     `INSERT INTO media
-      (id, kind, title, source, source_type, source_path, author, duration, status, note, tags_json, thumb, url, review_state, created_at, updated_at)
+      (id, kind, title, source, source_type, source_path, author, duration, status, note, tags_json, thumb, url, review_state, file_hash, transfer_state, original_filename, created_at, updated_at)
      VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.id,
       record.kind,
@@ -161,6 +164,9 @@ function insertMediaRecord(record) {
       record.thumb,
       record.url,
       record.review_state,
+      record.file_hash || null,
+      record.transfer_state || 'ready',
+      record.original_filename || '',
       record.created_at,
       record.updated_at,
     ],
@@ -315,6 +321,105 @@ function getShowcaseItems(options = {}) {
   }));
 }
 
+/** 设置传输态 */
+function setTransferState(id, state) {
+  run('UPDATE media SET transfer_state = ?, updated_at = ? WHERE id = ?', [state, nowIso(), id]);
+}
+
+/** 取指定传输态的记录（重启恢复用） */
+function getMediaByTransferStates(states) {
+  if (!states.length) return [];
+  const placeholders = states.map(() => '?').join(',');
+  return all(`SELECT * FROM media WHERE transfer_state IN (${placeholders})`, states);
+}
+
+/** 写入哈希 */
+function setFileHash(id, hash) {
+  run('UPDATE media SET file_hash = ?, updated_at = ? WHERE id = ?', [hash, nowIso(), id]);
+}
+
+/** 取未计算哈希的记录 */
+function getUnhashedMedia(limit = 10) {
+  return all('SELECT * FROM media WHERE file_hash IS NULL ORDER BY datetime(created_at) ASC LIMIT ?', [limit]);
+}
+
+/** 未哈希计数 */
+function countUnhashed() {
+  const row = get("SELECT COUNT(*) AS c FROM media WHERE file_hash IS NULL", []);
+  return row ? Number(row.c) : 0;
+}
+
+/** 由 source_type/source_path 解析出磁盘绝对路径（供哈希/清理用） */
+function resolveManagedAbsPath(row) {
+  if (!row || !row.source_path) return null;
+  const normalized = String(row.source_path).replace(/\\/g, '/').replace(/^\/+/, '');
+  const abs = path.resolve(config.UPLOAD_DIR, normalized);
+  const rel = path.relative(config.UPLOAD_DIR, abs);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  return abs;
+}
+
+/**
+ * 对未哈希记录逐条计算流式哈希并写入。
+ * @param {number} limit
+ * @returns {Promise<{hashed:number, remaining:number}>}
+ */
+async function scanHashes(limit = 10) {
+  const { computeFileHash } = require('../utils/file-hash');
+  const rows = getUnhashedMedia(limit);
+  for (const row of rows) {
+    try {
+      const absPath = resolveManagedAbsPath(row);
+      if (!absPath || !fs.existsSync(absPath)) {
+        // 文件缺失：写占位哈希避免反复重试，查重时忽略
+        setFileHash(row.id, `missing:${row.id}`);
+        continue;
+      }
+      const hash = await computeFileHash(absPath);
+      setFileHash(row.id, hash);
+    } catch (error) {
+      setFileHash(row.id, `error:${error.code || 'failed'}`);
+    }
+  }
+  return { hashed: rows.length, remaining: countUnhashed() };
+}
+
+/** 重复分组：file_hash 相同且非占位的，count>1 */
+function getDuplicateGroups() {
+  const rows = all(
+    `SELECT file_hash AS hash, COUNT(*) AS c
+     FROM media
+     WHERE file_hash IS NOT NULL
+       AND file_hash NOT LIKE 'missing:%' AND file_hash NOT LIKE 'error:%'
+     GROUP BY file_hash
+     HAVING c > 1
+     ORDER BY c DESC`,
+  );
+  return rows.map((r) => {
+    const items = all('SELECT * FROM media WHERE file_hash = ? ORDER BY datetime(created_at) ASC', [r.hash]).map(mediaRowToItem);
+    return { hash: r.hash, count: r.c, items };
+  });
+}
+
+/** 扫描 MEDIA_DIR 下的 年/活动 两层目录，供上传时选择已有文件夹 */
+function listFolders() {
+  const result = [];
+  if (!fs.existsSync(config.MEDIA_DIR)) return result;
+  const years = fs.readdirSync(config.MEDIA_DIR, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && /^\d{4}$/.test(e.name))
+    .map((e) => e.name)
+    .sort((a, b) => (a < b ? 1 : -1));
+  for (const year of years) {
+    const yearDir = path.join(config.MEDIA_DIR, year);
+    const events = fs.readdirSync(yearDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort((a, b) => (a < b ? 1 : -1));
+    result.push({ year, events });
+  }
+  return result;
+}
+
 module.exports = {
   getAllMedia,
   getMediaById,
@@ -326,4 +431,13 @@ module.exports = {
   insertMediaRecord,
   scanInbox,
   getShowcaseItems,
+  setTransferState,
+  getMediaByTransferStates,
+  setFileHash,
+  getUnhashedMedia,
+  countUnhashed,
+  scanHashes,
+  getDuplicateGroups,
+  listFolders,
+  resolveManagedAbsPath,
 };

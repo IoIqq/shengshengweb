@@ -12,12 +12,14 @@ import { state } from './state.js';
 import { els, clearDOMCache } from './dom.js';
 import { request, requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
-import { setActiveView, setShellLoggedIn, initScrollHide } from '../ui/navigation.js';
+import * as log from '../utils/log.js';
+import { setActiveView, setShellLoggedIn, initScrollHide, applyNavMode } from '../ui/navigation.js';
 import { initMobileNav } from '../ui/mobile-nav.js';
 import { setLoginPending } from '../ui/feedback.js';
 import { initRippleEffects, initLazyLoading, loadingBar } from '../ui/loading.js';
+import { startDayPhaseWatcher } from '../ui/animations.js';
 import { loadShowcase } from '../modules/showcase.js';
-import { ensureModulesLoaded } from './module-loader.js';
+import { loadCoreModules, loadAdminModules } from './module-loader.js';
 import { mountPanels } from './templates.js';
 import { applyRoleVisibility, currentRole } from './router.js';
 import { updateUserDisplay } from './profile.js';
@@ -38,6 +40,8 @@ import {
   syncDeviceView,
   syncBorrowView,
   loadTopics,
+  applyTheme,
+  loadPreferences,
 } from './proxies.js';
 
 function normalizeSessionPayload(payload) {
@@ -109,13 +113,14 @@ export async function loadBootstrap() {
   loadingBar.start();
 
   try {
-    // 业务模块和数据并行加载（首屏关键路径）
-    // - import 各模块走 HTTP，能与 /api/bootstrap 并发，几乎零额外延迟
+    // 业务模块和数据并行加载（首屏关键路径）：
+    // - 所有角色都拉 core 包；admin 角色额外拉 admin 包，并发不互相阻塞
+    // - import 与 /api/bootstrap 并发，几乎零额外延迟
     // - bootstrap 数据返回前模块通常已就绪
-    const [data] = await Promise.all([
-      request('/api/bootstrap'),
-      ensureModulesLoaded(),
-    ]);
+    const isAdmin = state.session?.user?.role === 'admin';
+    const tasks = [request('/api/bootstrap'), loadCoreModules()];
+    if (isAdmin) tasks.push(loadAdminModules());
+    const [data] = await Promise.all(tasks);
 
     // 先挂载面板模板，再让 els 缓存失效，确保后续 render/绑定能命中新节点
     await mountPanels();
@@ -152,6 +157,11 @@ async function completeLogin(result, message) {
   setShellLoggedIn(true);
   updateUserDisplay();
   bindAllEvents();
+  // 应用用户偏好的导航模式（auto / locked），同时让 IO 哨兵按需启停
+  applyNavMode(state.session?.user?.navMode || state.profile?.navMode || 'auto');
+  // 应用本地外观偏好；index.html 的 head 内联脚本已先做一次反闪烁同步，
+  // 这里再调一次主要是为了给 'auto' 模式装上 matchMedia 监听器，让会话期间能跟随系统切换
+  applyTheme(loadPreferences()?.theme || 'auto');
   renderAll();
   setActiveView(state.activeView);
 }
@@ -292,13 +302,13 @@ function bindLoginForm() {
 // ============================================================================
 async function start() {
   try {
-    console.log('📦 加载会话数据...');
+    log.log('📦 加载会话数据...');
 
     const sessionData = await request('/api/session').catch(() => null);
     state.session = normalizeSessionPayload(sessionData);
 
     if (state.session?.user) {
-      console.log('✅ 用户已登录:', state.session.user.username);
+      log.log('✅ 用户已登录:', state.session.user.username);
 
       await loadBootstrap();
 
@@ -307,11 +317,15 @@ async function start() {
       setShellLoggedIn(true);
       updateUserDisplay();
       bindAllEvents();
+      // 应用用户偏好的导航模式
+      applyNavMode(state.session?.user?.navMode || state.profile?.navMode || 'auto');
+      // 应用本地外观偏好（同登录路径，会话恢复也走这条）
+      applyTheme(loadPreferences()?.theme || 'auto');
       setActiveView(state.activeView);
 
       Toast.success('欢迎回来，' + state.session.user.username);
     } else {
-      console.log('ℹ️ 用户未登录，显示展示页');
+      log.log('ℹ️ 用户未登录，显示展示页');
       showShowcaseShell();
       loadShowcase();
     }
@@ -346,7 +360,8 @@ export function init() {
   setTimeout(() => {
     initRippleEffects();
     initLazyLoading();
-    console.log('✨ UX 增强功能已初始化');
+    startDayPhaseWatcher();
+    log.log('✨ UX 增强功能已初始化');
   }, 500);
 }
 

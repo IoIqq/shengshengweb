@@ -6,6 +6,8 @@ const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_EXEMPT_PATHS = new Set([
   '/api/login',
   '/api/login/guest',
+  '/api/auth/login',
+  '/api/auth/login/guest',
   '/api/registration-requests',
   '/api/client-log',
 ]);

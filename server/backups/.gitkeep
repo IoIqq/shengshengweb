@@ -1,0 +1,2 @@
+# 备份快照目录
+# 由 POST /api/backup/snapshot 自动写入 snapshot-<ISO时间>.json

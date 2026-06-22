@@ -20,6 +20,7 @@
     "maintenance": "node server/scripts/maintenance.js",
     "network": "node server/scripts/show-network.js",
     "check": "npm run lint && npm audit",
+    "test": "node --test",
     "clean": "node -e \"require('fs').rmSync('node_modules', {recursive: true, force: true})\" && npm install"
   },
   "dependencies": {

@@ -6,6 +6,7 @@ import { request } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { Dialog } from '../ui/dialog.js';
 import { createSkeleton } from '../ui/loading.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 let currentUsers = [];
 let currentRegistrationRequests = [];
@@ -348,15 +349,6 @@ function showUserDialog({ title, user, onSubmit }) {
       loadUsers();
     },
   });
-}
-
-function escapeHtml(text) {
-  return String(text || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 }
 
 function showRegistrationApprovalDialog(registrationRequest) {

@@ -217,6 +217,9 @@ function applyFilters() {
   const action = document.getElementById('audit-action-filter')?.value;
   if (action) filters.action = action;
 
+  const resourceType = document.getElementById('audit-resource-filter')?.value;
+  if (resourceType) filters.resource_type = resourceType;
+
   const startDate = document.getElementById('audit-start-date')?.value;
   if (startDate) filters.start_date = startDate;
 
@@ -232,6 +235,7 @@ function applyFilters() {
 function resetFilters() {
   document.getElementById('audit-user-filter').value = '';
   document.getElementById('audit-action-filter').value = '';
+  document.getElementById('audit-resource-filter').value = '';
   document.getElementById('audit-start-date').value = '';
   document.getElementById('audit-end-date').value = '';
 

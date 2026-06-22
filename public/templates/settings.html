@@ -8,17 +8,19 @@
   </div>
 
   <!-- 标签页导航 -->
-  <div class="settings-tabs">
-    <button class="settings-tab active" data-tab="general" type="button">站点设置</button>
-    <button class="settings-tab" data-tab="showcase" type="button">展示页内容</button>
-    <button class="settings-tab" data-tab="users" type="button">用户管理</button>
-    <button class="settings-tab" data-tab="storage" type="button">存储管理</button>
-    <button class="settings-tab" data-tab="audit" type="button">操作日志</button>
+  <div class="settings-tabs" role="tablist" aria-label="设置面板">
+    <button class="settings-tab active" data-tab="general" type="button" role="tab" aria-selected="true" aria-controls="settings-content-general" id="settings-tab-general">站点设置</button>
+    <button class="settings-tab" data-tab="showcase" type="button" role="tab" aria-selected="false" aria-controls="settings-content-showcase" id="settings-tab-showcase">展示页内容</button>
+    <button class="settings-tab" data-tab="users" type="button" role="tab" aria-selected="false" aria-controls="settings-content-users" id="settings-tab-users">用户管理</button>
+    <button class="settings-tab" data-tab="storage" type="button" role="tab" aria-selected="false" aria-controls="settings-content-storage" id="settings-tab-storage">存储管理</button>
+    <button class="settings-tab" data-tab="audit" type="button" role="tab" aria-selected="false" aria-controls="settings-content-audit" id="settings-tab-audit">操作日志</button>
+    <button class="settings-tab" data-tab="preferences" type="button" role="tab" aria-selected="false" aria-controls="settings-content-preferences" id="settings-tab-preferences">偏好</button>
+    <button class="settings-tab" data-tab="maintenance" type="button" role="tab" aria-selected="false" aria-controls="settings-content-maintenance" id="settings-tab-maintenance">维护</button>
   </div>
 
   <!-- 常规设置内容 -->
-  <div class="settings-content" data-content="general">
-    <form class="settings-form" id="settings-form">
+  <div class="settings-content" data-content="general" role="tabpanel" id="settings-content-general" aria-labelledby="settings-tab-general">
+    <form class="settings-form" id="settings-form" data-form-kind="site">
       <label class="field">
         <span>站点名称</span>
         <input name="siteTitle" type="text" />
@@ -27,35 +29,103 @@
         <span>站点副标题</span>
         <input name="siteSubtitle" type="text" />
       </label>
-      <label class="field">
+      <label class="field field-full">
         <span>首页说明文案</span>
         <input name="homeHeroMessage" type="text" placeholder="首页顶部说明文字" />
       </label>
-      <label class="field">
+      <label class="field field-full">
         <span>公开地址</span>
         <input name="publicUrl" type="text" placeholder="可留空" />
       </label>
-      <div class="settings-account-note">
+      <div class="settings-account-note field-full">
         <div>
           <strong>账号管理已集中到用户管理</strong>
           <p>管理员、编辑和访客账号请在用户管理中添加、禁用、删除或重置密码。</p>
         </div>
         <button class="ghost-btn" data-settings-tab="users" type="button">前往用户管理</button>
       </div>
-      <div class="settings-actions">
+      <div class="settings-actions field-full">
         <button class="primary-btn" type="submit">保存设置</button>
         <a class="ghost-btn" href="/api/backup" target="_blank" rel="noreferrer">下载数据备份</a>
         <a class="ghost-btn" href="/api/backup/database" target="_blank" rel="noreferrer">下载数据库</a>
       </div>
     </form>
 
+    <!-- 恢复备份 -->
+    <div class="restore-section" id="restore-section">
+      <div class="settings-section-head">
+        <div>
+          <h3>恢复备份</h3>
+          <p>从 JSON 备份文件恢复数据。请选择要恢复的数据表。</p>
+        </div>
+      </div>
+      <div class="restore-tables" id="restore-tables">
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="todos" checked />
+          <span>待办事项</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="devices" checked />
+          <span>设备登记</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="borrow_requests" checked />
+          <span>借出申请</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="team" checked />
+          <span>团队成员</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="users" checked />
+          <span>用户账号</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="settings" checked />
+          <span>系统设置</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="audit_logs" checked />
+          <span>操作日志</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="activity" checked />
+          <span>活动日志</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="sessions" checked />
+          <span>登录会话</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="registration_requests" checked />
+          <span>注册申请</span>
+        </label>
+        <label class="restore-table-item">
+          <input type="checkbox" name="restore_table" value="wishes" checked />
+          <span>许愿墙</span>
+        </label>
+        <label class="restore-table-item restore-table-item-excluded">
+          <input type="checkbox" name="restore_table" value="media" />
+          <span>素材库（默认不恢复）</span>
+        </label>
+        <label class="restore-table-item restore-table-item-excluded">
+          <input type="checkbox" name="restore_table" value="topics" />
+          <span>选题库（默认不恢复）</span>
+        </label>
+      </div>
+      <div class="restore-actions">
+        <input type="file" id="restore-file-input" accept=".json" hidden />
+        <button class="ghost-btn" id="restore-backup-btn" type="button">📂 选择备份文件恢复</button>
+      </div>
+    </div>
+
     <div class="system-card" id="system-card"></div>
   </div>
 
   <!-- 展示页内容设置 -->
-  <div class="settings-content hidden" data-content="showcase">
-    <form class="settings-form showcase-settings-form" id="showcase-settings-form">
-      <div class="settings-section-head">
+  <div class="settings-content hidden" data-content="showcase" role="tabpanel" id="settings-content-showcase" aria-labelledby="settings-tab-showcase">
+    <form class="settings-form showcase-settings-form" id="showcase-settings-form" data-form-kind="showcase">
+      <div class="settings-section-head field-full">
         <div>
           <h3>展示页内容</h3>
           <p>配置登录前公开展示页的文案、展示状态和素材筛选规则。</p>
@@ -63,7 +133,7 @@
         <span class="panel-badge">公开页面</span>
       </div>
 
-      <label class="field settings-toggle-field">
+      <label class="field settings-toggle-field field-full">
         <span>展示页开关</span>
         <select name="showcaseEnabled">
           <option value="1">开启公开展示页</option>
@@ -87,7 +157,7 @@
         <span>Hero 副标题</span>
         <textarea name="showcaseSubtitle" rows="3" maxlength="180"></textarea>
       </label>
-      <div class="settings-form-grid">
+      <div class="settings-form-grid field-full">
         <label class="field">
           <span>展示数量</span>
           <input name="showcaseLimit" type="number" min="1" max="100" />
@@ -102,19 +172,19 @@
           </select>
         </label>
       </div>
-      <label class="field">
+      <label class="field field-full">
         <span>页脚文案</span>
         <input name="showcaseFooterText" type="text" maxlength="80" />
       </label>
-      <div class="settings-actions">
+      <div class="settings-actions field-full">
         <button class="primary-btn" type="submit">保存展示页设置</button>
       </div>
     </form>
   </div>
 
   <!-- 用户管理内容 -->
-  <div class="settings-content hidden" data-content="users">
-    <div class="panel-head">
+  <div class="settings-content hidden" data-content="users" role="tabpanel" id="settings-content-users" aria-labelledby="settings-tab-users">
+    <div class="settings-content-head">
       <h3>用户管理</h3>
       <button class="primary-btn" id="add-user-btn" type="button">+ 添加用户</button>
     </div>
@@ -136,40 +206,9 @@
     </div>
   </div>
 
-  <!-- 操作日志内容 -->
-  <div class="settings-content hidden" data-content="audit">
-    <div class="panel-head">
-      <h3>操作日志</h3>
-      <button class="ghost-btn" id="export-logs-btn" type="button">导出日志</button>
-    </div>
-
-    <div class="audit-toolbar">
-      <select id="audit-user-filter" class="filter-select">
-        <option value="">所有用户</option>
-      </select>
-      <select id="audit-action-filter" class="filter-select">
-        <option value="">所有操作</option>
-        <option value="login">登录</option>
-        <option value="create">创建</option>
-        <option value="update">更新</option>
-        <option value="delete">删除</option>
-      </select>
-      <input type="date" id="audit-start-date" class="filter-input" placeholder="开始日期" />
-      <input type="date" id="audit-end-date" class="filter-input" placeholder="结束日期" />
-      <button class="ghost-btn" id="audit-filter-btn" type="button">筛选</button>
-      <button class="ghost-btn" id="audit-reset-btn" type="button">重置</button>
-    </div>
-
-    <div class="audit-log-list" id="audit-log-list">
-      <!-- 审计日志将动态加载 -->
-    </div>
-
-    <div class="pagination" id="audit-pagination"></div>
-  </div>
-
   <!-- 存储管理内容 -->
-  <div class="settings-content hidden" data-content="storage" id="storage-content">
-    <div class="panel-head">
+  <div class="settings-content hidden" data-content="storage" role="tabpanel" id="settings-content-storage" aria-labelledby="settings-tab-storage">
+    <div class="settings-content-head">
       <div>
         <h3>服务器素材存储</h3>
         <p>指定素材存放空间，查看本机硬盘用量；保存后重启服务生效。</p>
@@ -188,17 +227,17 @@
       <section class="storage-section" aria-labelledby="storage-form-title">
         <h4 id="storage-form-title">指定素材存放空间</h4>
         <form class="settings-form storage-form" id="storage-form">
-          <label class="field">
+          <label class="field field-full">
             <span>素材根目录</span>
             <input name="uploadDir" type="text" placeholder="例如 D:/ShengshengStorage/uploads" autocomplete="off" />
             <small>系统会在此目录下存放 media、avatars、devices 等素材文件。</small>
           </label>
-          <label class="field">
+          <label class="field field-full">
             <span>Inbox 同步目录</span>
             <input name="inboxDir" type="text" placeholder="例如 D:/ShengshengStorage/uploads/inbox" autocomplete="off" />
             <small>建议放在素材根目录内，方便通过现有 /uploads/inbox 访问。</small>
           </label>
-          <div class="settings-actions">
+          <div class="settings-actions field-full">
             <button class="ghost-btn" id="storage-validate-btn" type="button">验证路径</button>
             <button class="primary-btn" id="storage-save-btn" type="button">保存配置</button>
           </div>
@@ -210,7 +249,7 @@
     <section class="storage-section" aria-labelledby="storage-volume-title">
       <div class="storage-section-head">
         <h4 id="storage-volume-title">硬盘用量</h4>
-        <p>点击“用作素材盘”会自动填入推荐素材目录，不会立即修改硬盘内容。</p>
+        <p>点击"用作素材盘"会自动填入推荐素材目录，不会立即修改硬盘内容。</p>
       </div>
       <div class="storage-volume-list" id="storage-volume-list"></div>
     </section>
@@ -221,6 +260,151 @@
         <p>另一台电脑连接同一路由器或交换机网络后，可使用下方地址访问。</p>
       </div>
       <div class="storage-lan-list" id="storage-lan-list"></div>
+    </section>
+  </div>
+
+  <!-- 操作日志内容 -->
+  <div class="settings-content hidden" data-content="audit" role="tabpanel" id="settings-content-audit" aria-labelledby="settings-tab-audit">
+    <div class="settings-content-head">
+      <h3>操作日志</h3>
+      <button class="ghost-btn" id="export-logs-btn" type="button">导出日志</button>
+    </div>
+
+    <div class="audit-toolbar">
+      <select id="audit-user-filter" class="filter-select">
+        <option value="">所有用户</option>
+      </select>
+      <select id="audit-action-filter" class="filter-select">
+        <option value="">所有操作</option>
+        <option value="login">登录</option>
+        <option value="create">创建</option>
+        <option value="update">更新</option>
+        <option value="delete">删除</option>
+      </select>
+      <select id="audit-resource-filter" class="filter-select">
+        <option value="">所有资源</option>
+        <option value="media">素材</option>
+        <option value="user">用户</option>
+        <option value="todo">待办</option>
+        <option value="device">设备</option>
+        <option value="borrow">借出</option>
+        <option value="team">团队</option>
+        <option value="settings">设置</option>
+      </select>
+      <input type="date" id="audit-start-date" class="filter-input" placeholder="开始日期" />
+      <input type="date" id="audit-end-date" class="filter-input" placeholder="结束日期" />
+      <button class="ghost-btn" id="audit-filter-btn" type="button">筛选</button>
+      <button class="ghost-btn" id="audit-reset-btn" type="button">重置</button>
+    </div>
+
+    <div class="audit-log-list" id="audit-log-list">
+      <!-- 审计日志将动态加载 -->
+    </div>
+
+    <div class="pagination" id="audit-pagination"></div>
+  </div>
+
+  <!-- 偏好设置内容 -->
+  <div class="settings-content hidden" data-content="preferences" role="tabpanel" id="settings-content-preferences" aria-labelledby="settings-tab-preferences">
+    <div class="settings-content-head">
+      <div>
+        <h3>本地偏好</h3>
+        <p>仅作用于当前浏览器；换设备或清缓存后会恢复默认。导航模式会同步到账户。</p>
+      </div>
+    </div>
+
+    <section class="preferences-grid">
+      <div class="preference-row">
+        <div class="preference-row-text">
+          <h4>外观主题</h4>
+          <p>深色主题切换基于设计 token 重写，适用于全部工作台面板。</p>
+        </div>
+        <select id="preference-theme" class="filter-select">
+          <option value="auto">跟随系统</option>
+          <option value="light">浅色</option>
+          <option value="dark">深色</option>
+        </select>
+      </div>
+
+      <div class="preference-row">
+        <div class="preference-row-text">
+          <h4>导航模式</h4>
+          <p>自动模式下顶部导航在滚动时收为左上角圆球；锁定模式始终展开。</p>
+        </div>
+        <select id="preference-nav-mode" class="filter-select">
+          <option value="auto">自动收缩</option>
+          <option value="locked">锁定展开</option>
+        </select>
+      </div>
+
+      <div class="preference-row">
+        <div class="preference-row-text">
+          <h4>危险操作前二次确认</h4>
+          <p>关闭后，重启服务、清理会话、生成快照等操作不再弹原生确认框。「清空数据」始终强制确认。</p>
+        </div>
+        <label class="preference-toggle">
+          <input type="checkbox" id="preference-confirm-danger" />
+          <span>启用</span>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <!-- 维护操作内容 -->
+  <div class="settings-content hidden" data-content="maintenance" role="tabpanel" id="settings-content-maintenance" aria-labelledby="settings-tab-maintenance">
+    <div class="settings-content-head">
+      <div>
+        <h3>维护操作</h3>
+        <p>集中入口；危险操作请配合「立即备份到服务器」一起使用。</p>
+      </div>
+    </div>
+
+    <section class="maintenance-grid">
+      <article class="maintenance-card">
+        <header>
+          <h4>立即备份到服务器</h4>
+          <p>把当前数据写到 <code>server/backups/</code> 下的 JSON 文件，用于本机回滚。</p>
+        </header>
+        <div class="maintenance-actions">
+          <button class="primary-btn" id="snapshot-backup-btn" type="button">立即备份</button>
+          <button class="ghost-btn" id="snapshot-refresh-btn" type="button">刷新列表</button>
+        </div>
+        <div class="maintenance-snap-list" id="snapshot-list">
+          <p class="empty-state">尚未读取。</p>
+        </div>
+      </article>
+
+      <article class="maintenance-card">
+        <header>
+          <h4>清理过期会话</h4>
+          <p>删除已过期的登录 token，不影响在线用户。</p>
+        </header>
+        <div class="maintenance-actions">
+          <button class="ghost-btn" id="cleanup-sessions-btn" type="button">立即清理</button>
+        </div>
+        <p class="maintenance-banner" id="cleanup-sessions-result">尚未执行。</p>
+      </article>
+
+      <article class="maintenance-card">
+        <header>
+          <h4>重启服务</h4>
+          <p>触发 Node 进程重启；约 5 秒内恢复在线。PM2 模式下走 <code>pm2 restart</code>。</p>
+        </header>
+        <div class="maintenance-actions">
+          <button class="ghost-btn" id="restart-server-btn" type="button">立即重启</button>
+        </div>
+      </article>
+
+      <article class="maintenance-card maintenance-card-danger">
+        <header>
+          <h4>清空全部数据</h4>
+          <p>清空业务表（素材 / 待办 / 设备 / 借出 / 团队 / 留言 / 选题 / 活动 / 审计 / 注册申请）。保留管理员账号与当前会话。</p>
+        </header>
+        <div class="maintenance-actions">
+          <button class="danger-btn" id="wipe-database-btn" type="button">清空数据</button>
+        </div>
+        <p class="maintenance-banner maintenance-banner-warning">不可撤销。建议先生成一份服务器快照再执行。</p>
+      </article>
     </section>
   </div>
 </article>

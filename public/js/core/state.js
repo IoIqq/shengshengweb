@@ -14,6 +14,7 @@ export const state = {
   mediaFilter: 'all',
   mediaSearch: '',
   mediaSort: 'newest',
+  mediaViewMode: 'list', // 'list' | 'grid'，默认列表流
   selectedMedia: new Set(),
 
   // 审片相关

@@ -8,6 +8,7 @@ import { els } from '../core/dom.js';
 import { escapeHtml, formatDatetime, safeText, currentRole } from '../utils/helpers.js';
 import { todoDayKey, classifyTodoByDate, formatDueLabel } from './todo.js';
 import { isOverdue } from './borrow.js';
+import { runDashboardCountUpOnce, triggerHeroCleared } from '../ui/animations.js';
 
 function canUseShortcut(shortcut) {
   const role = currentRole();
@@ -218,6 +219,15 @@ export function renderDashboard() {
 
   // 最近动态
   renderActivity();
+
+  // 动效：数字 count-up（仅首次进入 / 刷新后）+ 「今日清零」能量条
+  requestAnimationFrame(() => {
+    runDashboardCountUpOnce();
+    triggerHeroCleared({
+      pendingReview: counts.pending ?? 0,
+      todoOpen: counts.todoOpen ?? 0,
+    });
+  });
 }
 
 /**

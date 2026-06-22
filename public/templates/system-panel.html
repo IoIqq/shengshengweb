@@ -9,68 +9,121 @@
 
   <div class="system-admin-grid">
     <!-- 1. 服务器状态卡片 -->
-    <section class="system-card" id="sys-card-server">
+    <section class="system-card" id="sys-card-server" aria-labelledby="sys-server-title">
       <div class="system-card-head">
-        <h3>🖥 服务器状态</h3>
+        <h3 id="sys-server-title">🖥 服务器状态</h3>
         <span class="sys-status-dot" id="sys-status-dot" title="运行中"></span>
       </div>
       <dl class="sys-info-list" id="sys-info-server">
-        <div><dt>Node.js</dt><dd id="sys-node-version">—</dd></div>
-        <div><dt>平台</dt><dd id="sys-platform">—</dd></div>
-        <div><dt>主机名</dt><dd id="sys-hostname">—</dd></div>
-        <div><dt>CPU 核心</dt><dd id="sys-cpu-cores">—</dd></div>
-        <div><dt>运行时间</dt><dd id="sys-uptime">—</dd></div>
-        <div><dt>监听端口</dt><dd id="sys-port">—</dd></div>
-        <div><dt>内存 (RSS)</dt><dd id="sys-mem-rss">—</dd></div>
-        <div><dt>堆内存</dt><dd id="sys-mem-heap">—</dd></div>
-        <div><dt>PM2 守护</dt><dd id="sys-pm2">—</dd></div>
+        <div><dt>Node.js</dt><dd id="sys-node-version">-</dd></div>
+        <div><dt>平台</dt><dd id="sys-platform">-</dd></div>
+        <div><dt>主机名</dt><dd id="sys-hostname">-</dd></div>
+        <div><dt>CPU 核心</dt><dd id="sys-cpu-cores">-</dd></div>
+        <div><dt>运行时间</dt><dd id="sys-uptime">-</dd></div>
+        <div><dt>监听端口</dt><dd id="sys-port">-</dd></div>
       </dl>
+
+      <!-- 内存使用进度条 -->
+      <div class="sys-metric-section">
+        <div class="sys-metric-header">
+          <span>内存使用 (RSS)</span>
+          <span class="sys-metric-value" id="sys-mem-text">0%</span>
+        </div>
+        <div class="sys-progress-bar">
+          <div class="sys-progress-fill mem" id="sys-mem-bar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CPU 使用率进度条 -->
+      <div class="sys-metric-section">
+        <div class="sys-metric-header">
+          <span>CPU 使用率</span>
+          <span class="sys-metric-value" id="sys-cpu-text">0%</span>
+        </div>
+        <div class="sys-progress-bar">
+          <div class="sys-progress-fill cpu" id="sys-cpu-bar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <dl class="sys-info-list" style="margin-top: var(--spacing-sm);">
+        <div><dt>堆内存</dt><dd id="sys-mem-heap">-</dd></div>
+        <div><dt>PM2 守护</dt><dd id="sys-pm2">-</dd></div>
+      </dl>
+      <div class="sys-card-actions">
+        <button class="btn btn-sm btn-danger" id="sys-restart-btn" type="button" title="重启服务">
+          ⚠ 重启服务
+        </button>
+      </div>
     </section>
 
     <!-- 2. 数据库卡片 -->
-    <section class="system-card" id="sys-card-db">
+    <section class="system-card" id="sys-card-db" aria-labelledby="sys-db-title">
       <div class="system-card-head">
-        <h3>🗄 数据库</h3>
+        <h3 id="sys-db-title">🗄 数据库</h3>
       </div>
       <dl class="sys-info-list" id="sys-info-db">
-        <div><dt>路径</dt><dd id="sys-db-path">—</dd></div>
-        <div><dt>大小</dt><dd id="sys-db-size">—</dd></div>
-        <div><dt>状态</dt><dd id="sys-db-exists">—</dd></div>
-        <div><dt>上传文件数</dt><dd id="sys-upload-count">—</dd></div>
+        <div><dt>路径</dt><dd id="sys-db-path">-</dd></div>
+        <div><dt>大小</dt><dd id="sys-db-size">-</dd></div>
+        <div><dt>状态</dt><dd id="sys-db-exists">-</dd></div>
+        <div><dt>上传文件数</dt><dd id="sys-upload-count">-</dd></div>
       </dl>
       <div class="sys-card-actions">
-        <button class="btn btn-sm" id="sys-db-backup-btn" type="button">⬇ 下载数据库备份</button>
-        <button class="btn btn-sm btn-outline" id="sys-db-json-btn" type="button">📋 导出 JSON 备份</button>
+        <button class="btn btn-sm" id="sys-db-backup-btn" type="button">
+          ⬇ 下载数据库备份
+        </button>
+        <button class="btn btn-sm btn-outline" id="sys-db-json-btn" type="button">
+          📋 导出 JSON 备份
+        </button>
       </div>
     </section>
 
     <!-- 3. 网络访问卡片 -->
-    <section class="system-card" id="sys-card-network">
+    <section class="system-card" id="sys-card-network" aria-labelledby="sys-network-title">
       <div class="system-card-head">
-        <h3>🌐 网络访问</h3>
+        <h3 id="sys-network-title">🌐 网络访问</h3>
       </div>
       <ul class="sys-lan-list" id="sys-lan-list">
-        <li class="sys-lan-placeholder">加载中…</li>
+        <li class="sys-lan-placeholder">加载中...</li>
       </ul>
       <div class="sys-card-actions">
-        <button class="btn btn-sm" id="sys-refresh-network-btn" type="button">⟳ 刷新网络信息</button>
+        <button class="btn btn-sm" id="sys-refresh-network-btn" type="button">
+          ⟳ 刷新网络信息
+        </button>
       </div>
-      <div class="sys-qr-wrap" id="sys-qr-wrap">
+      <div class="sys-qr-wrap" id="sys-qr-wrap" aria-hidden="true">
         <!-- QR SVG 动态插入 -->
       </div>
       <p class="sys-qr-hint" id="sys-qr-url"></p>
     </section>
 
     <!-- 4. 日志卡片 -->
-    <section class="system-card" id="sys-card-logs">
+    <section class="system-card" id="sys-card-logs" aria-labelledby="sys-logs-title">
       <div class="system-card-head">
-        <h3>📜 最近日志</h3>
+        <h3 id="sys-logs-title"> 最近日志</h3>
         <span class="sys-log-file" id="sys-log-file"></span>
       </div>
-      <pre class="sys-log-viewer" id="sys-log-viewer">点击下方按钮加载日志…</pre>
+
+      <!-- 日志日期选择器 -->
+      <div class="sys-log-toolbar">
+        <input type="date" id="sys-log-date" class="sys-log-date-input" aria-label="选择日志日期" />
+        <select id="sys-log-file-list" class="sys-log-file-select" aria-label="选择日志文件">
+          <option value="">加载中...</option>
+        </select>
+      </div>
+
+      <pre class="sys-log-viewer" id="sys-log-viewer" role="log" aria-live="polite">点击下方按钮加载日志...</pre>
+
+      <!-- 日志内搜索 -->
+      <div class="sys-log-search" hidden>
+        <input type="text" id="sys-log-search-input" placeholder="搜索日志内容..." aria-label="搜索日志内容" />
+        <span class="sys-log-search-count" id="sys-log-search-count"></span>
+      </div>
+
       <div class="sys-card-actions">
-        <button class="btn btn-sm" id="sys-load-logs-btn" type="button">📄 加载日志</button>
+        <button class="btn btn-sm" id="sys-load-logs-btn" type="button">📥 加载日志</button>
+        <button class="btn btn-sm btn-outline" id="sys-load-all-logs-btn" type="button" hidden>📥 加载全部</button>
         <button class="btn btn-sm btn-outline" id="sys-refresh-logs-btn" type="button">⟳ 刷新</button>
+        <button class="btn btn-sm btn-outline" id="sys-log-search-btn" type="button" hidden>🔍 搜索</button>
       </div>
     </section>
   </div>

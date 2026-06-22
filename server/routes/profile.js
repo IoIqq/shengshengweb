@@ -17,6 +17,18 @@ const uploadLimiter = rateLimit({
   validate: { trustProxy: false, xForwardedForHeader: false },
 });
 
+// 修改密码的速率限制:5 分钟内最多 5 次尝试,降低爆破与撞库风险。
+const passwordChangeLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 分钟
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false },
+  handler: (req, res, _next, _options) => {
+    res.status(429).json({ error: '修改密码尝试过于频繁,请 5 分钟后再试。' });
+  },
+});
+
 // Multer configuration for avatar upload
 const AVATAR_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);
 const MAX_AVATAR_MB = 5;
@@ -105,7 +117,7 @@ router.patch('/', requireAuth, (req, res) => {
 });
 
 // POST /api/profile/password - Change password
-router.post('/password', requireAuth, (req, res) => {
+router.post('/password', passwordChangeLimiter, requireAuth, (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {

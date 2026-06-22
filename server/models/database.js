@@ -284,12 +284,17 @@ const SCHEMA_MIGRATIONS = [
   // settings 扩展（修复旧库缺失列）
   ['settings', 'created_at', "TEXT NOT NULL DEFAULT ''"],
   ['settings', 'updated_at', "TEXT NOT NULL DEFAULT ''"],
+  // media 扩展：内容哈希、传输态、原始文件名
+  ['media', 'file_hash', 'TEXT'],
+  ['media', 'transfer_state', "TEXT NOT NULL DEFAULT 'ready'"],
+  ['media', 'original_filename', "TEXT DEFAULT ''"],
 ];
 
 const SCHEMA_INDEXES = [
   ['sessions', ['expires_at']],
   ['media', ['review_state', 'created_at']],
   ['media', ['kind', 'created_at']],
+  ['media', ['file_hash']],
   ['activity', ['created_at']],
   ['todos', ['done', 'created_at']],
   ['registration_requests', ['status', 'created_at']],

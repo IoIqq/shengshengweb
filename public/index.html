@@ -2,8 +2,14 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="description" content="声声网络思政工作室工作网站，聚焦素材库、审片中心、待办事项、团队协作与系统备份。" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta
+      name="description"
+      content="声声网络思政工作室工作网站，聚焦素材库、审片中心、待办事项、团队协作与系统备份。"
+    />
     <meta name="theme-color" content="#fbfbfa" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -12,7 +18,10 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content="声声网络思政工作室 · 工作网站" />
-    <meta property="og:description" content="聚焦素材库、审片中心、待办事项、团队协作与系统备份的工作网站。" />
+    <meta
+      property="og:description"
+      content="聚焦素材库、审片中心、待办事项、团队协作与系统备份的工作网站。"
+    />
     <meta property="og:image" content="favicon.svg" />
     <meta property="og:locale" content="zh_CN" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -22,6 +31,22 @@
     <link rel="apple-touch-icon" href="favicon.svg" />
 
     <link rel="stylesheet" href="css/main.css?v=__ASSET_VERSION__" />
+    <script>
+      // 主题反闪烁：CSS 解析前先把保存的偏好写到 <html data-theme>
+      // 与 public/js/modules/preferences.js 共享 localStorage key
+      (function () {
+        try {
+          var raw = localStorage.getItem('shengsheng.workspace.preferences');
+          var pref = raw ? JSON.parse(raw) : null;
+          var theme = pref && pref.theme ? pref.theme : 'auto';
+          var resolved = theme === 'auto'
+            ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : theme;
+          if (resolved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+          else document.documentElement.setAttribute('data-theme', 'light');
+        } catch (e) { /* localStorage 不可用时按浅色降级 */ }
+      })();
+    </script>
   </head>
   <body class="workspace-body">
     <a class="skip-link" href="#content">跳到主要内容</a>
@@ -34,26 +59,78 @@
         </div>
         <button class="showcase-login-btn" id="showcase-to-login" type="button">
           工作台入口
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
         </button>
       </nav>
 
       <section class="showcase-hero">
-        <p class="eyebrow">CREATIVE SHOWCASE</p>
-        <h1>光影<em>之间</em></h1>
-        <p class="showcase-hero-sub">我们用镜头记录每一帧思想。这里收录工作室的影像与图片作品，欢迎走进我们的创作世界。</p>
-        <div class="showcase-hero-meta">
-          <span class="count" id="showcase-count">00</span>
-          <span>件作品</span>
-          <span class="rule" aria-hidden="true"></span>
-          <span>VOICE STUDIO</span>
+        <div class="showcase-hero-text">
+          <p class="eyebrow">CREATIVE SHOWCASE</p>
+          <h1>光影<span class="hero-accent">之间</span></h1>
+          <p class="showcase-hero-sub">
+            我们用镜头记录每一帧思想。这里收录工作室的影像与图片作品，欢迎走进我们的创作世界。
+          </p>
+          <div class="showcase-hero-meta">
+            <span class="count" id="showcase-count">00</span>
+            <span>件作品</span>
+            <span class="rule" aria-hidden="true"></span>
+            <span>VOICE STUDIO</span>
+          </div>
+        </div>
+        <div class="showcase-hero-collage" id="showcase-hero-collage" aria-hidden="true">
+          <div class="hero-collage-frame hero-collage-frame--a">
+            <span class="hero-collage-tag">No.001</span>
+          </div>
+          <div class="hero-collage-frame hero-collage-frame--b">
+            <span class="hero-collage-tag">No.002</span>
+          </div>
+          <div class="hero-collage-frame hero-collage-frame--c">
+            <span class="hero-collage-tag">No.003</span>
+          </div>
         </div>
       </section>
 
       <div class="showcase-filters" id="showcase-filters" role="tablist" aria-label="作品分类">
-        <button class="showcase-filter-btn is-active" type="button" data-filter="all" role="tab" aria-selected="true">全部<span class="num" data-count="all">0</span></button>
-        <button class="showcase-filter-btn" type="button" data-filter="video" role="tab" aria-selected="false">影像<span class="num" data-count="video">0</span></button>
-        <button class="showcase-filter-btn" type="button" data-filter="photo" role="tab" aria-selected="false">图片<span class="num" data-count="photo">0</span></button>
+        <button
+          class="showcase-filter-btn is-active"
+          type="button"
+          data-filter="all"
+          role="tab"
+          aria-selected="true"
+        >
+          全部<span class="num" data-count="all">0</span>
+        </button>
+        <button
+          class="showcase-filter-btn"
+          type="button"
+          data-filter="video"
+          role="tab"
+          aria-selected="false"
+        >
+          影像<span class="num" data-count="video">0</span>
+        </button>
+        <button
+          class="showcase-filter-btn"
+          type="button"
+          data-filter="photo"
+          role="tab"
+          aria-selected="false"
+        >
+          图片<span class="num" data-count="photo">0</span>
+        </button>
       </div>
 
       <main class="showcase-main" id="showcase-main">
@@ -61,30 +138,139 @@
           <div class="showcase-loading">正在载入作品…</div>
         </div>
         <div class="showcase-empty hidden" id="showcase-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
           <p>作品即将上映</p>
           <span>素材通过审核后将在此展出</span>
         </div>
       </main>
 
       <footer class="showcase-footer">
-        <p>© 声声网络思政工作室 · Voice Studio</p>
+        <p class="showcase-footer-copy">© 声声网络思政工作室 · Voice Studio</p>
+        <p class="showcase-footer-motto" aria-hidden="true">声 · 影 · 思</p>
+        <button
+          type="button"
+          class="showcase-footer-top"
+          id="showcase-back-to-top"
+          aria-label="回到页面顶部"
+        >
+          回到顶部
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
       </footer>
 
       <!-- lightbox -->
-      <div class="showcase-lightbox hidden" id="showcase-lightbox">
-        <button class="showcase-lightbox-close" id="showcase-lightbox-close" type="button" aria-label="关闭">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <div
+        class="showcase-lightbox hidden"
+        id="showcase-lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="showcase-lightbox-title"
+        tabindex="-1"
+      >
+        <button
+          class="showcase-lightbox-close"
+          id="showcase-lightbox-close"
+          type="button"
+          aria-label="关闭"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
-        <button class="showcase-lightbox-nav showcase-lightbox-prev" id="showcase-lightbox-prev" type="button" aria-label="上一件">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <button
+          class="showcase-lightbox-nav showcase-lightbox-prev"
+          id="showcase-lightbox-prev"
+          type="button"
+          aria-label="上一件"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
         </button>
-        <button class="showcase-lightbox-nav showcase-lightbox-next" id="showcase-lightbox-next" type="button" aria-label="下一件">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <button
+          class="showcase-lightbox-nav showcase-lightbox-next"
+          id="showcase-lightbox-next"
+          type="button"
+          aria-label="下一件"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </button>
-        <img class="showcase-lightbox-img" id="showcase-lightbox-img" src="" alt="" />
-        <video class="showcase-lightbox-video hidden" id="showcase-lightbox-video" controls playsinline></video>
-        <p class="showcase-lightbox-title" id="showcase-lightbox-title"></p>
+        <div class="showcase-lightbox-stage" id="showcase-lightbox-stage">
+          <img class="showcase-lightbox-img" id="showcase-lightbox-img" src="" alt="" />
+          <video
+            class="showcase-lightbox-video hidden"
+            id="showcase-lightbox-video"
+            controls
+            playsinline
+            preload="metadata"
+          ></video>
+        </div>
+        <div class="showcase-lightbox-meta">
+          <p class="showcase-lightbox-title" id="showcase-lightbox-title"></p>
+          <p class="showcase-lightbox-sub" id="showcase-lightbox-sub"></p>
+          <span
+            class="showcase-lightbox-counter"
+            id="showcase-lightbox-counter"
+            aria-live="polite"
+          ></span>
+        </div>
       </div>
     </div>
 
@@ -122,9 +308,30 @@
             <span>账号</span>
             <div class="input-wrap">
               <span class="input-icon" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
               </span>
-              <input id="login-username" name="username" type="text" autocomplete="username" placeholder="请输入账号" required autocapitalize="off" spellcheck="false" />
+              <input
+                id="login-username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                placeholder="请输入账号"
+                required
+                autocapitalize="off"
+                spellcheck="false"
+              />
             </div>
           </label>
 
@@ -132,12 +339,68 @@
             <span>密码</span>
             <div class="input-wrap">
               <span class="input-icon" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
               </span>
-              <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required />
-              <button type="button" class="input-action" id="login-password-toggle" aria-label="显示密码" aria-pressed="false" tabindex="-1">
-                <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="请输入密码"
+                required
+              />
+              <button
+                type="button"
+                class="input-action"
+                id="login-password-toggle"
+                aria-label="显示密码"
+                aria-pressed="false"
+                tabindex="-1"
+              >
+                <svg
+                  class="icon-eye"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg
+                  class="icon-eye-off"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
               </button>
             </div>
             <small class="caps-lock-hint" id="caps-lock-hint" hidden>大写锁定已开启</small>
@@ -147,7 +410,18 @@
             <label class="login-remember">
               <input type="checkbox" id="login-remember" name="remember" />
               <span class="login-remember-box" aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </span>
               <span class="login-remember-text">记住账号</span>
             </label>
@@ -158,13 +432,19 @@
               <span class="login-submit-text">进入工作台</span>
               <span class="login-submit-spinner" aria-hidden="true"></span>
             </button>
-            <button class="ghost-btn login-guest" id="login-guest" type="button">
-              访客进入
-            </button>
-            <button class="ghost-btn" id="registration-toggle" type="button" aria-expanded="false" aria-controls="registration-form">
+            <button class="ghost-btn login-guest" id="login-guest" type="button">访客进入</button>
+            <button
+              class="ghost-btn"
+              id="registration-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="registration-form"
+            >
               申请账号
             </button>
-            <span class="login-hint">管理员和编辑使用账号密码登录；访客可直接进入只读工作台，账号申请需等待管理员审核。</span>
+            <span class="login-hint"
+              >管理员和编辑使用账号密码登录；访客可直接进入只读工作台，账号申请需等待管理员审核。</span
+            >
           </div>
 
           <p class="form-message" id="login-message" aria-live="polite"></p>
@@ -177,23 +457,50 @@
           </div>
           <label class="field login-field">
             <span>申请账号</span>
-            <input name="username" type="text" autocomplete="username" placeholder="3-32 位字母、数字或 _.-" required minlength="3" maxlength="32" autocapitalize="off" spellcheck="false" />
+            <input
+              name="username"
+              type="text"
+              autocomplete="username"
+              placeholder="3-32 位字母、数字或 _.-"
+              required
+              minlength="3"
+              maxlength="32"
+              autocapitalize="off"
+              spellcheck="false"
+            />
           </label>
           <label class="field login-field">
             <span>显示名称</span>
-            <input name="displayName" type="text" placeholder="例如：张三" required maxlength="50" />
+            <input
+              name="displayName"
+              type="text"
+              placeholder="例如：张三"
+              required
+              maxlength="50"
+            />
           </label>
           <label class="field login-field">
             <span>联系方式</span>
-            <input name="contact" type="text" placeholder="手机号 / 微信 / 邮箱" required maxlength="100" />
+            <input
+              name="contact"
+              type="text"
+              placeholder="手机号 / 微信 / 邮箱"
+              required
+              maxlength="100"
+            />
           </label>
           <label class="field login-field">
             <span>申请说明</span>
-            <textarea name="reason" rows="3" placeholder="简单说明加入原因或所属部门" required maxlength="300"></textarea>
+            <textarea
+              name="reason"
+              rows="3"
+              placeholder="简单说明加入原因或所属部门"
+              required
+              maxlength="300"
+            ></textarea>
           </label>
           <button class="primary-btn" id="registration-submit" type="button">提交申请</button>
         </div>
-
       </section>
     </div>
 
@@ -202,54 +509,99 @@
 
     <!-- 浮动留言墙按钮 -->
     <button class="wish-fab" id="wish-fab" type="button" aria-label="打开留言墙" hidden>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     </button>
 
     <!-- 留言墙侧边抽屉 -->
-    <div class="wish-drawer" id="wish-modal" role="dialog" aria-modal="true" aria-label="留言墙" hidden>
+    <div
+      class="wish-drawer"
+      id="wish-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="留言墙"
+      hidden
+    >
       <div class="wish-drawer-overlay" id="wish-modal-overlay"></div>
       <div class="wish-drawer-content">
         <div class="wish-drawer-header">
           <h2>
-            <svg class="wish-drawer-title-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            <svg
+              class="wish-drawer-title-icon"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+              />
             </svg>
             留言墙
           </h2>
           <button class="wish-drawer-close" id="wish-modal-close" type="button" aria-label="关闭">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
-        
+
         <form class="wish-form" id="wish-form">
           <label class="field">
             <span>留言内容</span>
-            <textarea name="content" placeholder="写下你的想法..." maxlength="200" rows="3" required></textarea>
+            <textarea
+              name="content"
+              placeholder="写下你的想法..."
+              maxlength="200"
+              rows="3"
+              required
+            ></textarea>
             <small class="char-count"><span id="wish-char-count">0</span>/200</small>
           </label>
-          
+
           <div class="wish-form-row">
             <label class="field">
               <span>心情标签</span>
               <input name="mood" type="text" placeholder="例如：开心、期待" maxlength="10" />
             </label>
-            
+
             <label class="wish-anonymous">
               <input type="checkbox" name="anonymous" id="wish-anonymous" />
               <span class="wish-checkbox-box"></span>
               <span class="wish-checkbox-text">匿名发布</span>
             </label>
           </div>
-          
+
           <button class="primary-btn" type="submit">
             <span>发布留言</span>
           </button>
         </form>
-        
+
         <div class="wish-list-section">
           <h3>所有留言</h3>
           <div class="wish-list" id="wish-list"></div>
@@ -260,20 +612,47 @@
     <div class="workspace-shell hidden" id="workspace-shell">
       <header class="topbar" id="topbar">
         <div class="topbar-shell">
-          <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="mobile-nav-drawer" hidden>
+          <button
+            class="hamburger-btn"
+            id="hamburger-btn"
+            type="button"
+            aria-label="打开导航菜单"
+            aria-expanded="false"
+            aria-controls="mobile-nav-drawer"
+            hidden
+          >
             <span></span><span></span><span></span>
           </button>
           <div class="topbar-brand">
             <div class="brand-icon" aria-hidden="true">
               <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                <rect width="36" height="36" rx="12" fill="url(#brand-gradient)"/>
-                <path d="M18 12c-3.5 0-6 2.5-6 5.5 0 1.5.5 2.8 1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-                <path d="M18 12c3.5 0 6 2.5 6 5.5 0 1.5-.5 2.8-1.5 3.8" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-                <circle cx="18" cy="17.5" r="1.5" fill="white"/>
+                <rect width="36" height="36" rx="12" fill="url(#brand-gradient)" />
+                <path
+                  d="M18 12c-3.5 0-6 2.5-6 5.5 0 1.5.5 2.8 1.5 3.8"
+                  stroke="white"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  opacity="0.9"
+                />
+                <path
+                  d="M18 12c3.5 0 6 2.5 6 5.5 0 1.5-.5 2.8-1.5 3.8"
+                  stroke="white"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  opacity="0.9"
+                />
+                <circle cx="18" cy="17.5" r="1.5" fill="white" />
                 <defs>
-                  <linearGradient id="brand-gradient" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#8a918a"/>
-                    <stop offset="100%" stop-color="#6a706a"/>
+                  <linearGradient
+                    id="brand-gradient"
+                    x1="0"
+                    y1="0"
+                    x2="36"
+                    y2="36"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0%" stop-color="#8a918a" />
+                    <stop offset="100%" stop-color="#6a706a" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -286,7 +665,9 @@
 
           <nav class="topnav" id="topnav" aria-label="工作区导航">
             <span class="nav-indicator" id="nav-indicator" aria-hidden="true"></span>
-            <button class="nav-chip is-active" data-view="overview" type="button">工作台概览</button>
+            <button class="nav-chip is-active" data-view="overview" type="button">
+              工作台概览
+            </button>
             <button class="nav-chip" data-view="media" type="button">素材库</button>
             <button class="nav-chip" data-view="review" type="button">审片中心</button>
             <button class="nav-chip" data-view="todo" type="button">待办事项</button>
@@ -294,26 +675,60 @@
             <button class="nav-chip" data-view="borrow" type="button">借出申请</button>
             <button class="nav-chip" data-view="team" type="button">团队协作</button>
             <button class="nav-chip" data-view="topics" type="button">选题库</button>
-            <button class="nav-chip" data-view="settings" type="button" id="settings-nav">系统设置</button>
+            <button class="nav-chip" data-view="settings" type="button" id="settings-nav">
+              系统设置
+            </button>
             <button class="nav-chip" data-view="admin" type="button">系统管理</button>
           </nav>
 
           <div class="topbar-actions">
             <button class="ghost-btn topbar-sync" id="refresh-btn" type="button">同步</button>
             <button class="topbar-cta" id="logout-btn" type="button">退出</button>
-            <button class="avatar-btn" id="user-avatar-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="打开账户面板">
-              <span class="avatar-initials" id="user-avatar-initials">工</span>
-              <img class="avatar-img" id="user-avatar-image" alt="" hidden />
+            <button
+              class="avatar-btn"
+              id="user-avatar-btn"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-label="打开账户面板"
+            >
+              <span class="avatar-frame">
+                <span class="avatar-initials" id="user-avatar-initials">工</span>
+                <img class="avatar-img" id="user-avatar-image" alt="" hidden />
+              </span>
               <span class="avatar-tooltip" id="avatar-tooltip" hidden></span>
             </button>
           </div>
         </div>
       </header>
 
-      <div class="mobile-nav-drawer" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="主导航" hidden>
+      <!-- 移动端悬浮汉堡按钮（topbar 隐藏时显示） -->
+      <button class="mobile-fab" id="mobile-fab" type="button" aria-label="打开导航">
+        <div class="hamburger-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+
+      <div
+        class="mobile-nav-drawer"
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="主导航"
+        hidden
+      >
         <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
         <nav class="mobile-nav-content" id="mobile-nav-content" aria-label="移动端导航">
-          <button class="mobile-nav-close" id="mobile-nav-close" type="button" aria-label="关闭导航">×</button>
+          <button
+            class="mobile-nav-close"
+            id="mobile-nav-close"
+            type="button"
+            aria-label="关闭导航"
+          >
+            ×
+          </button>
           <div class="mobile-nav-items"></div>
         </nav>
       </div>
@@ -321,113 +736,217 @@
       <!-- 移动端底部 Tab 导航栏 -->
       <nav class="mobile-tab-bar" id="mobile-tab-bar" aria-label="快捷导航">
         <button class="tab-item is-active" data-view="overview" type="button">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M2 8h16M7 8v9" stroke="currentColor" stroke-width="1.6"/>
+          <svg
+            class="tab-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect
+              x="2"
+              y="3"
+              width="16"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <path d="M2 8h16M7 8v9" stroke="currentColor" stroke-width="1.6" />
           </svg>
           <span class="tab-label">概览</span>
         </button>
         <button class="tab-item" data-view="media" type="button">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
-            <circle cx="6.5" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M2 14l4-4 3 3 3-4 6 5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <svg
+            class="tab-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect
+              x="2"
+              y="3"
+              width="16"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <circle cx="6.5" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.2" />
+            <path
+              d="M2 14l4-4 3 3 3-4 6 5"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            />
           </svg>
           <span class="tab-label">素材</span>
         </button>
         <button class="tab-item" data-view="todo" type="button">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M6 10l2.5 2.5L14 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            class="tab-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect
+              x="3"
+              y="3"
+              width="14"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <path
+              d="M6 10l2.5 2.5L14 7"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span class="tab-label">待办</span>
         </button>
         <button class="tab-item" id="tab-more-btn" type="button">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
-            <circle cx="4.5" cy="10" r="1.5" fill="currentColor"/>
-            <circle cx="15.5" cy="10" r="1.5" fill="currentColor"/>
+          <svg
+            class="tab-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+            <circle cx="4.5" cy="10" r="1.5" fill="currentColor" />
+            <circle cx="15.5" cy="10" r="1.5" fill="currentColor" />
           </svg>
           <span class="tab-label">更多</span>
         </button>
       </nav>
 
-      <div class="profile-popover" id="profile-popover" role="dialog" aria-modal="false" aria-label="账户详情" hidden>
+      <div
+        class="profile-popover"
+        id="profile-popover"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="profile-preview-name"
+        aria-label="账户详情"
+        hidden
+      >
         <div class="profile-popover-inner">
           <div class="profile-popover-head">
             <label class="profile-avatar-large" id="profile-avatar-trigger" title="点击更换头像">
               <span id="profile-avatar-preview">工</span>
+              <span id="profile-avatar-initials" hidden></span>
               <img id="profile-avatar-image" alt="" hidden />
-              <span class="profile-status-dot" id="profile-status-dot" aria-label="在线"></span>
+              <span class="profile-status-dot" id="profile-status-dot" aria-label="在线状态" hidden></span>
               <span class="avatar-overlay">更换头像</span>
-              <input id="profile-avatar-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+              <span class="avatar-uploading-spinner" aria-hidden="true"></span>
+              <input
+                id="profile-avatar-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                aria-label="选择头像图片"
+                hidden
+              />
             </label>
             <div class="profile-head-info">
               <strong id="profile-preview-name">-</strong>
               <span id="profile-preview-signature">-</span>
               <span class="profile-role-badge" id="profile-role-badge">-</span>
             </div>
-            <button class="close-btn" id="profile-close" type="button">关闭</button>
+            <button class="profile-close-icon" id="profile-close" type="button" aria-label="关闭">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+            </button>
           </div>
 
           <section class="profile-summary" id="profile-summary" aria-label="个人活动概要">
             <button class="profile-summary-card" data-jump="todo" type="button">
+              <svg class="summary-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
               <strong id="profile-summary-todos">0</strong>
               <span>今日待办</span>
             </button>
             <button class="profile-summary-card" data-jump="borrow" type="button">
+              <svg class="summary-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
               <strong id="profile-summary-borrow">0</strong>
               <span>借出设备</span>
             </button>
             <button class="profile-summary-card" data-jump="overview" type="button">
+              <svg class="summary-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               <strong id="profile-summary-active">0</strong>
               <span>本周活跃</span>
             </button>
           </section>
 
-          <p class="profile-feedback" id="profile-feedback" role="status" aria-live="polite" hidden></p>
+          <p
+            class="profile-feedback"
+            id="profile-feedback"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
 
-          <form class="profile-form" id="profile-form">
+          <!--
+            个人信息 + 偏好设置 表单（独立 form：避免在改密字段按 Enter 误触发资料保存）
+          -->
+          <form class="profile-form" id="profile-info-form" novalidate>
             <section class="profile-section">
               <p class="profile-section-title">个人信息</p>
               <label class="field">
                 <span>显示名称</span>
-                <input id="profile-display-name" name="displayName" type="text" autocomplete="nickname" placeholder="留空则使用登录账号" />
+                <input
+                  id="profile-display-name"
+                  name="displayName"
+                  type="text"
+                  autocomplete="nickname"
+                  placeholder="留空则使用登录账号"
+                />
               </label>
               <label class="field">
                 <span>个人签名</span>
-                <input id="profile-signature" name="signature" type="text" placeholder="一句简短说明" />
+                <input
+                  id="profile-signature"
+                  name="signature"
+                  type="text"
+                  maxlength="60"
+                  placeholder="一句简短说明"
+                />
+                <small class="char-counter" id="profile-signature-counter" aria-live="off">0/60</small>
               </label>
               <label class="field">
                 <span>手机号</span>
-                <input id="profile-phone" name="phone" type="tel" placeholder="例如：138****1234" />
+                <input
+                  id="profile-phone"
+                  name="phone"
+                  type="tel"
+                  pattern="^1[3-9]\d{9}$"
+                  inputmode="numeric"
+                  autocomplete="tel"
+                  placeholder="例如：138****1234"
+                />
               </label>
               <label class="field">
                 <span>个人简介</span>
-                <textarea id="profile-bio" name="bio" rows="2" placeholder="简单介绍一下自己..."></textarea>
+                <textarea
+                  id="profile-bio"
+                  name="bio"
+                  rows="2"
+                  maxlength="200"
+                  placeholder="简单介绍一下自己..."
+                ></textarea>
+                <small class="char-counter" id="profile-bio-counter" aria-live="off">0/200</small>
               </label>
               <div class="profile-actions">
-                <button class="primary-btn" id="profile-save-btn" type="button">保存资料</button>
-              </div>
-            </section>
-
-            <section class="profile-section">
-              <p class="profile-section-title">账号安全</p>
-              <label class="field">
-                <span>当前密码</span>
-                <input id="profile-pwd-old" type="password" autocomplete="current-password" placeholder="验证身份" />
-              </label>
-              <label class="field">
-                <span>新密码</span>
-                <input id="profile-pwd-new" type="password" autocomplete="new-password" placeholder="6-100 个字符" />
-              </label>
-              <label class="field">
-                <span>确认新密码</span>
-                <input id="profile-pwd-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
-              </label>
-              <p class="profile-pwd-hint" id="profile-pwd-hint" hidden></p>
-              <div class="profile-actions">
-                <button class="ghost-btn" id="profile-pwd-btn" type="button">修改密码</button>
+                <button class="primary-btn" id="profile-save-btn" type="submit">
+                  <span class="btn-label">保存资料</span>
+                  <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
               </div>
             </section>
 
@@ -453,6 +972,50 @@
               </div>
             </div>
           </form>
+
+          <!--
+            账号安全 表单（独立 form：单独 submit，与资料表单互不干扰）
+          -->
+          <form class="profile-form" id="profile-pwd-form" novalidate>
+            <section class="profile-section">
+              <p class="profile-section-title">账号安全</p>
+              <label class="field">
+                <span>当前密码</span>
+                <input
+                  id="profile-pwd-old"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="验证身份"
+                />
+              </label>
+              <label class="field">
+                <span>新密码</span>
+                <input
+                  id="profile-pwd-new"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  placeholder="6-100 个字符"
+                />
+              </label>
+              <label class="field">
+                <span>确认新密码</span>
+                <input
+                  id="profile-pwd-confirm"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="再次输入新密码"
+                />
+              </label>
+              <p class="profile-pwd-hint" id="profile-pwd-hint" hidden></p>
+              <div class="profile-actions">
+                <button class="ghost-btn" id="profile-pwd-btn" type="submit">
+                  <span class="btn-label">修改密码</span>
+                  <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
+              </div>
+            </section>
+          </form>
         </div>
       </div>
 
@@ -468,15 +1031,77 @@
       <div class="upload-dialog" role="dialog" aria-modal="true" aria-label="上传素材">
         <div class="upload-dialog-head">
           <h3>上传素材</h3>
-          <button class="upload-dialog-close" id="upload-dialog-close" type="button" aria-label="关闭上传对话框">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <button
+            class="upload-dialog-close"
+            id="upload-dialog-close"
+            type="button"
+            aria-label="关闭上传对话框"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
+        <div class="upload-target" aria-label="选择目标文件夹与设备">
+          <div class="upload-target-mode" role="radiogroup" aria-label="目标文件夹">
+            <label class="radio-chip"><input type="radio" name="upload-target-mode" value="new" checked> 新建文件夹</label>
+            <label class="radio-chip"><input type="radio" name="upload-target-mode" value="existing"> 选择已有</label>
+          </div>
+          <div class="upload-target-new" id="upload-target-new">
+            <label class="field">
+              <span>日期</span>
+              <input id="upload-event-date" type="date" />
+            </label>
+            <label class="field">
+              <span>活动名称</span>
+              <input id="upload-event-name" type="text" placeholder="如：物流运动会" autocomplete="off" />
+            </label>
+            <small class="upload-folder-preview" id="upload-folder-preview">将创建：media/…/…</small>
+          </div>
+          <div class="upload-target-existing" id="upload-target-existing" hidden>
+            <label class="field">
+              <span>已有文件夹</span>
+              <select id="upload-existing-folder"><option value="">加载中…</option></select>
+            </label>
+          </div>
+          <label class="field">
+            <span>拍摄设备</span>
+            <select id="upload-device-select"><option value="">加载中…</option></select>
+          </label>
+        </div>
         <div class="upload-dropzone" id="upload-dropzone">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
           <p>拖拽文件到此处，或点击选择文件</p>
-          <small>支持 JPG、PNG、GIF、WebP、SVG、MP4、WebM、MOV（单文件最大 200MB）</small>
-          <input type="file" id="upload-file-input" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,video/mp4,video/webm,video/quicktime,video/ogg" multiple hidden />
+          <small>支持 JPG、PNG、GIF、WebP、SVG、MP4、WebM、MOV（单文件上限可配置，默认 2GB）</small>
+          <input
+            type="file"
+            id="upload-file-input"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,video/mp4,video/webm,video/quicktime,video/ogg"
+            multiple
+            hidden
+          />
         </div>
         <div class="upload-queue" id="upload-queue"></div>
         <div class="upload-progress" id="upload-progress" hidden>
@@ -485,7 +1110,9 @@
         </div>
         <div class="upload-dialog-actions">
           <button class="ghost-btn" id="upload-cancel-btn" type="button">取消</button>
-          <button class="primary-btn" id="upload-confirm-btn" type="button" disabled>确认上传</button>
+          <button class="primary-btn" id="upload-confirm-btn" type="button" disabled>
+            确认上传
+          </button>
         </div>
       </div>
     </div>
@@ -504,11 +1131,15 @@
         if (isDev) {
           // 开发机：清掉已注册的 SW 与缓存，避免旧版资源挡住代码改动
           navigator.serviceWorker.getRegistrations().then(function (regs) {
-            regs.forEach(function (reg) { reg.unregister(); });
+            regs.forEach(function (reg) {
+              reg.unregister();
+            });
           });
           if (window.caches && caches.keys) {
             caches.keys().then(function (names) {
-              names.forEach(function (n) { caches.delete(n); });
+              names.forEach(function (n) {
+                caches.delete(n);
+              });
             });
           }
           console.log('[dev] Service Worker disabled on ' + host);
@@ -522,9 +1153,14 @@
           window.location.reload();
         });
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('service-worker.js?v=__ASSET_VERSION__')
-            .then(function () { console.log('Service Worker 注册成功'); })
-            .catch(function (err) { console.log('Service Worker 注册失败:', err); });
+          navigator.serviceWorker
+            .register('service-worker.js?v=__ASSET_VERSION__')
+            .then(function () {
+              console.log('Service Worker 注册成功');
+            })
+            .catch(function (err) {
+              console.log('Service Worker 注册失败:', err);
+            });
         });
       })();
     </script>

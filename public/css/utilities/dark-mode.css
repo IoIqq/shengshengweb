@@ -1,12 +1,89 @@
 /*
  * Utility: preference overrides
- * 当前 UI 以白色 Studio OS 为主，不再随系统暗色模式自动反转工作台主题。
+ * 工作台主题以白色 Studio OS 为默认；用户在「设置 → 偏好」里可显式切深色。
+ *   - 自动模式：跟随 prefers-color-scheme，由 settings 模块往 <html> 写 data-theme
+ *   - 浅色 / 深色：直接写 data-theme="light" / "dark"
+ * 这里只在 [data-theme="dark"] 选区下重写 base/variables.css 的色彩 token。
  */
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: light;
   }
+}
+
+/* —— 显式深色主题（由偏好设置驱动） —— */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* 表面与文字 */
+  --canvas: #14171b;
+  --canvas-soft: #181c21;
+  --surface: rgba(28, 32, 38, 0.94);
+  --surface-strong: #1d2127;
+  --surface-soft: #1b1f24;
+  --surface-muted: #232830;
+  --text: #e8e9eb;
+  --text-soft: #b9bcc1;
+  --text-muted: #828790;
+  --text-faint: #5d626b;
+  --line: rgba(232, 233, 235, 0.08);
+  --line-strong: rgba(232, 233, 235, 0.16);
+  --accent: #9aa1aa;
+  --accent-soft: rgba(154, 161, 170, 0.14);
+  --accent-line: rgba(154, 161, 170, 0.28);
+
+  /* 兼容语义令牌 */
+  --bg: #14171b;
+  --success: #6fa687;
+  --warning: #c2a065;
+  --danger: #c87979;
+
+  /* 品牌强调 */
+  --brand: #9aa1aa;
+  --brand-strong: #c0c4ca;
+  --brand-soft: rgba(154, 161, 170, 0.18);
+  --brand-softer: rgba(154, 161, 170, 0.08);
+  --brand-line: rgba(154, 161, 170, 0.32);
+  --brand-line-strong: rgba(154, 161, 170, 0.48);
+
+  /* 渐变文字 */
+  --gradient-text-start: #e8e9eb;
+  --gradient-text-end: #b9bcc1;
+  --gradient-success-start: #6fa687;
+  --gradient-success-end: #547a64;
+  --gradient-warning-start: #c2a065;
+  --gradient-warning-end: #8e7848;
+
+  /* 表面渐变 */
+  --surface-gradient: linear-gradient(135deg, rgba(28, 32, 38, 0.96), rgba(20, 23, 27, 0.92));
+  --surface-gradient-soft: linear-gradient(180deg, rgba(28, 32, 38, 0.96), rgba(35, 40, 48, 0.88));
+
+  /* 工作台主题 */
+  --topbar-bg: rgba(28, 32, 38, 0.7);
+  --topbar-border: rgba(232, 233, 235, 0.1);
+  --topbar-shadow: 0 18px 50px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --nav-active-bg: rgba(154, 161, 170, 0.18);
+  --nav-active-text: #d6d9de;
+  --panel-bg: rgba(28, 32, 38, 0.92);
+  --panel-border: var(--line);
+  --panel-shadow: 0 22px 56px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --card-bg: #1d2127;
+  --card-border: var(--line);
+  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  --hero-bg:
+    linear-gradient(135deg, rgba(28, 32, 38, 0.94), rgba(20, 23, 27, 0.78)),
+    linear-gradient(155deg, #1d2127 0%, #181c21 44%, #14171b 100%);
+
+  /* 阴影 */
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.36);
+  --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.28);
+  --shadow-strong: 0 24px 64px rgba(0, 0, 0, 0.48);
+  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* 兼容令牌 */
+  --accent-blue: var(--brand);
+  --accent-blue-hover: var(--brand-strong);
 }
 
 /* High Contrast Mode */
