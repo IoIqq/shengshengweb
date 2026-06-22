@@ -1,6 +1,6 @@
 {
   "name": "shengsheng-ideology-studio",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "声声网络思政工作室网站，支持素材库、审片、待办、登录后台和服务器照片同步。",
   "main": "server/server-new.js",
   "engines": {
