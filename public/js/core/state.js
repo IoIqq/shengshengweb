@@ -32,6 +32,7 @@ export const state = {
   // 借出相关
   borrowFilter: 'all',
   borrowSearch: '',
+  borrowViewMode: 'table',
   borrowCatalog: [],
   borrowItems: [],
 
@@ -106,6 +107,7 @@ export function resetState() {
   state.deviceEditingId = null;
   state.borrowFilter = 'all';
   state.borrowSearch = '';
+  state.borrowViewMode = 'table';
   state.teamFilter = 'all';
   state.teamSearch = '';
   state.teamSort = 'name';

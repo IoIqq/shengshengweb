@@ -6,13 +6,22 @@ import { Toast } from '../ui/toast.js';
 
 let countdownTimer = null;
 let allFirewallRules = [];
+let blockedIps = new Set();
+let lastArpTable = [];
+let lastOnlineIps = new Set();
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+function isValidIpv4(ip) {
+  const m = String(ip || '').match(IPV4_RE);
+  return !!m && m.slice(1).every((seg) => Number(seg) >= 0 && Number(seg) <= 255);
+}
+
 export async function renderHost() {
-  await Promise.all([loadNetworkInfo(), loadFirewallRules(), loadLanClients(), loadDhcpStatus()]);
+  await Promise.all([loadNetworkInfo(), loadFirewallRules(), loadLanClients()]);
 }
 
 /** 解析 user-agent 为简短设备/浏览器描述 */
@@ -63,15 +72,9 @@ export async function loadLanClients() {
     if (arpTb) {
       // 标记 ARP 中也出现在在线用户里的 IP
       const onlineIPs = new Set(onlineUsers.map((u) => u.ipAddress).filter(Boolean));
-      arpTb.innerHTML = arpTable.length === 0
-        ? '<tr><td colspan="5" class="fb-empty">无 ARP 记录（可能需要先与其他设备通信）</td></tr>'
-        : arpTable.map((a) => `<tr${onlineIPs.has(a.ip) ? ' class="is-highlight"' : ''}>
-            <td class="host-cell-mono">${escapeHtml(a.ip)}</td>
-            <td class="host-cell-mono">${escapeHtml(a.mac)}</td>
-            <td>${escapeHtml(a.type)}</td>
-            <td class="host-cell-mono">${escapeHtml(a.interface || '—')}</td>
-            <td>${onlineIPs.has(a.ip) ? '<span class="svc-badge is-running">已登录</span>' : ''}</td>
-          </tr>`).join('');
+      lastArpTable = arpTable;
+      lastOnlineIps = onlineIPs;
+      renderArpRows();
     }
 
     // 活跃连接
@@ -91,6 +94,35 @@ export async function loadLanClients() {
     if (arpTb) arpTb.innerHTML = `<tr><td colspan="5" class="fb-empty">加载失败</td></tr>`;
     if (connTb) connTb.innerHTML = `<tr><td colspan="4" class="fb-empty">加载失败</td></tr>`;
   }
+}
+
+/** 渲染 ARP 表行（含访问控制：允许/拒绝 IP）。依赖 lastArpTable / lastOnlineIps / blockedIps */
+function renderArpRows() {
+  const arpTb = document.getElementById('host-arp-tbody');
+  if (!arpTb) return;
+  if (lastArpTable.length === 0) {
+    arpTb.innerHTML = '<tr><td colspan="5" class="fb-empty">无 ARP 记录（可能需要先与其他设备通信）</td></tr>';
+    return;
+  }
+  arpTb.innerHTML = lastArpTable.map((a) => {
+    const online = lastOnlineIps.has(a.ip);
+    const blocked = blockedIps.has(a.ip);
+    const valid = isValidIpv4(a.ip);
+    // 访问控制按钮：默认放行，可拉黑；已拉黑则显示"允许"以解封
+    let ctrl = '';
+    if (valid) {
+      ctrl = blocked
+        ? `<span class="host-fw-tag is-blocked">已封禁</span><button class="fb-item-action" data-fw-ip="${escapeHtml(a.ip)}" data-fw-action="unblock">允许</button>`
+        : `<button class="fb-item-action fb-action-danger" data-fw-ip="${escapeHtml(a.ip)}" data-fw-action="block">拒绝</button>`;
+    }
+    return `<tr${online ? ' class="is-highlight"' : ''}>
+      <td class="host-cell-mono">${escapeHtml(a.ip)}</td>
+      <td class="host-cell-mono">${escapeHtml(a.mac)}</td>
+      <td>${escapeHtml(a.type)}</td>
+      <td class="host-cell-mono">${escapeHtml(a.interface || '—')}</td>
+      <td class="host-arp-ctrl">${online ? '<span class="svc-badge is-running">已登录</span>' : ''}${ctrl}</td>
+    </tr>`;
+  }).join('');
 }
 
 export async function loadNetworkInfo() {
@@ -117,18 +149,20 @@ export async function loadNetworkInfo() {
 
 export async function loadFirewallRules() {
   const tbody = document.getElementById('host-fw-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="fb-empty">加载中…</td></tr>';
   try {
-    const { rules = [], note } = await requestJSON('/api/host/firewall');
+    const { rules = [], blockedIps: blocked = [], note } = await requestJSON('/api/host/firewall');
     allFirewallRules = rules;
+    blockedIps = new Set(blocked);
+    // 防火墙状态回来后刷新 ARP 表的访问控制按钮
+    renderArpRows();
+    if (!tbody) return;
     if (note) {
       tbody.innerHTML = `<tr><td colspan="6" class="fb-empty">${escapeHtml(note)}</td></tr>`;
       return;
     }
     renderFirewallRows(rules);
   } catch (error) {
-    tbody.innerHTML = `<tr><td colspan="6" class="fb-empty">加载失败：${escapeHtml(error.message || '')}</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="fb-empty">加载失败：${escapeHtml(error.message || '')}</td></tr>`;
   }
 }
 
@@ -193,7 +227,7 @@ export function bindHostEvents() {
   if (refreshBtn) refreshBtn.addEventListener('click', () => { loadNetworkInfo(); loadFirewallRules(); loadLanClients(); });
 
   const lanRefreshBtn = document.getElementById('host-lan-refresh-btn');
-  if (lanRefreshBtn) lanRefreshBtn.addEventListener('click', () => loadLanClients());
+  if (lanRefreshBtn) lanRefreshBtn.addEventListener('click', () => { loadLanClients(); loadFirewallRules(); });
 
   const shutdownBtn = document.getElementById('host-shutdown-btn');
   if (shutdownBtn) shutdownBtn.addEventListener('click', () => powerAction('shutdown'));
@@ -211,204 +245,31 @@ export function bindHostEvents() {
     });
   }
 
-  // DHCP 事件
-  const dhcpStart = document.getElementById('dhcp-start-btn');
-  if (dhcpStart) dhcpStart.addEventListener('click', dhcpToggle);
-  const dhcpStop = document.getElementById('dhcp-stop-btn');
-  if (dhcpStop) dhcpStop.addEventListener('click', dhcpToggle);
-  const dhcpSave = document.getElementById('dhcp-save-btn');
-  if (dhcpSave) dhcpSave.addEventListener('click', saveDhcpConfig);
-  const dhcpAdd = document.getElementById('dhcp-r-add-btn');
-  if (dhcpAdd) dhcpAdd.addEventListener('click', addDhcpReservation);
-  const dhcpDetect = document.getElementById('dhcp-detect-btn');
-  if (dhcpDetect) dhcpDetect.addEventListener('click', detectDhcp);
-
-  const dhcpRefresh = document.getElementById('host-lan-refresh-btn');
-  if (dhcpRefresh) dhcpRefresh.addEventListener('click', loadDhcpStatus);
-}
-
-// ========== DHCP ==========
-async function loadDhcpStatus() {
-  try {
-    const st = await requestJSON('/api/dhcp/status');
-    renderDhcpStatus(st);
-  } catch (error) {
-    Toast.show('获取 DHCP 状态失败', 'error');
-  }
-}
-
-function renderDhcpStatus(st) {
-  const badge = document.getElementById('dhcp-status-badge');
-  const startBtn = document.getElementById('dhcp-start-btn');
-  const stopBtn = document.getElementById('dhcp-stop-btn');
-  if (badge) {
-    badge.textContent = st.running ? '运行中' : '未运行';
-    badge.className = 'dhcp-status-badge ' + (st.running ? 'is-running' : '');
-  }
-  if (startBtn) startBtn.hidden = st.running;
-  if (stopBtn) stopBtn.hidden = !st.running;
-
-  const c = st.config || {};
-  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
-  set('dhcp-pool-start', c.poolStart);
-  set('dhcp-pool-end', c.poolEnd);
-  set('dhcp-netmask', c.netmask);
-  set('dhcp-gateway', c.gateway);
-  set('dhcp-dns1', c.dnsPrimary);
-  set('dhcp-dns2', c.dnsSecondary);
-  set('dhcp-lease', c.leaseHours);
-  set('dhcp-server-ip', c.serverIp || st.detectedIp);
-
-  // 绑定表
-  const reserveTb = document.getElementById('dhcp-reserve-tbody');
-  if (reserveTb) {
-    const rows = st.reservations || [];
-    reserveTb.innerHTML = rows.length === 0
-      ? '<tr><td colspan="5" class="fb-empty">无绑定</td></tr>'
-      : rows.map((r) => `<tr>
-          <td class="host-cell-mono">${escapeHtml(r.mac)}</td>
-          <td class="host-cell-mono">${escapeHtml(r.ip)}</td>
-          <td>${escapeHtml(r.hostname || '—')}</td>
-          <td>${escapeHtml(r.note || '—')}</td>
-          <td><button class="fb-item-action fb-action-danger" data-mac="${escapeHtml(r.mac)}" data-action="del-reserve">删除</button></td>
-        </tr>`).join('');
-    reserveTb.querySelectorAll('[data-action="del-reserve"]').forEach((btn) => {
-      btn.addEventListener('click', () => delDhcpReservation(btn.dataset.mac));
+  // ARP 表访问控制：事件委托到 tbody，处理"拒绝/允许"按钮
+  const arpTb = document.getElementById('host-arp-tbody');
+  if (arpTb) {
+    arpTb.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-fw-action]');
+      if (!btn) return;
+      firewallAction(btn.dataset.fwAction, btn.dataset.fwIp, btn);
     });
   }
-
-  // 租约表
-  const leaseTb = document.getElementById('dhcp-lease-tbody');
-  if (leaseTb) {
-    const leases = st.leases || [];
-    leaseTb.innerHTML = leases.length === 0
-      ? '<tr><td colspan="4" class="fb-empty">无活跃租约</td></tr>'
-      : leases.map((l) => `<tr>
-          <td class="host-cell-mono">${escapeHtml(l.ip)}</td>
-          <td class="host-cell-mono">${escapeHtml(l.mac || '—')}</td>
-          <td>${escapeHtml(l.hostname || '—')}</td>
-          <td><span class="svc-badge is-running">已分配</span></td>
-        </tr>`).join('');
-  }
 }
 
-async function dhcpToggle() {
-  const action = document.getElementById('dhcp-start-btn')?.hidden ? 'stop' : 'start';
-  if (action === 'start') {
-    // 启动前先检测网络中是否已有 DHCP 服务器（路由器）
-    const detectResult = document.getElementById('dhcp-detect-result');
-    if (detectResult) { detectResult.hidden = false; detectResult.textContent = '🔍 正在检测网络中的 DHCP 服务器…'; detectResult.className = 'dhcp-detect-result'; }
-    try {
-      const r = await requestJSON('/api/dhcp/detect', { method: 'POST', retry: false });
-      if (r.detected && !r.self) {
-        const serverList = (r.servers || []).map((s) => s.serverIp).filter(Boolean).join(', ');
-        if (detectResult) {
-          detectResult.className = 'dhcp-detect-result is-warn';
-          detectResult.textContent = `⚠ 检测到网络中已有 DHCP 服务器${serverList ? '（' + serverList + '）' : ''}。\n同时运行两个 DHCP 会冲突！\n仍要启动 NAS DHCP 吗？`;
-        }
-        if (!confirm('检测到网络中已有 DHCP 服务器（可能是路由器）。\n同时运行两个 DHCP 会导致 IP 冲突！\n\n仍要启动 NAS DHCP 吗？')) {
-          if (detectResult) detectResult.hidden = true;
-          return;
-        }
-      } else if (r.error) {
-        if (detectResult) {
-          detectResult.className = 'dhcp-detect-result';
-          detectResult.textContent = 'ℹ ' + r.error + '，跳过检测直接启动。';
-        }
-      } else if (!r.detected) {
-        if (detectResult) {
-          detectResult.className = 'dhcp-detect-result is-ok';
-          detectResult.textContent = '✓ 未检测到其他 DHCP 服务器，可以安全启动。';
-        }
-      }
-    } catch (_) { /* 检测失败不阻塞启动 */ }
-
-    if (!confirm('启动 DHCP 服务后，本机将为局域网中的设备自动分配 IP。\n\n请确认：\n1. 网络中没有其他 DHCP 服务器\n2. 本程序以管理员身份运行\n\n确定启动？')) return;
-  }
+// ========== 防火墙访问控制（默认放行，可拉黑 IP） ==========
+async function firewallAction(action, ip, btn) {
+  if (!isValidIpv4(ip)) { Toast.show('IP 地址不合法', 'error'); return; }
+  if (action === 'block' && !confirm(`拒绝 ${ip} 访问本机？\n将写入一条防火墙入站封禁规则，可随时解封。`)) return;
+  if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
   try {
-    await requestJSON(`/api/dhcp/${action}`, { method: 'POST', retry: false });
-    Toast.show(action === 'start' ? 'DHCP 服务已启动' : 'DHCP 服务已停止', 'success');
-    await loadDhcpStatus();
+    const data = await requestJSON(`/api/host/firewall/${action}`, { method: 'POST', body: { ip }, retry: false });
+    if (action === 'block') blockedIps.add(ip); else blockedIps.delete(ip);
+    Toast.show(data.message || '操作成功', 'success');
+    renderArpRows();
+    // 后台刷新完整防火墙规则列表（不阻塞 UI）
+    loadFirewallRules();
   } catch (error) {
     Toast.show(error.message || '操作失败', 'error');
-  }
-}
-
-async function detectDhcp() {
-  const result = document.getElementById('dhcp-detect-result');
-  const btn = document.getElementById('dhcp-detect-btn');
-  if (btn) { btn.disabled = true; }
-  if (result) { result.hidden = false; result.className = 'dhcp-detect-result'; result.textContent = '🔍 正在检测（3 秒）…'; }
-  try {
-    const r = await requestJSON('/api/dhcp/detect', { method: 'POST', retry: false });
-    if (result) {
-      if (r.error) {
-        result.className = 'dhcp-detect-result';
-        result.textContent = 'ℹ ' + r.error;
-      } else if (r.detected) {
-        if (r.self) {
-          result.className = 'dhcp-detect-result is-ok';
-          result.textContent = '✓ NAS DHCP 服务正在运行';
-        } else {
-          const servers = (r.servers || []).map((s) => `${s.serverIp || '未知'}（分配 ${s.offeredIp || '?'}）`).join('；');
-          result.className = 'dhcp-detect-result is-warn';
-          result.textContent = `⚠ 检测到 DHCP 服务器：${servers || '已响应'}\n无需启动 NAS DHCP，否则会冲突。`;
-        }
-      } else {
-        result.className = 'dhcp-detect-result is-ok';
-        result.textContent = '✓ 未检测到 DHCP 服务器。可以启动 NAS DHCP 为网络分配 IP。';
-      }
-    }
-  } catch (error) {
-    if (result) { result.className = 'dhcp-detect-result'; result.textContent = '检测失败：' + (error.message || ''); }
-  } finally {
-    if (btn) { btn.disabled = false; }
-  }
-}
-
-async function saveDhcpConfig() {
-  const body = {
-    poolStart: document.getElementById('dhcp-pool-start')?.value?.trim() || '',
-    poolEnd: document.getElementById('dhcp-pool-end')?.value?.trim() || '',
-    netmask: document.getElementById('dhcp-netmask')?.value?.trim() || '',
-    gateway: document.getElementById('dhcp-gateway')?.value?.trim() || '',
-    dnsPrimary: document.getElementById('dhcp-dns1')?.value?.trim() || '',
-    dnsSecondary: document.getElementById('dhcp-dns2')?.value?.trim() || '',
-    leaseHours: Number(document.getElementById('dhcp-lease')?.value) || 24,
-    serverIp: document.getElementById('dhcp-server-ip')?.value?.trim() || '',
-  };
-  try {
-    await requestJSON('/api/dhcp/config', { method: 'PATCH', body, retry: false });
-    Toast.show('配置已保存', 'success');
-  } catch (error) {
-    Toast.show(error.message || '保存失败', 'error');
-  }
-}
-
-async function addDhcpReservation() {
-  const mac = document.getElementById('dhcp-r-mac')?.value?.trim();
-  const ip = document.getElementById('dhcp-r-ip')?.value?.trim();
-  const hostname = document.getElementById('dhcp-r-name')?.value?.trim() || '';
-  if (!mac || !ip) { Toast.show('MAC 和 IP 不能为空', 'error'); return; }
-  try {
-    const { reservations } = await requestJSON('/api/dhcp/reservations', { method: 'POST', body: { mac, ip, hostname }, retry: false });
-    Toast.show('绑定已添加', 'success');
-    document.getElementById('dhcp-r-mac').value = '';
-    document.getElementById('dhcp-r-ip').value = '';
-    document.getElementById('dhcp-r-name').value = '';
-    await loadDhcpStatus();
-  } catch (error) {
-    Toast.show(error.message || '添加失败', 'error');
-  }
-}
-
-async function delDhcpReservation(mac) {
-  if (!confirm(`删除绑定 ${mac}？`)) return;
-  try {
-    await requestJSON(`/api/dhcp/reservations/${encodeURIComponent(mac)}`, { method: 'DELETE', retry: false });
-    Toast.show('已删除', 'success');
-    await loadDhcpStatus();
-  } catch (error) {
-    Toast.show(error.message || '删除失败', 'error');
+    if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
   }
 }

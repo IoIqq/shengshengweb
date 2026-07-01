@@ -73,6 +73,11 @@ export const uploadDeviceImage = (...args) => m()?.device?.uploadDeviceImage?.(.
 export const loadDeviceOptions = (...args) => m()?.device?.loadDeviceOptions?.(...args);
 export const syncDeviceView = (...args) => m()?.device?.syncDeviceView?.(...args);
 export const refreshDevices = (...args) => m()?.device?.refreshDevices?.(...args);
+export const openDeviceDrawer = (...args) => m()?.device?.openDeviceDrawer?.(...args);
+export const closeDeviceDrawer = (...args) => m()?.device?.closeDeviceDrawer?.(...args);
+export const openDeviceStatusPopover = (...args) => m()?.device?.openDeviceStatusPopover?.(...args);
+export const closeDeviceStatusPopover = (...args) => m()?.device?.closeDeviceStatusPopover?.(...args);
+export const confirmDeviceStatus = (...args) => m()?.device?.confirmDeviceStatus?.(...args);
 
 // borrow
 export const renderBorrowRequests = (...args) => m()?.borrow?.renderBorrowRequests?.(...args);
@@ -84,6 +89,8 @@ export const cancelBorrowRequest = (...args) => m()?.borrow?.cancelBorrowRequest
 export const syncBorrowView = (...args) => m()?.borrow?.syncBorrowView?.(...args);
 export const refreshBorrowRequests = (...args) => m()?.borrow?.refreshBorrowRequests?.(...args);
 export const renderBorrowDeviceSelect = (...args) => m()?.borrow?.renderBorrowDeviceSelect?.(...args);
+export const openBorrowDrawer = (...args) => m()?.borrow?.openBorrowDrawer?.(...args);
+export const closeBorrowDrawer = (...args) => m()?.borrow?.closeBorrowDrawer?.(...args);
 
 // settings
 export const renderSettings = (...args) => m()?.settings?.renderSettings?.(...args);
@@ -101,12 +108,9 @@ export const loadStorageStatus = (...args) => m()?.storage?.loadStorageStatus?.(
 export const bindStorageEvents = (...args) => m()?.storage?.bindStorageEvents?.(...args);
 export const initWishWall = (...args) => m()?.wishWall?.initWishWall?.(...args);
 
-// systemAdmin
-export const renderSystemPanel = (...args) => m()?.systemAdmin?.renderSystemPanel?.(...args);
-export const refreshSystemInfo = (...args) => m()?.systemAdmin?.refreshSystemInfo?.(...args);
+// systemAdmin（运维：网络访问 / 日志 / 飞书同步）
 export const loadSystemLogs = (...args) => m()?.systemAdmin?.loadSystemLogs?.(...args);
 export const loadNetworkInfo = (...args) => m()?.systemAdmin?.loadNetworkInfo?.(...args);
-export const restartService = (...args) => m()?.systemAdmin?.restartService?.(...args);
 export const loadLogFileList = (...args) => m()?.systemAdmin?.loadLogFileList?.(...args);
 export const searchLogs = (...args) => m()?.systemAdmin?.searchLogs?.(...args);
 export const loadFeishuSyncStatus = (...args) => m()?.systemAdmin?.loadFeishuSyncStatus?.(...args);

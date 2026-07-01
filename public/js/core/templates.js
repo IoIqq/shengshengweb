@@ -24,7 +24,6 @@ const PANELS = [
   'team',
   'topics',
   'settings',
-  'system-panel',
   'file-browser',
   'monitor',
   'services',

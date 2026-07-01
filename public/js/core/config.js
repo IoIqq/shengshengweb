@@ -36,7 +36,6 @@ export const VIEW_LABELS = {
   team: '团队协作',
   topics: '选题库',
   settings: '系统设置',
-  admin: '系统管理',
   'file-browser': '文件浏览',
   monitor: '资源监控',
   services: '服务管理',

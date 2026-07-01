@@ -144,13 +144,14 @@ router.get('/lan-clients', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/host/firewall — 防火墙规则（只读）
+// GET /api/host/firewall — 防火墙规则（含本系统拉黑的 IP）
 router.get('/firewall', requireAuth, requireAdmin, async (req, res) => {
   try {
     if (process.platform !== 'win32') {
-      return res.json({ ok: true, rules: [], note: '仅支持 Windows 防火墙。' });
+      return res.json({ ok: true, rules: [], blockedIps: [], note: '仅支持 Windows 防火墙。' });
     }
     let rules = [];
+    const blockedIps = [];
     try {
       const { stdout } = await runCommand('netsh', ['advfirewall', 'firewall', 'show', 'rule', 'name=all'], { timeout: 20000, maxBuffer: 4 * 1024 * 1024 });
       // netsh 输出按空行分隔每条规则，字段为 "键: 值"
@@ -166,9 +167,10 @@ router.get('/firewall', requireAuth, requireAdmin, async (req, res) => {
             rule[key] = val;
           }
         }
-        if (rule['规则名称'] || rule['Rule Name']) {
+        const name = rule['规则名称'] || rule['Rule Name'] || '';
+        if (name) {
           rules.push({
-            name: rule['规则名称'] || rule['Rule Name'] || '',
+            name,
             enabled: rule['已启用'] || rule['Enabled'] || '',
             direction: rule['方向'] || rule['Direction'] || '',
             profile: rule['配置文件'] || rule['Profile'] || '',
@@ -177,14 +179,68 @@ router.get('/firewall', requireAuth, requireAdmin, async (req, res) => {
             localPort: rule['本地端口'] || rule['LocalPort'] || '',
             remotePort: rule['远程端口'] || rule['RemotePort'] || '',
           });
+          // 收集本系统拉黑规则对应的 IP：NAS-BLOCK-<ip>
+          const m = name.match(/^NAS-BLOCK-(\d{1,3}(?:\.\d{1,3}){3})$/);
+          if (m && !blockedIps.includes(m[1])) blockedIps.push(m[1]);
         }
       }
     } catch (e) {
-      return res.json({ ok: true, rules: [], note: '读取防火墙规则失败：' + (e.message || '') });
+      return res.json({ ok: true, rules: [], blockedIps: [], note: '读取防火墙规则失败：' + (e.message || '') });
     }
-    res.json({ ok: true, rules });
+    res.json({ ok: true, rules, blockedIps });
   } catch (error) {
     res.status(500).json({ error: '获取防火墙信息失败。' });
+  }
+});
+
+// 严格 IPv4 校验（每段 0-255），只允许合法点分十进制，防止参数注入
+function isValidIpv4(ip) {
+  if (typeof ip !== 'string') return false;
+  const m = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  return m.slice(1).every((seg) => {
+    const n = Number(seg);
+    return n >= 0 && n <= 255 && String(n) === String(Number(seg));
+  });
+}
+
+// POST /api/host/firewall/block — 新增入站 block 规则封禁指定 IP（默认放行，可临时拉黑）
+router.post('/firewall/block', requireAuth, requireAdmin, async (req, res) => {
+  if (process.platform !== 'win32') {
+    return res.status(400).json({ error: '仅支持 Windows 防火墙。' });
+  }
+  const ip = String(req.body?.ip || '').trim();
+  if (!isValidIpv4(ip)) {
+    return res.status(400).json({ error: 'IP 地址格式不合法。' });
+  }
+  try {
+    // 数组式传参 + 已通过严格 IPv4 校验，规则名固定前缀便于识别与解封
+    await runCommand('netsh', ['advfirewall', 'firewall', 'add', 'rule', `name=NAS-BLOCK-${ip}`, 'dir=in', 'action=block', `remoteip=${ip}`], { timeout: 15000 });
+    auditModel.createAuditLog({ userId: req.user.id, username: req.user.username, role: req.user.role, action: 'firewall_block_ip', resourceType: 'firewall', resourceId: ip, ipAddress: req.ip, userAgent: req.get('user-agent') });
+    res.json({ ok: true, message: `已拉黑 ${ip}（入站封禁）。`, ip });
+  } catch (error) {
+    // 权限不足时 netsh 会报错，提示需管理员权限运行
+    const msg = /requires elevation|拒绝访问|access is denied/i.test(error.message || '') ? '权限不足：需以管理员身份运行本服务。' : ('拉黑失败：' + (error.message || ''));
+    res.status(500).json({ error: msg });
+  }
+});
+
+// POST /api/host/firewall/unblock — 删除对应 block 规则解封 IP
+router.post('/firewall/unblock', requireAuth, requireAdmin, async (req, res) => {
+  if (process.platform !== 'win32') {
+    return res.status(400).json({ error: '仅支持 Windows 防火墙。' });
+  }
+  const ip = String(req.body?.ip || '').trim();
+  if (!isValidIpv4(ip)) {
+    return res.status(400).json({ error: 'IP 地址格式不合法。' });
+  }
+  try {
+    await runCommand('netsh', ['advfirewall', 'firewall', 'delete', 'rule', `name=NAS-BLOCK-${ip}`], { timeout: 15000 });
+    auditModel.createAuditLog({ userId: req.user.id, username: req.user.username, role: req.user.role, action: 'firewall_unblock_ip', resourceType: 'firewall', resourceId: ip, ipAddress: req.ip, userAgent: req.get('user-agent') });
+    res.json({ ok: true, message: `已解封 ${ip}。`, ip });
+  } catch (error) {
+    const msg = /requires elevation|拒绝访问|access is denied/i.test(error.message || '') ? '权限不足：需以管理员身份运行本服务。' : ('解封失败：' + (error.message || ''));
+    res.status(500).json({ error: msg });
   }
 });
 

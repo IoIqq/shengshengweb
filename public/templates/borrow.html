@@ -5,53 +5,23 @@
       <h2>申请、审批与归还</h2>
     </div>
     <div class="panel-actions">
-      <span class="panel-badge" id="borrow-count">0 条申请</span>
+      <button class="primary-btn" id="borrow-add-btn" type="button">+ 提交申请</button>
       <button class="ghost-btn" id="borrow-refresh-btn" type="button">刷新申请</button>
     </div>
   </div>
 
-  <form class="borrow-form" id="borrow-form">
-    <label class="field">
-      <span>申请人</span>
-      <input name="applicant" type="text" placeholder="例如：李同学" required />
-    </label>
-    <label class="field">
-      <span>申请设备</span>
-      <select name="deviceId" id="borrow-device-select"></select>
-    </label>
-    <label class="field">
-      <span>用途</span>
-      <input name="purpose" type="text" placeholder="例如：活动拍摄 / 课程录制" required />
-    </label>
-    <label class="field">
-      <span>借出时间</span>
-      <input name="borrowAt" type="datetime-local" required />
-    </label>
-    <label class="field">
-      <span>预计归还</span>
-      <input name="expectedReturnAt" type="datetime-local" required />
-    </label>
-    <label class="field">
-      <span>备注</span>
-      <input name="note" type="text" placeholder="补充用途、借用范围或注意事项" />
-    </label>
-    <button class="primary-btn" type="submit">提交申请</button>
-  </form>
+  <!-- 统计芯片兼做筛选：点「待审 N」即筛待审，复用 #borrow-filters 既有 [data-filter] 委托 -->
+  <div class="filter-row borrow-stat-filters" id="borrow-filters"></div>
 
-  <div class="toolbar">
+  <div class="borrow-toolbar">
     <label class="search-field">
       <span>搜索借出</span>
       <input id="borrow-search" type="search" placeholder="按申请人、设备、用途、状态搜索" />
     </label>
-  </div>
-
-  <div class="filter-row" id="borrow-filters">
-    <button class="filter-chip is-active" data-filter="all" type="button">全部</button>
-    <button class="filter-chip" data-filter="pending" type="button">待审批</button>
-    <button class="filter-chip" data-filter="approved" type="button">已通过</button>
-    <button class="filter-chip" data-filter="rejected" type="button">已拒绝</button>
-    <button class="filter-chip" data-filter="returned" type="button">已归还</button>
-    <button class="filter-chip" data-filter="cancelled" type="button">已撤销</button>
+    <div class="borrow-view-toggle" role="group" aria-label="借出视图切换">
+      <button class="view-toggle-btn is-active" id="borrow-view-table" type="button" aria-pressed="true">表格</button>
+      <button class="view-toggle-btn" id="borrow-view-grid" type="button" aria-pressed="false">卡片</button>
+    </div>
   </div>
 
   <div class="borrow-list" id="borrow-list"></div>

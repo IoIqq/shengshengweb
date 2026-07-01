@@ -48,7 +48,6 @@ export const VIEW_ROLES = {
   review: ['admin', 'editor'],
   topics: ['admin', 'editor'],
   settings: ['admin'],
-  admin: ['admin'],
   'file-browser': ['admin'],
   monitor: ['admin'],
   services: ['admin'],

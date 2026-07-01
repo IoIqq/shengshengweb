@@ -15,6 +15,7 @@
     <button class="settings-tab" data-tab="storage" type="button" role="tab" aria-selected="false" aria-controls="settings-content-storage" id="settings-tab-storage">存储管理</button>
     <button class="settings-tab" data-tab="audit" type="button" role="tab" aria-selected="false" aria-controls="settings-content-audit" id="settings-tab-audit">操作日志</button>
     <button class="settings-tab" data-tab="preferences" type="button" role="tab" aria-selected="false" aria-controls="settings-content-preferences" id="settings-tab-preferences">偏好</button>
+    <button class="settings-tab" data-tab="ops" type="button" role="tab" aria-selected="false" aria-controls="settings-content-ops" id="settings-tab-ops">运维</button>
     <button class="settings-tab" data-tab="maintenance" type="button" role="tab" aria-selected="false" aria-controls="settings-content-maintenance" id="settings-tab-maintenance">维护</button>
   </div>
 
@@ -348,6 +349,73 @@
         </label>
       </div>
     </section>
+  </div>
+
+  <!-- 运维内容（局域网访问 / 日志 / 飞书同步） -->
+  <div class="settings-content hidden" data-content="ops" role="tabpanel" id="settings-content-ops" aria-labelledby="settings-tab-ops">
+    <div class="settings-content-head">
+      <div>
+        <h3>运维</h3>
+        <p>局域网访问入口、服务器日志与飞书多维表格同步。</p>
+      </div>
+    </div>
+    <div class="system-admin-grid">
+      <!-- 网络访问卡片 -->
+      <section class="system-card" id="sys-card-network" aria-labelledby="sys-network-title">
+        <div class="system-card-head">
+          <h3 id="sys-network-title">🌐 网络访问</h3>
+        </div>
+        <ul class="sys-lan-list" id="sys-lan-list">
+          <li class="sys-lan-placeholder">加载中...</li>
+        </ul>
+        <div class="sys-card-actions">
+          <button class="btn btn-sm" id="sys-refresh-network-btn" type="button">⟳ 刷新网络信息</button>
+        </div>
+        <div class="sys-qr-wrap" id="sys-qr-wrap" aria-hidden="true"></div>
+        <p class="sys-qr-hint" id="sys-qr-url"></p>
+      </section>
+
+      <!-- 日志卡片 -->
+      <section class="system-card" id="sys-card-logs" aria-labelledby="sys-logs-title">
+        <div class="system-card-head">
+          <h3 id="sys-logs-title"> 最近日志</h3>
+          <span class="sys-log-file" id="sys-log-file"></span>
+        </div>
+        <div class="sys-log-toolbar">
+          <input type="date" id="sys-log-date" class="sys-log-date-input" aria-label="选择日志日期" />
+          <select id="sys-log-file-list" class="sys-log-file-select" aria-label="选择日志文件">
+            <option value="">加载中...</option>
+          </select>
+        </div>
+        <pre class="sys-log-viewer" id="sys-log-viewer" role="log" aria-live="polite">点击下方按钮加载日志...</pre>
+        <div class="sys-log-search" hidden>
+          <input type="text" id="sys-log-search-input" placeholder="搜索日志内容..." aria-label="搜索日志内容" />
+          <span class="sys-log-search-count" id="sys-log-search-count"></span>
+        </div>
+        <div class="sys-card-actions">
+          <button class="btn btn-sm" id="sys-load-logs-btn" type="button">📥 加载日志</button>
+          <button class="btn btn-sm btn-outline" id="sys-load-all-logs-btn" type="button" hidden>📥 加载全部</button>
+          <button class="btn btn-sm btn-outline" id="sys-refresh-logs-btn" type="button">⟳ 刷新</button>
+          <button class="btn btn-sm btn-outline" id="sys-log-search-btn" type="button" hidden>🔍 搜索</button>
+        </div>
+      </section>
+
+      <!-- 飞书同步卡片 -->
+      <section class="system-card" id="sys-card-feishu" aria-labelledby="sys-feishu-title">
+        <div class="system-card-head">
+          <h3 id="sys-feishu-title">🔁 飞书同步</h3>
+          <span class="sys-badge" id="sys-feishu-badge" data-state="idle">未启用</span>
+        </div>
+        <p class="sys-feishu-msg" id="sys-feishu-msg">加载中...</p>
+        <ul class="sys-feishu-stats" id="sys-feishu-stats" hidden></ul>
+        <p class="sys-feishu-errors-hint" id="sys-feishu-errors-hint" hidden>匹配失败的行（成员在表格里填的设备名对不上 NAS 设备，修正后下次自动重试）：</p>
+        <ul class="sys-feishu-errors" id="sys-feishu-errors" hidden></ul>
+        <div class="sys-card-actions">
+          <button class="btn btn-sm" id="sys-feishu-run-btn" type="button" disabled>📥 立即同步</button>
+          <button class="btn btn-sm btn-outline" id="sys-feishu-refresh-btn" type="button">⟳ 刷新</button>
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- 维护操作内容 -->

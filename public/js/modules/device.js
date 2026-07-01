@@ -1,6 +1,9 @@
 /**
  * 设备管理模块
  * 负责设备登记的渲染和 CRUD 操作
+ *
+ * 台账优先布局：密集表格置顶，登记表单收进右侧抽屉（#device-drawer，body 层），
+ * 统计芯片兼做筛选，行内状态 chip 弹小菜单快改。
  */
 
 import { state } from '../core/state.js';
@@ -10,11 +13,21 @@ import { requestJSON, readCookie } from '../utils/api.js';
 import { canManageDevices } from '../core/router.js';
 import { Toast } from '../ui/toast.js';
 import { Dialog } from '../ui/dialog.js';
-import { setPending, showFeedback } from '../ui/feedback.js';
+import { setPending } from '../ui/feedback.js';
+
+const STATUS_OPTIONS = [
+  { value: 'available', label: '可借' },
+  { value: 'borrowed', label: '已借出' },
+  { value: 'maintenance', label: '维护中' },
+];
+
+// 行内状态弹层当前目标 { id, triggerEl }
+let _statusPopoverTarget = null;
 
 function applyDeviceRoleVisibility() {
   const canManage = canManageDevices();
-  if (els.deviceForm) els.deviceForm.hidden = !canManage;
+  // 管理者才显示「新增设备」；表单本身在抽屉里，随抽屉开合
+  if (els.deviceAddBtn) els.deviceAddBtn.hidden = !canManage;
   if (els.deviceFormCancel) els.deviceFormCancel.hidden = !canManage || !state.deviceEditingId;
 }
 
@@ -53,7 +66,7 @@ export function deviceStatusLabel(status) {
 }
 
 /**
- * 获取设备统计信息
+ * 获取设备统计信息（基于当前可见视图）
  * @returns {Object}
  */
 export function getDeviceStats() {
@@ -67,13 +80,26 @@ export function getDeviceStats() {
 }
 
 /**
+ * 全量台账统计（用于统计芯片计数，不受当前筛选/搜索影响）
+ */
+function getDeviceCatalogStats() {
+  const items = Array.isArray(state.deviceCatalog) ? state.deviceCatalog : [];
+  return {
+    total: items.length,
+    available: items.filter((i) => i.status === 'available').length,
+    borrowed: items.filter((i) => i.status === 'borrowed').length,
+    maintenance: items.filter((i) => i.status === 'maintenance').length,
+  };
+}
+
+/**
  * 检查设备是否匹配视图条件
  * @param {Object} item - 设备对象
  * @returns {boolean}
  */
 export function deviceMatchesView(item) {
   const search = String(state.deviceSearch || '').trim().toLowerCase();
-  if (state.deviceFilter !== 'all' && item.status !== state.deviceFilter) return false;
+  if (state.deviceFilter && state.deviceFilter !== 'all' && item.status !== state.deviceFilter) return false;
   if (!search) return true;
   return [
     item.name,
@@ -110,70 +136,177 @@ export function syncDeviceView() {
 }
 
 /**
+ * 渲染统计-筛选芯片到 #device-filters
+ * 点「借出 N」即筛借出，复用既有 [data-filter] 委托（events.js）
+ */
+function renderDeviceStatFilters() {
+  if (!els.deviceFilters) return;
+  const stats = getDeviceCatalogStats();
+  const current = state.deviceFilter || 'all';
+  const chips = [
+    { filter: 'all', label: '全部', count: stats.total, tone: '' },
+    { filter: 'available', label: '可借', count: stats.available, tone: 'available' },
+    { filter: 'borrowed', label: '借出', count: stats.borrowed, tone: 'borrowed' },
+    { filter: 'maintenance', label: '维护', count: stats.maintenance, tone: 'maintenance' },
+  ];
+  els.deviceFilters.innerHTML = chips
+    .map((f) => {
+      const active = current === f.filter ? ' is-active' : '';
+      const pressed = current === f.filter ? 'true' : 'false';
+      const tone = f.tone ? ` data-tone="${f.tone}"` : '';
+      return `<button class="filter-chip device-stat-chip${active}" data-filter="${f.filter}" type="button" aria-pressed="${pressed}"${tone}><span class="stat-label">${f.label}</span><span class="stat-count">${f.count}</span></button>`;
+    })
+    .join('');
+}
+
+/**
+ * 渲染单张设备卡片（卡片视图）
+ */
+function renderDeviceCard(item) {
+  const hasImage = item.image && item.image.trim();
+  const modelInfo = item.model ? ` · ${escapeHtml(item.model)}` : '';
+  const purchaseInfo = item.purchaseDate ? ` · 购入 ${escapeHtml(item.purchaseDate)}` : '';
+  const serialInfo = item.serialNo ? ` · SN ${escapeHtml(item.serialNo)}` : '';
+  const priceVal = Number(item.price || 0);
+  const priceInfo = priceVal > 0 ? `<span>采购价：¥${escapeHtml(priceVal.toFixed(2))}</span>` : '';
+  const warrantyInfo = item.warrantyUntil ? `<span>保修至：${escapeHtml(item.warrantyUntil)}</span>` : '';
+  const noteHtml = item.note
+    ? `<details class="device-note-details"><summary>备注</summary><p>${escapeHtml(item.note)}</p></details>`
+    : '';
+  const actionsHtml = canManageDevices()
+    ? `<div class="device-actions">
+            <button class="ghost-btn" data-device-edit="${escapeHtml(item.id)}" type="button">编辑</button>
+            <button class="ghost-btn" data-device-delete="${escapeHtml(item.id)}" type="button">删除</button>
+          </div>`
+    : '';
+  return `
+    <article class="device-item" data-status="${escapeHtml(item.status)}">
+      <div class="device-card-layout">
+        <div class="device-thumb" data-status-ring="${escapeHtml(item.status)}">
+          ${hasImage
+            ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />`
+            : `<span class="device-thumb-icon" data-category="${escapeHtml(item.category || '')}">${pickCategoryIcon(item.category)}</span>`
+          }
+        </div>
+        <div class="device-info">
+          <div class="device-head">
+            <div>
+              <h3>${escapeHtml(item.name)}</h3>
+              <p>${escapeHtml(item.category)} · ${escapeHtml(item.assetNo)}${modelInfo}${serialInfo}${purchaseInfo}</p>
+            </div>
+            ${renderStatusPill(item)}
+          </div>
+          <div class="device-meta">
+            <span>位置：${escapeHtml(item.location || '-')}</span>
+            <span>责任人：${escapeHtml(item.owner || '-')}</span>
+            ${priceInfo}
+            ${warrantyInfo}
+          </div>
+          ${noteHtml}
+          ${actionsHtml}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+/**
+ * 渲染状态 pill：管理者为可点按钮（弹快改菜单），访客为纯展示
+ */
+function renderStatusPill(item) {
+  const label = escapeHtml(deviceStatusLabel(item.status));
+  const status = escapeHtml(item.status);
+  if (canManageDevices()) {
+    return `<button class="status-pill" data-status="${status}" data-device-status="${escapeHtml(item.id)}" type="button" aria-label="修改状态" title="点击修改状态">${label}</button>`;
+  }
+  return `<span class="status-pill" data-status="${status}">${label}</span>`;
+}
+
+/**
+ * 渲染表格行（表格视图）
+ */
+function renderDeviceTableRow(item) {
+  const hasImage = item.image && item.image.trim();
+  const modelHtml = item.model ? `<p class="cell-model">${escapeHtml(item.model)}</p>` : '';
+  const actionsHtml = canManageDevices()
+    ? `<div class="device-row-actions">
+        <button class="ghost-btn" data-device-edit="${escapeHtml(item.id)}" type="button">编辑</button>
+        <button class="ghost-btn" data-device-delete="${escapeHtml(item.id)}" type="button">删除</button>
+      </div>`
+    : '';
+  return `
+    <div class="device-table-row" data-status="${escapeHtml(item.status)}">
+      <div class="cell-device">
+        <div class="cell-thumb" data-status-ring="${escapeHtml(item.status)}">
+          ${hasImage
+            ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />`
+            : `<span class="device-thumb-icon" data-category="${escapeHtml(item.category || '')}">${pickCategoryIcon(item.category)}</span>`
+          }
+        </div>
+        <div class="cell-name">
+          <h3>${escapeHtml(item.name)}</h3>
+          ${modelHtml}
+        </div>
+      </div>
+      <div class="cell-asset" data-label="编号">${escapeHtml(item.assetNo)}</div>
+      <div class="cell-category" data-label="类别">${escapeHtml(item.category)}</div>
+      <div class="cell-status" data-label="状态">${renderStatusPill(item)}</div>
+      <div class="cell-location" data-label="位置">${escapeHtml(item.location || '-')}</div>
+      <div class="cell-owner" data-label="责任人">${escapeHtml(item.owner || '-')}</div>
+      <div class="cell-actions">${actionsHtml}</div>
+    </div>
+  `;
+}
+
+/**
  * 渲染设备列表
  */
 export function renderDevices() {
   applyDeviceRoleVisibility();
+  renderDeviceStatFilters();
+
   const items = Array.isArray(state.deviceItems) ? state.deviceItems : [];
-  const stats = getDeviceStats();
-  if (els.deviceCount) {
-    els.deviceCount.textContent = `${items.length} 台设备 (可借: ${stats.available}, 借出: ${stats.borrowed}, 维护: ${stats.maintenance})`;
-  }
   if (!els.deviceList) return;
 
-  els.deviceList.innerHTML = items.length
-    ? items
-      .map(
-        (item) => {
-          const hasImage = item.image && item.image.trim();
-          const modelInfo = item.model ? ` · ${escapeHtml(item.model)}` : '';
-          const purchaseInfo = item.purchaseDate ? ` · 购入 ${escapeHtml(item.purchaseDate)}` : '';
-          const serialInfo = item.serialNo ? ` · SN ${escapeHtml(item.serialNo)}` : '';
-          const priceVal = Number(item.price || 0);
-          const priceInfo = priceVal > 0 ? `<span>采购价：¥${escapeHtml(priceVal.toFixed(2))}</span>` : '';
-          const warrantyInfo = item.warrantyUntil ? `<span>保修至：${escapeHtml(item.warrantyUntil)}</span>` : '';
-          const noteHtml = item.note
-            ? `<details class="device-note-details"><summary>备注</summary><p>${escapeHtml(item.note)}</p></details>`
-            : '';
-          const actionsHtml = canManageDevices()
-            ? `<div class="device-actions">
-                    <button class="ghost-btn" data-device-edit="${escapeHtml(item.id)}" type="button">编辑</button>
-                    <button class="ghost-btn" data-device-delete="${escapeHtml(item.id)}" type="button">删除</button>
-                  </div>`
-            : '';
-          return `
-            <article class="device-item" data-status="${escapeHtml(item.status)}">
-              <div class="device-card-layout">
-                <div class="device-thumb" data-status-ring="${escapeHtml(item.status)}">
-                  ${hasImage
-                    ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />`
-                    : `<span class="device-thumb-icon" data-category="${escapeHtml(item.category || '')}">${pickCategoryIcon(item.category)}</span>`
-                  }
-                </div>
-                <div class="device-info">
-                  <div class="device-head">
-                    <div>
-                      <h3>${escapeHtml(item.name)}</h3>
-                      <p>${escapeHtml(item.category)} · ${escapeHtml(item.assetNo)}${modelInfo}${serialInfo}${purchaseInfo}</p>
-                    </div>
-                    <span class="status-pill" data-status="${escapeHtml(item.status)}">${escapeHtml(deviceStatusLabel(item.status))}</span>
-                  </div>
-                  <div class="device-meta">
-                    <span>位置：${escapeHtml(item.location || '-')}</span>
-                    <span>责任人：${escapeHtml(item.owner || '-')}</span>
-                    ${priceInfo}
-                    ${warrantyInfo}
-                  </div>
-                  ${noteHtml}
-                  ${actionsHtml}
-                </div>
-              </div>
-            </article>
-          `;
-        },
-      )
-      .join('')
-    : `<div class="empty-state"><strong>没有设备记录</strong><p>${canManageDevices() ? '点击上方"保存设备"按钮添加第一台设备。' : '暂无可查看的设备台账。'}</p></div>`;
+  const viewMode = state.deviceViewMode === 'grid' ? 'grid' : 'table';
+  els.deviceList.classList.toggle('is-table', viewMode === 'table');
+  els.deviceList.classList.toggle('is-grid', viewMode === 'grid');
+  // 视图切换按钮态
+  if (els.deviceViewTable) {
+    const isTable = viewMode === 'table';
+    els.deviceViewTable.classList.toggle('is-active', isTable);
+    els.deviceViewTable.setAttribute('aria-pressed', String(isTable));
+  }
+  if (els.deviceViewGrid) {
+    const isGrid = viewMode === 'grid';
+    els.deviceViewGrid.classList.toggle('is-active', isGrid);
+    els.deviceViewGrid.setAttribute('aria-pressed', String(isGrid));
+  }
+
+  if (!items.length) {
+    els.deviceList.innerHTML = `<div class="empty-state"><strong>没有设备记录</strong><p>${canManageDevices() ? '点击上方「新增设备」按钮添加第一台设备。' : '暂无可查看的设备台账。'}</p></div>`;
+    return;
+  }
+
+  if (viewMode === 'grid') {
+    els.deviceList.innerHTML = items.map(renderDeviceCard).join('');
+    return;
+  }
+
+  // 表格视图：表头 + 行
+  els.deviceList.innerHTML =
+    `<div class="device-table" role="table" aria-label="设备台账">
+      <div class="device-table-head" role="row">
+        <span class="cell-device">设备</span>
+        <span class="cell-asset">编号</span>
+        <span class="cell-category">类别</span>
+        <span class="cell-status">状态</span>
+        <span class="cell-location">位置</span>
+        <span class="cell-owner">责任人</span>
+        <span class="cell-actions">操作</span>
+      </div>
+      ${items.map(renderDeviceTableRow).join('')}
+    </div>`;
 }
 
 /**
@@ -347,6 +480,7 @@ export async function createDevice(formData) {
     if (els.deviceForm) els.deviceForm.reset();
     setDeviceImagePreview('');
     state.deviceEditingId = null;
+    closeDeviceDrawer();
   } catch (error) {
     Toast.error(error.message || '添加失败');
     throw error;
@@ -380,6 +514,10 @@ export async function updateDevice(id, updates) {
     state.deviceEditingId = null;
     syncDeviceView();
     loadDeviceOptions();
+    // 仅在抽屉式编辑时关闭；行内状态快改不打开抽屉，无需关闭
+    if (updates && !updates.statusOnly && els.deviceDrawer && !els.deviceDrawer.hidden) {
+      closeDeviceDrawer();
+    }
     return result;
   } catch (error) {
     Toast.error(error.message || '更新失败');
@@ -423,7 +561,7 @@ export async function deleteDevice(id) {
 }
 
 /**
- * 开始编辑设备
+ * 开始编辑设备：填充表单字段
  * @param {string} id - 设备 ID
  */
 export function startEditDevice(id) {
@@ -454,7 +592,7 @@ export function startEditDevice(id) {
 }
 
 /**
- * 取消编辑设备
+ * 取消编辑设备：重置表单并关闭抽屉
  */
 export function cancelEditDevice() {
   state.deviceEditingId = null;
@@ -462,5 +600,109 @@ export function cancelEditDevice() {
   setDeviceImagePreview('');
   if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = '保存设备';
   if (els.deviceFormId) els.deviceFormId.value = '';
+  closeDeviceDrawer();
   applyDeviceRoleVisibility();
+}
+
+/**
+ * 打开登记抽屉
+ * @param {'add'|'edit'} mode
+ * @param {string|null} id - 编辑模式下的设备 ID
+ */
+export function openDeviceDrawer(mode = 'add', id = null) {
+  if (!canManageDevices()) {
+    Toast.warning('当前身份无权管理设备');
+    return;
+  }
+  if (mode === 'edit' && id) {
+    startEditDevice(id);
+    if (els.deviceDrawerTitle) els.deviceDrawerTitle.textContent = '编辑设备';
+  } else {
+    // 新增模式：重置表单
+    state.deviceEditingId = null;
+    if (els.deviceForm) els.deviceForm.reset();
+    setDeviceImagePreview('');
+    if (els.deviceFormSubmit) els.deviceFormSubmit.textContent = '保存设备';
+    if (els.deviceFormId) els.deviceFormId.value = '';
+    if (els.deviceDrawerTitle) els.deviceDrawerTitle.textContent = '新增设备';
+  }
+  if (els.deviceDrawer) els.deviceDrawer.hidden = false;
+  applyDeviceRoleVisibility();
+}
+
+/**
+ * 关闭登记抽屉
+ */
+export function closeDeviceDrawer() {
+  if (els.deviceDrawer && !els.deviceDrawer.hidden) els.deviceDrawer.hidden = true;
+}
+
+/**
+ * 打开行内状态快改弹层
+ * @param {string} id - 设备 ID
+ * @param {HTMLElement} triggerEl - 触发按钮
+ */
+export function openDeviceStatusPopover(id, triggerEl) {
+  if (!canManageDevices()) {
+    Toast.warning('当前身份无权修改状态');
+    return;
+  }
+  const pop = els.deviceStatusPopover;
+  if (!pop) return;
+  _statusPopoverTarget = { id, triggerEl };
+  pop.innerHTML = STATUS_OPTIONS.map(
+    (opt) =>
+      `<button class="status-pill" data-status="${opt.value}" data-status-option="${opt.value}" type="button" role="menuitem" aria-label="设为${opt.label}">${opt.label}</button>`,
+  ).join('');
+  pop.hidden = false;
+  pop.setAttribute('aria-hidden', 'false');
+  pop.classList.add('is-open');
+  positionDeviceStatusPopover(triggerEl);
+}
+
+/**
+ * 关闭行内状态快改弹层
+ */
+export function closeDeviceStatusPopover() {
+  const pop = els.deviceStatusPopover;
+  if (!pop || pop.hidden) return;
+  pop.hidden = true;
+  pop.setAttribute('aria-hidden', 'true');
+  pop.classList.remove('is-open');
+  pop.style.top = '';
+  pop.style.left = '';
+  pop.innerHTML = '';
+  _statusPopoverTarget = null;
+}
+
+/**
+ * 定位弹层到触发按钮下方（视口坐标，body 层 fixed）
+ */
+function positionDeviceStatusPopover(triggerEl) {
+  const pop = els.deviceStatusPopover;
+  if (!pop || !triggerEl) return;
+  const rect = triggerEl.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  const margin = 6;
+  let top = rect.bottom + margin;
+  let left = rect.left;
+  if (top + popRect.height > window.innerHeight - margin) {
+    top = Math.max(margin, rect.top - popRect.height - margin);
+  }
+  if (left + popRect.width > window.innerWidth - margin) {
+    left = Math.max(margin, window.innerWidth - popRect.width - margin);
+  }
+  pop.style.top = `${top}px`;
+  pop.style.left = `${left}px`;
+}
+
+/**
+ * 确认状态快改（弹层选项点击 / 键盘确认时调用）
+ * @param {string} status
+ */
+export async function confirmDeviceStatus(status) {
+  if (!_statusPopoverTarget) return;
+  const { id } = _statusPopoverTarget;
+  closeDeviceStatusPopover();
+  await updateDevice(id, { status, statusOnly: true });
 }

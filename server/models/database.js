@@ -235,27 +235,6 @@ function createTables() {
       created_at TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS dhcp_config (
-      id INTEGER PRIMARY KEY,
-      pool_start TEXT NOT NULL DEFAULT '',
-      pool_end TEXT NOT NULL DEFAULT '',
-      netmask TEXT NOT NULL DEFAULT '255.255.255.0',
-      gateway TEXT NOT NULL DEFAULT '',
-      dns_primary TEXT NOT NULL DEFAULT '',
-      dns_secondary TEXT NOT NULL DEFAULT '',
-      lease_hours INTEGER NOT NULL DEFAULT 24,
-      server_ip TEXT NOT NULL DEFAULT '',
-      enabled INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS dhcp_reservations (
-      mac TEXT PRIMARY KEY,
-      ip TEXT NOT NULL,
-      hostname TEXT NOT NULL DEFAULT '',
-      note TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL
-    );
-
     -- 飞书多维表格 ↔ NAS 设备申请同步状态
     -- record_id 为飞书行 ID，作去重键；status: synced(已导入)/error(匹配失败)/backed(已回写)
     CREATE TABLE IF NOT EXISTS feishu_sync_state (

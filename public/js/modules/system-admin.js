@@ -1,113 +1,13 @@
 /**
- * 系统管理面板模块
+ * 运维模块（网络访问 / 日志 / 飞书同步）
  *
- * 仅管理员可访问。展示服务器运行状态、数据库信息、网络访问地址和二维码、
- * 最近日志等运维数据。所有操作均为只读（不控制服务器生命周期）。
+ * 仅管理员可访问，元素挂在「系统设置 → 运维」标签页内。
+ * 展示局域网访问地址+二维码、服务器日志、飞书多维表格同步状态。均为只读运维数据。
  */
 
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { escapeHtml } from '../utils/helpers.js';
-import { Dialog } from '../ui/dialog.js';
-
-/**
- * 格式化秒数为可读时间
- */
-function formatUptime(seconds) {
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  const parts = [];
-  if (d > 0) parts.push(`${d}天`);
-  if (h > 0) parts.push(`${h}时`);
-  if (m > 0) parts.push(`${m}分`);
-  parts.push(`${s}秒`);
-  return parts.join(' ');
-}
-
-/**
- * 格式化字节
- */
-function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-}
-
-/**
- * 渲染系统管理面板（进入视图时调用）
- */
-export async function renderSystemPanel() {
-  await refreshSystemInfo();
-  await loadNetworkInfo();
-  await loadFeishuSyncStatus();
-}
-
-/**
- * 刷新系统信息并更新服务器状态卡和数据库卡
- */
-export async function refreshSystemInfo() {
-  try {
-    const info = await requestJSON('/api/system/info');
-
-    // 服务器状态
-    setText('sys-node-version', info.nodeVersion);
-    setText('sys-platform', info.platform);
-    setText('sys-hostname', info.hostname);
-    setText('sys-cpu-cores', String(info.cpuCores));
-    setText('sys-uptime', formatUptime(info.uptime));
-    setText('sys-port', String(info.port));
-
-    // 内存使用进度条
-    const memText = document.getElementById('sys-mem-text');
-    const memBar = document.getElementById('sys-mem-bar');
-    if (memText && memBar && info.totalMemory > 0) {
-      const memPercent = Math.min(100, Math.round((info.memory.rss / info.totalMemory) * 100));
-      memText.textContent = `${info.memory.rss} MB / ${info.totalMemory} MB (${memPercent}%)`;
-      memBar.style.width = `${memPercent}%`;
-    }
-
-    // CPU 使用率进度条
-    const cpuText = document.getElementById('sys-cpu-text');
-    const cpuBar = document.getElementById('sys-cpu-bar');
-    if (cpuText && cpuBar) {
-      const cpuPercent = info.cpuUsage || 0;
-      cpuText.textContent = `${cpuPercent}%`;
-      cpuBar.style.width = `${cpuPercent}%`;
-    }
-
-    // PM2 状态
-    const pm2El = document.getElementById('sys-pm2');
-    if (pm2El) {
-      if (info.pm2.isPM2) {
-        pm2El.innerHTML = `<span class="sys-badge sys-badge-ok">PM2 #${info.pm2.id || '?'}</span>`;
-      } else {
-        pm2El.innerHTML = '<span class="sys-badge sys-badge-dim">独立运行</span>';
-      }
-    }
-
-    // 数据库
-    setText('sys-db-path', info.database?.path || '-');
-    setText('sys-db-size', formatBytes(info.database?.sizeBytes));
-    const dbExistsEl = document.getElementById('sys-db-exists');
-    if (dbExistsEl) {
-      dbExistsEl.innerHTML = info.database?.exists
-        ? '<span class="sys-badge sys-badge-ok">正常</span>'
-        : '<span class="sys-badge sys-badge-err">不存在</span>';
-    }
-    setText('sys-upload-count', String(info.uploadDir?.fileCount ?? 0));
-
-    // 堆内存
-    setText('sys-mem-heap', `${info.memory.heapUsed} / ${info.memory.heapTotal} MB`);
-
-  } catch (error) {
-    console.error('获取系统信息失败:', error);
-    Toast.error('获取系统信息失败');
-  }
-}
 
 /**
  * 加载并渲染网络信息 + 二维码
@@ -368,71 +268,4 @@ export function searchLogs(keyword) {
   }
 
   countEl.textContent = `${matchedLines.length} / ${lines.length} 行`;
-}
-
-/** 辅助：安全设置文本内容 */
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-/**
- * 重启服务
- */
-export async function restartService() {
-  const btn = document.getElementById('sys-restart-btn');
-  if (!btn) return;
-
-  // 15 秒冷却期
-  if (btn.disabled || btn.classList.contains('is-cooling')) {
-    Toast.warning('重启冷却中，请稍后再试');
-    return;
-  }
-
-  const confirmed = await Dialog.confirm({
-    title: '重启服务',
-    message: '重启期间服务将短暂不可用（约 3-5 秒）。',
-    confirmText: '确认重启',
-    cancelText: '取消',
-    variant: 'danger',
-  });
-  if (!confirmed) return;
-
-  try {
-    btn.disabled = true;
-    btn.classList.add('is-cooling');
-    btn.textContent = '⏳ 重启中...';
-
-    const result = await requestJSON('/api/system/restart', { method: 'POST' });
-
-    Toast.success('服务将在 2 秒后重启，页面将自动刷新');
-
-    // 15 秒冷却
-    let cooldown = 15;
-    btn.textContent = `冷却中 (${cooldown}s)`;
-
-    const cooldownInterval = setInterval(() => {
-      cooldown--;
-      if (cooldown <= 0) {
-        clearInterval(cooldownInterval);
-        btn.disabled = false;
-        btn.classList.remove('is-cooling');
-        btn.textContent = '⚠ 重启服务';
-      } else {
-        btn.textContent = `冷却中 (${cooldown}s)`;
-      }
-    }, 1000);
-
-    // 3 秒后自动刷新页面
-    setTimeout(() => {
-      window.location.reload();
-    }, 3000);
-
-  } catch (error) {
-    console.error('重启失败:', error);
-    Toast.error(error.message || '重启失败');
-    btn.disabled = false;
-    btn.classList.remove('is-cooling');
-    btn.textContent = '⚠ 重启服务';
-  }
 }

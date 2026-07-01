@@ -35,7 +35,6 @@ import {
   loadTeamContribution,
   renderTopics,
   renderSettings,
-  renderSystemPanel,
   renderFileBrowser,
   renderMonitor,
   renderServices,
@@ -107,7 +106,6 @@ function renderAll() {
   renderTopics();
   if (currentRole() === 'admin') {
     renderSettings();
-    renderSystemPanel();
     renderFileBrowser();
     renderMonitor();
     renderServices();

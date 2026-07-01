@@ -40,7 +40,6 @@ const filesRoutes = require('./routes/files');
 const monitorRoutes = require('./routes/monitor');
 const servicesRoutes = require('./routes/services');
 const hostRoutes = require('./routes/host');
-const dhcpRoutes = require('./routes/dhcp');
 const feishuSyncRoutes = require('./routes/feishu-sync');
 
 const STATIC_CACHEABLE_EXTENSIONS = new Set(['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf']);
@@ -273,7 +272,6 @@ async function initApp() {
     app.use('/api/monitor', monitorRoutes);
     app.use('/api/services', servicesRoutes);
     app.use('/api/host', hostRoutes);
-    app.use('/api/dhcp', dhcpRoutes);
     app.use('/api/feishu-sync', feishuSyncRoutes);
 
     // 健康检查（已包含在systemRoutes中，这里保留作为备份）

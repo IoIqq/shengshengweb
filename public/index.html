@@ -595,6 +595,173 @@
       </div>
     </div>
 
+    <!-- 设备登记抽屉 + 行内状态弹层：置于 body 层，避免 .workspace-panel 的 transform 破坏 position:fixed -->
+    <div
+      class="device-drawer"
+      id="device-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="设备登记"
+      hidden
+    >
+      <div class="device-drawer-overlay" id="device-drawer-overlay"></div>
+      <div class="device-drawer-content">
+        <div class="device-drawer-header">
+          <h2 id="device-drawer-title">新增设备</h2>
+          <button class="device-drawer-close" id="device-drawer-close" type="button" aria-label="关闭">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <form class="device-form" id="device-form">
+          <input type="hidden" name="id" id="device-form-id" value="" />
+
+          <!-- 必填 3 项：常驻可见 -->
+          <label class="field">
+            <span>设备名称</span>
+            <input name="name" type="text" placeholder="例如：摄像机 A1" required />
+          </label>
+          <label class="field">
+            <span>设备类别</span>
+            <input name="category" type="text" placeholder="例如：摄影 / 收音 / 电脑" list="device-cat-list" required />
+            <datalist id="device-cat-list"></datalist>
+          </label>
+          <label class="field">
+            <span>设备编号</span>
+            <input name="assetNo" type="text" placeholder="例如：DEV-001" required />
+          </label>
+
+          <!-- 高级字段：默认折叠 -->
+          <details class="device-form-advanced">
+            <summary>更多（SN / 型号 / 状态 / 价格 / 位置 等）</summary>
+            <label class="field">
+              <span>序列号 / SN</span>
+              <input name="serialNo" type="text" placeholder="厂家序列号（可选）" />
+            </label>
+            <label class="field">
+              <span>规格型号</span>
+              <input name="model" type="text" placeholder="例如：Sony A7M4" />
+            </label>
+            <label class="field">
+              <span>设备状态</span>
+              <select name="status">
+                <option value="available">可借</option>
+                <option value="borrowed">已借出</option>
+                <option value="maintenance">维护中</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>购入日期</span>
+              <input name="purchaseDate" type="date" />
+            </label>
+            <label class="field">
+              <span>保修截止</span>
+              <input name="warrantyUntil" type="date" />
+            </label>
+            <label class="field">
+              <span>采购价格（元）</span>
+              <input name="price" type="number" min="0" step="0.01" placeholder="例如：12999.00" />
+            </label>
+            <label class="field">
+              <span>存放位置</span>
+              <input name="location" type="text" placeholder="例如：资料室 A 架" list="device-loc-list" />
+              <datalist id="device-loc-list"></datalist>
+            </label>
+            <label class="field">
+              <span>责任人</span>
+              <input name="owner" type="text" placeholder="例如：王老师" list="device-owner-list" />
+              <datalist id="device-owner-list"></datalist>
+            </label>
+            <label class="field device-image-field">
+              <span>设备图片</span>
+              <div class="device-image-uploader">
+                <div class="device-image-preview-wrap">
+                  <img id="device-image-preview" alt="设备图片预览" hidden />
+                  <span class="device-image-empty" aria-hidden="true">未选择</span>
+                </div>
+                <div class="device-image-actions">
+                  <button class="ghost-btn" type="button" id="device-image-upload-btn">选择图片</button>
+                  <button class="ghost-btn" type="button" id="device-image-clear" hidden>清除</button>
+                </div>
+                <input id="device-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+                <input type="hidden" name="image" id="device-image-url" value="" />
+              </div>
+            </label>
+            <label class="field">
+              <span>备注</span>
+              <input name="note" type="text" placeholder="补充说明、使用手册链接等" />
+            </label>
+          </details>
+
+          <div class="device-form-actions">
+            <button class="primary-btn" id="device-form-submit" type="submit">保存设备</button>
+            <button class="ghost-btn" id="device-form-cancel" type="button" hidden>取消编辑</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 行内状态快改弹层（单一复用，JS 按触发按钮定位） -->
+    <div class="device-status-popover" id="device-status-popover" role="menu" aria-hidden="true" hidden></div>
+
+    <!-- 借出申请抽屉：置于 body 层，避免 .workspace-panel 的 transform 破坏 position:fixed -->
+    <div
+      class="borrow-drawer"
+      id="borrow-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="借出申请"
+      hidden
+    >
+      <div class="borrow-drawer-overlay" id="borrow-drawer-overlay"></div>
+      <div class="borrow-drawer-content">
+        <div class="borrow-drawer-header">
+          <h2 id="borrow-drawer-title">提交借出申请</h2>
+          <button class="borrow-drawer-close" id="borrow-drawer-close" type="button" aria-label="关闭">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <form class="borrow-form" id="borrow-form">
+          <label class="field">
+            <span>申请人</span>
+            <input name="applicant" type="text" placeholder="例如：李同学" required />
+          </label>
+          <label class="field">
+            <span>申请设备</span>
+            <select name="deviceId" id="borrow-device-select"></select>
+          </label>
+          <label class="field">
+            <span>用途</span>
+            <input name="purpose" type="text" placeholder="例如：活动拍摄 / 课程录制" required />
+          </label>
+          <label class="field">
+            <span>借出时间</span>
+            <input name="borrowAt" type="datetime-local" required />
+          </label>
+          <label class="field">
+            <span>预计归还</span>
+            <input name="expectedReturnAt" type="datetime-local" required />
+          </label>
+          <label class="field">
+            <span>备注</span>
+            <input name="note" type="text" placeholder="补充用途、借用范围或注意事项" />
+          </label>
+
+          <div class="borrow-form-actions">
+            <button class="primary-btn" id="borrow-form-submit" type="submit">提交申请</button>
+            <button class="ghost-btn" id="borrow-form-cancel" type="button">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="workspace-shell hidden" id="workspace-shell">
       <header class="topbar" id="topbar">
         <div class="topbar-shell">
@@ -1017,10 +1184,6 @@
           <button class="nav-chip" data-view="settings" type="button" id="settings-nav">
             <svg class="nav-chip-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
             <span class="nav-chip-label">系统设置</span>
-          </button>
-          <button class="nav-chip" data-view="admin" type="button">
-            <svg class="nav-chip-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span class="nav-chip-label">系统管理</span>
           </button>
           <button class="nav-chip" data-view="file-browser" type="button">
             <svg class="nav-chip-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>

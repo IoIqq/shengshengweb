@@ -30,60 +30,6 @@
     <p class="host-countdown" id="host-countdown" hidden></p>
   </section>
 
-  <!-- DHCP 地址分配 -->
-  <section class="host-section">
-    <div class="host-section-head">
-      <p class="host-section-title">DHCP 地址分配</p>
-      <div class="panel-head-actions">
-        <span class="dhcp-status-badge" id="dhcp-status-badge">未运行</span>
-        <button class="ghost-btn" id="dhcp-detect-btn" type="button">🔍 检测网络 DHCP</button>
-        <button class="ghost-btn" id="dhcp-stop-btn" type="button" hidden>停止</button>
-        <button class="primary-btn" id="dhcp-start-btn" type="button">启动 DHCP</button>
-      </div>
-    </div>
-    <p class="dhcp-detect-result" id="dhcp-detect-result" hidden></p>
-    <p class="dhcp-note">启动后本机将作为 DHCP 服务器为局域网分配 IP。需管理员权限运行（UDP 67 端口）。确保网络中无其他 DHCP 服务器，否则会冲突。</p>
-
-    <!-- 配置表单 -->
-    <div class="dhcp-config-grid">
-      <label class="field"><span>地址池起始</span><input id="dhcp-pool-start" type="text" placeholder="192.168.1.100" /></label>
-      <label class="field"><span>地址池结束</span><input id="dhcp-pool-end" type="text" placeholder="192.168.1.200" /></label>
-      <label class="field"><span>子网掩码</span><input id="dhcp-netmask" type="text" placeholder="255.255.255.0" /></label>
-      <label class="field"><span>网关</span><input id="dhcp-gateway" type="text" placeholder="192.168.1.1" /></label>
-      <label class="field"><span>主 DNS</span><input id="dhcp-dns1" type="text" placeholder="8.8.8.8" /></label>
-      <label class="field"><span>备 DNS</span><input id="dhcp-dns2" type="text" placeholder="114.114.114.114" /></label>
-      <label class="field"><span>租约时长（小时）</span><input id="dhcp-lease" type="number" min="1" max="168" placeholder="24" /></label>
-      <label class="field"><span>本机 IP（DHCP 服务地址）</span><input id="dhcp-server-ip" type="text" placeholder="自动探测" /></label>
-    </div>
-    <div class="profile-actions" style="margin: 8px 0 16px">
-      <button class="ghost-btn" id="dhcp-save-btn" type="button">保存配置</button>
-    </div>
-
-    <!-- MAC→IP 绑定 -->
-    <p class="host-sub-title">MAC → IP 绑定（固定 IP 分配）</p>
-    <div class="dhcp-reserve-form">
-      <input id="dhcp-r-mac" type="text" placeholder="MAC 地址 aa:bb:cc:dd:ee:ff" />
-      <input id="dhcp-r-ip" type="text" placeholder="IP 192.168.1.50" />
-      <input id="dhcp-r-name" type="text" placeholder="主机名（可选）" />
-      <button class="primary-btn" id="dhcp-r-add-btn" type="button">添加</button>
-    </div>
-    <div class="svc-table-wrap">
-      <table class="svc-table">
-        <thead><tr><th>MAC</th><th>IP</th><th>主机名</th><th>备注</th><th>操作</th></tr></thead>
-        <tbody id="dhcp-reserve-tbody"><tr><td colspan="5" class="fb-empty">加载中…</td></tr></tbody>
-      </table>
-    </div>
-
-    <!-- 活跃租约 -->
-    <p class="host-sub-title">活跃租约</p>
-    <div class="svc-table-wrap">
-      <table class="svc-table">
-        <thead><tr><th>IP</th><th>MAC</th><th>主机名</th><th>状态</th></tr></thead>
-        <tbody id="dhcp-lease-tbody"><tr><td colspan="4" class="fb-empty">加载中…</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
   <!-- 局域网客户端 -->
   <section class="host-section">
     <div class="host-section-head">
@@ -106,10 +52,11 @@
 
     <!-- ARP 表（所有已知 LAN 设备） -->
     <p class="host-sub-title">局域网设备（ARP 表）</p>
+    <p class="host-fw-hint">默认放行局域网访问。对可疑设备可点「拒绝」写入一条防火墙入站封禁规则，随时可「允许」解封。需以管理员身份运行本服务。</p>
     <div class="svc-table-wrap">
       <table class="svc-table">
         <thead>
-          <tr><th>IP 地址</th><th>MAC 地址</th><th>类型</th><th>接口</th><th>备注</th></tr>
+          <tr><th>IP 地址</th><th>MAC 地址</th><th>类型</th><th>接口</th><th>访问控制</th></tr>
         </thead>
         <tbody id="host-arp-tbody">
           <tr><td colspan="5" class="fb-empty">加载中…</td></tr>
@@ -139,7 +86,7 @@
 
   <!-- 防火墙规则 -->
   <section class="host-section">
-    <p class="host-section-title">防火墙规则（只读）</p>
+    <p class="host-section-title">防火墙规则</p>
     <div class="panel-head-actions" style="margin-bottom:8px">
       <input class="svc-search" id="host-fw-search" type="search" placeholder="搜索规则名…" />
     </div>

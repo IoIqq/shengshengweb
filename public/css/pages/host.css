@@ -25,18 +25,8 @@
 .svc-table tr.is-highlight { background: rgba(39,174,96,0.06); }
 .svc-table tr.is-highlight:hover { background: rgba(39,174,96,0.1); }
 
-/* DHCP */
-.dhcp-note { font-size: 11px; color: var(--text-muted, #888); margin: 0 0 12px; padding: 8px 12px; background: var(--surface-2, rgba(0,0,0,0.03)); border-radius: 8px; border-left: 3px solid #d4a017; }
-.dhcp-detect-result { font-size: 12px; padding: 8px 12px; border-radius: 8px; margin: 0 0 12px; white-space: pre-wrap; line-height: 1.6; background: var(--surface-2, rgba(0,0,0,0.03)); color: var(--text-muted, #666); border: 1px solid var(--border, rgba(0,0,0,0.06)); }
-.dhcp-detect-result.is-ok { background: rgba(39,174,96,0.08); color: #27ae60; border-color: rgba(39,174,96,0.2); }
-.dhcp-detect-result.is-warn { background: rgba(192,57,43,0.08); color: #c0392b; border-color: rgba(192,57,43,0.2); }
-.dhcp-status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--surface-3, rgba(0,0,0,0.1)); color: var(--text-muted, #888); }
-.dhcp-status-badge.is-running { background: rgba(39,174,96,0.15); color: #27ae60; }
-.dhcp-config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-.dhcp-config-grid .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
-.dhcp-config-grid .field span { font-size: 11px; color: var(--text-muted, #666); }
-.dhcp-config-grid .field input { padding: 6px 10px; border: 1px solid var(--border, rgba(0,0,0,0.15)); border-radius: 6px; font-size: 12px; font-family: var(--font-mono, monospace); background: var(--surface, #fff); color: var(--text, #333); }
-.dhcp-reserve-form { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.dhcp-reserve-form input { padding: 6px 10px; border: 1px solid var(--border, rgba(0,0,0,0.15)); border-radius: 6px; font-size: 12px; background: var(--surface, #fff); color: var(--text, #333); }
-.dhcp-reserve-form input:nth-child(1) { width: 180px; font-family: var(--font-mono, monospace); }
-.dhcp-reserve-form input:nth-child(2) { width: 140px; font-family: var(--font-mono, monospace); }
+/* 局域网访问控制（防火墙拉黑/放行） */
+.host-fw-hint { font-size: 11px; color: var(--text-muted, #888); margin: 0 0 10px; padding: 8px 12px; background: var(--surface-2, rgba(0,0,0,0.03)); border-radius: 8px; border-left: 3px solid #d4a017; line-height: 1.6; }
+.host-arp-ctrl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.host-fw-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.host-fw-tag.is-blocked { background: rgba(192,57,43,0.12); color: #c0392b; }

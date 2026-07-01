@@ -55,8 +55,13 @@ import {
   loadDeviceOptions,
   uploadDeviceImage,
   setDeviceImagePreview,
-  startEditDevice,
   deleteDevice,
+  renderDevices,
+  openDeviceDrawer,
+  closeDeviceDrawer,
+  openDeviceStatusPopover,
+  closeDeviceStatusPopover,
+  confirmDeviceStatus,
   createBorrowRequest,
   syncBorrowView,
   refreshBorrowRequests,
@@ -64,6 +69,8 @@ import {
   returnBorrowRequest,
   deleteBorrowRequest,
   cancelBorrowRequest,
+  openBorrowDrawer,
+  closeBorrowDrawer,
   saveEditTeamMember,
   createTeamMember,
   cancelEditTeamMember,
@@ -80,11 +87,8 @@ import {
   bindTopicsEvents,
   bindStorageEvents,
   initWishWall,
-  renderSystemPanel,
-  refreshSystemInfo,
   loadSystemLogs,
   loadNetworkInfo,
-  restartService,
   loadLogFileList,
   searchLogs,
   loadFeishuSyncStatus,
@@ -579,32 +583,96 @@ function bindDeviceEvents() {
 
   loadDeviceOptions();
 
-  // 设备操作
+  // 新增设备：打开登记抽屉
+  if (els.deviceAddBtn) {
+    els.deviceAddBtn.addEventListener('click', () => openDeviceDrawer('add'));
+  }
+
+  // 台账视图切换：表格 / 卡片
+  const setDeviceView = (mode) => {
+    state.deviceViewMode = mode;
+    renderDevices();
+  };
+  if (els.deviceViewTable) {
+    els.deviceViewTable.addEventListener('click', () => setDeviceView('table'));
+  }
+  if (els.deviceViewGrid) {
+    els.deviceViewGrid.addEventListener('click', () => setDeviceView('grid'));
+  }
+
+  // 登记抽屉关闭：关闭按钮 + 遮罩点击
+  if (els.deviceDrawerClose) {
+    els.deviceDrawerClose.addEventListener('click', () => closeDeviceDrawer());
+  }
+  if (els.deviceDrawerOverlay) {
+    els.deviceDrawerOverlay.addEventListener('click', () => closeDeviceDrawer());
+  }
+
+  // 行内状态快改：弹层选项点击
+  if (els.deviceStatusPopover) {
+    els.deviceStatusPopover.addEventListener('click', (e) => {
+      const opt = e.target.closest('[data-status-option]');
+      if (opt) confirmDeviceStatus(opt.dataset.statusOption);
+    });
+  }
+
+  // 状态弹层外部点击关闭
+  document.addEventListener('click', (e) => {
+    if (!els.deviceStatusPopover || els.deviceStatusPopover.hidden) return;
+    if (els.deviceStatusPopover.contains(e.target)) return;
+    if (e.target.closest('[data-device-status]')) return;
+    closeDeviceStatusPopover();
+  });
+
+  // Esc：先关状态弹层，再关登记抽屉
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (els.deviceStatusPopover && !els.deviceStatusPopover.hidden) {
+      closeDeviceStatusPopover();
+      return;
+    }
+    if (els.deviceDrawer && !els.deviceDrawer.hidden) closeDeviceDrawer();
+  });
+
+  // 设备操作（编辑 / 删除 / 行内状态）
   if (els.deviceList) {
     els.deviceList.addEventListener('click', async (e) => {
+      const statusBtn = e.target.closest('[data-device-status]');
       const editBtn = e.target.closest('[data-device-edit]');
       const deleteBtn = e.target.closest('[data-device-delete]');
+
+      if (statusBtn) {
+        if (!canManageDevices()) {
+          Toast.warning('当前身份无权修改状态');
+          return;
+        }
+        openDeviceStatusPopover(statusBtn.dataset.deviceStatus, statusBtn);
+        return;
+      }
 
       if (editBtn) {
         if (!canManageDevices()) {
           Toast.warning('当前身份无权编辑设备');
           return;
         }
-        const id = editBtn.dataset.deviceEdit;
-        startEditDevice(id);
+        openDeviceDrawer('edit', editBtn.dataset.deviceEdit);
       } else if (deleteBtn) {
         if (!canManageDevices()) {
           Toast.warning('当前身份无权删除设备');
           return;
         }
-        const id = deleteBtn.dataset.deviceDelete;
-        await deleteDevice(id);
+        await deleteDevice(deleteBtn.dataset.deviceDelete);
       }
     });
   }
 }
 
 function bindBorrowEvents() {
+  const setBorrowView = (mode) => {
+    state.borrowViewMode = mode;
+    syncBorrowView();
+  };
+
   // 借出表单
   if (els.borrowForm) {
     els.borrowForm.addEventListener('submit', async (e) => {
@@ -612,6 +680,38 @@ function bindBorrowEvents() {
       const formData = new FormData(els.borrowForm);
       await createBorrowRequest(formData);
     });
+  }
+
+  // 提交申请按钮 → 打开抽屉
+  if (els.borrowAddBtn) {
+    els.borrowAddBtn.addEventListener('click', () => openBorrowDrawer());
+  }
+
+  // 取消按钮 → 关闭抽屉
+  if (els.borrowFormCancel) {
+    els.borrowFormCancel.addEventListener('click', () => closeBorrowDrawer());
+  }
+
+  // 抽屉关闭：关闭按钮 + 遮罩点击
+  if (els.borrowDrawerClose) {
+    els.borrowDrawerClose.addEventListener('click', () => closeBorrowDrawer());
+  }
+  if (els.borrowDrawerOverlay) {
+    els.borrowDrawerOverlay.addEventListener('click', () => closeBorrowDrawer());
+  }
+
+  // Esc 关闭抽屉
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (els.borrowDrawer && !els.borrowDrawer.hidden) closeBorrowDrawer();
+  });
+
+  // 视图切换（表格 / 卡片）
+  if (els.borrowViewTable) {
+    els.borrowViewTable.addEventListener('click', () => setBorrowView('table'));
+  }
+  if (els.borrowViewGrid) {
+    els.borrowViewGrid.addEventListener('click', () => setBorrowView('grid'));
   }
 
   // 借出搜索
@@ -622,22 +722,13 @@ function bindBorrowEvents() {
     }, 300));
   }
 
-  // 借出过滤
+  // 借出过滤（统计-筛选芯片，JS 渲染，仍用 [data-filter] 委托）
   if (els.borrowFilters) {
     els.borrowFilters.setAttribute('role', 'group');
     els.borrowFilters.setAttribute('aria-label', '借用申请筛选');
-    $$('[data-filter]', els.borrowFilters).forEach(b => {
-      b.setAttribute('aria-pressed', String(b.classList.contains('is-active')));
-    });
     els.borrowFilters.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-filter]');
       if (!btn) return;
-
-      $$('[data-filter]', els.borrowFilters).forEach(b => {
-        const active = b === btn;
-        b.classList.toggle('is-active', active);
-        b.setAttribute('aria-pressed', String(active));
-      });
       state.borrowFilter = btn.dataset.filter;
       syncBorrowView();
     });
@@ -863,6 +954,11 @@ function bindSettingsTabs() {
         loadStorageStatus();
       } else if (targetTab === 'preferences') {
         initPreferencesPanel();
+      } else if (targetTab === 'ops') {
+        // 运维 tab：加载网络访问、日志文件列表、飞书同步状态
+        loadNetworkInfo();
+        loadLogFileList();
+        loadFeishuSyncStatus();
       } else if (targetTab === 'maintenance') {
         initMaintenancePanel();
       }
@@ -870,37 +966,8 @@ function bindSettingsTabs() {
   });
 }
 
-// ── 系统管理面板事件 ──
+// ── 运维（网络访问 / 日志 / 飞书同步）事件；元素现位于「系统设置」运维 tab ──
 function bindSystemAdminEvents() {
-  // 刷新按钮
-  const refreshBtn = document.getElementById('sys-refresh-btn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      refreshSystemInfo();
-      loadNetworkInfo();
-    });
-  }
-
-  // 下载数据库备份
-  const dbBackupBtn = document.getElementById('sys-db-backup-btn');
-  if (dbBackupBtn) {
-    dbBackupBtn.addEventListener('click', () => {
-      window.open('/api/backup/database', '_blank', 'noopener');
-      Toast.success('正在下载数据库备份…');
-      flashSuccess(dbBackupBtn);
-    });
-  }
-
-  // 导出 JSON 备份
-  const jsonBackupBtn = document.getElementById('sys-db-json-btn');
-  if (jsonBackupBtn) {
-    jsonBackupBtn.addEventListener('click', () => {
-      window.open('/api/backup', '_blank', 'noopener');
-      Toast.success('正在导出 JSON 备份…');
-      flashSuccess(jsonBackupBtn);
-    });
-  }
-
   // 加载日志
   const loadLogsBtn = document.getElementById('sys-load-logs-btn');
   if (loadLogsBtn) {
@@ -955,12 +1022,6 @@ function bindSystemAdminEvents() {
   const refreshNetBtn = document.getElementById('sys-refresh-network-btn');
   if (refreshNetBtn) {
     refreshNetBtn.addEventListener('click', () => loadNetworkInfo());
-  }
-
-  // 重启服务
-  const restartBtn = document.getElementById('sys-restart-btn');
-  if (restartBtn) {
-    restartBtn.addEventListener('click', () => restartService());
   }
 
   // 飞书同步
