@@ -12,7 +12,7 @@
   background: transparent;
   box-shadow: none;
   overflow-x: clip;
-  gap: 20px;
+  gap: 14px;
 }
 
 /* 激活时 grid 布局：标题行两列 + 下方全宽 */
@@ -39,7 +39,7 @@
 .overview-title-text h1 {
   margin: 0;
   color: #383836;
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(22px, 2.2vw, 28px);
   font-weight: 760;
   line-height: 1.05;
   letter-spacing: -0.04em;
@@ -94,21 +94,20 @@
 /* ========== Hero / Side stack ========== */
 .overview-hero-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 1.42fr) minmax(280px, 0.58fr);
-  gap: 18px;
+  grid-template-columns: minmax(300px, 1.1fr) minmax(280px, 0.72fr);
+  gap: 12px;
 }
 
 .overview-hero-card {
   position: relative;
-  min-height: 480px;
   border: 1px solid var(--line);
   border-radius: var(--radius-hero);
   background: var(--hero-bg);
   overflow: hidden;
-  padding: clamp(28px, 3vw, 38px);
+  padding: clamp(18px, 2vw, 26px);
   display: grid;
-  align-content: space-between;
-  gap: clamp(18px, 2vw, 28px);
+  align-content: start;
+  gap: clamp(10px, 1.2vw, 16px);
   box-shadow: var(--panel-shadow);
 }
 
@@ -173,40 +172,40 @@ body[data-day-phase="night"] .overview-hero-card::before {
 /* 移除装饰性浮动窗口伪元素，减少视觉干扰 */
 
 .overview-hero-title {
-  margin: 14px 0 0;
-  max-width: 740px;
+  margin: 8px 0 0;
+  max-width: 600px;
   color: #363634;
-  font-size: clamp(36px, 4.4vw, 60px);
-  line-height: 1;
-  letter-spacing: -0.07em;
+  font-size: clamp(18px, 1.8vw, 26px);
+  line-height: 1.15;
+  letter-spacing: -0.05em;
   font-weight: 760;
 }
 
 .overview-hero-lede {
   max-width: 480px;
-  margin: 18px 0 0;
+  margin: 6px 0 0;
   color: var(--text-soft);
-  font-size: 15px;
-  line-height: 1.78;
+  font-size: 13.5px;
+  line-height: 1.65;
 }
 
 .overview-hero-message {
   max-width: 520px;
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--text-muted);
-  font-size: 13.5px;
-  line-height: 1.7;
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 
-/* Hero metrics — C19 metric tiles in hero card */
+/* Hero metrics — 3x2 bento grid, numbers as the visual anchor */
 .hero-stats {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
   padding: 0;
-  margin: 4px 0 0;
-  max-width: 760px;
+  margin: 10px 0 0;
+  max-width: none;
 }
 
 .hero-stats .metric {
@@ -231,7 +230,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
   width: 100%;
   display: grid;
   gap: 4px;
-  padding: 14px 14px 12px;
+  padding: 12px 14px 10px;
   background: transparent;
   border: 0;
   text-align: left;
@@ -256,9 +255,9 @@ body[data-day-phase="night"] .overview-hero-card::before {
   display: block;
   color: #646a64;
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: clamp(22px, 1.8vw, 30px);
   font-weight: 760;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.05em;
 }
 
 .metric-hint {
@@ -277,10 +276,22 @@ body[data-day-phase="night"] .overview-hero-card::before {
   letter-spacing: 0.02em;
 }
 
+.overview-hero-message:empty { display: none; }
+
 .hero-stats .metric[data-tone="warning"] .metric-num { color: var(--warning); }
 .hero-stats .metric[data-tone="success"] .metric-num { color: var(--success); }
 .hero-stats .metric[data-tone="info"] .metric-num { color: var(--brand); }
 .hero-stats .metric[data-tone="primary"] .metric-num { color: var(--brand-strong); }
+
+/* Tone-tinted tile backgrounds — attention items pop, neutral items recede */
+.hero-stats .metric[data-tone="warning"] {
+  background: rgba(183, 152, 74, 0.07);
+  border-color: rgba(183, 152, 74, 0.25);
+}
+.hero-stats .metric[data-tone="primary"] {
+  background: rgba(100, 106, 100, 0.07);
+  border-color: rgba(100, 106, 100, 0.22);
+}
 
 .metric-dot {
   position: absolute;
@@ -305,7 +316,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
 /* ========== Side stack panels ========== */
 .overview-side-stack {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   align-content: start;
 }
 
@@ -314,7 +325,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: #ffffff;
-  padding: 22px;
+  padding: 16px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 32px rgba(70, 70, 66, 0.04);
   animation: metric-fade 0.72s var(--motion-ease) both;
   overflow: hidden;
@@ -325,7 +336,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
   align-items: end;
   justify-content: space-between;
   gap: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .overview-panel-head-text {
@@ -495,13 +506,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
 }
 
 .shortcut-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
+  display: none;
 }
 
 /* Media chart */
@@ -512,7 +517,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
 
 .media-chart-svg-wrap {
   position: relative;
-  width: 160px;
+  width: 120px;
   margin: 4px auto 6px;
 }
 
@@ -547,7 +552,7 @@ body[data-day-phase="night"] .overview-hero-card::before {
 .media-chart-center strong {
   display: block;
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 760;
   color: var(--text);
   letter-spacing: -0.04em;
@@ -607,15 +612,74 @@ body[data-day-phase="night"] .overview-hero-card::before {
   font-size: 13px;
 }
 
+/* Storage bar — 横向容量条 */
+.storage-bar-body {
+  display: grid;
+  gap: 12px;
+}
+
+.storage-bar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.storage-bar-pct {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 760;
+  color: var(--brand-strong);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.storage-bar-head span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.storage-bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-strong);
+  transition: width 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.storage-bar-body[data-tone="warning"] .storage-bar-fill { background: var(--warning); }
+.storage-bar-body[data-tone="warning"] .storage-bar-pct { color: var(--warning); }
+.storage-bar-body[data-tone="danger"] .storage-bar-fill { background: var(--danger); }
+.storage-bar-body[data-tone="danger"] .storage-bar-pct { color: var(--danger); }
+
+.legend-dot--used { background: var(--brand-strong); }
+.legend-dot--free { background: var(--text-muted); opacity: 0.4; }
+
+.storage-bar-body[data-tone="warning"] .legend-dot--used { background: var(--warning); }
+.storage-bar-body[data-tone="danger"] .legend-dot--used { background: var(--danger); }
+
+.storage-chart-total {
+  margin: 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
 /* ========== Lower board ========== */
 .overview-board {
   display: grid;
   grid-template-columns: minmax(280px, 1.04fr) minmax(280px, 0.96fr);
-  gap: 18px;
+  gap: 12px;
 }
 
 .overview-board-panel {
-  padding: 22px;
+  padding: 16px;
 }
 
 /* Focus groups (queue rows replacing old focus-cards) */
@@ -631,7 +695,6 @@ body[data-day-phase="night"] .overview-hero-card::before {
 }
 
 .focus-group + .focus-group {
-  padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 
@@ -692,7 +755,6 @@ body[data-day-phase="night"] .overview-hero-card::before {
 
 .focus-row:hover {
   background: var(--surface-soft);
-  transform: translateY(-1px);
   transition-duration: var(--motion-medium);
   transition-timing-function: var(--motion-spring);
 }
@@ -942,6 +1004,26 @@ body[data-day-phase="night"] .overview-hero-card::before {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* 环形图弧绘入：stroke-dashoffset 从 --arc-start 画到 0 */
+@keyframes arc-draw-in {
+  from { stroke-dashoffset: var(--arc-start, 0); }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* 素材图副弧（photo）：绘入后淡显，匹配 opacity: 0.55 终态 */
+@keyframes arc-photo-fade {
+  from { opacity: 0; }
+  to   { opacity: 0.55; }
+}
+
+.media-chart-segment--video {
+  animation: arc-draw-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.media-chart-segment--photo {
+  animation: arc-photo-fade 220ms ease-out 440ms both;
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 1180px) {
   .overview-hero-layout {
@@ -1096,6 +1178,11 @@ body[data-day-phase="night"] .overview-hero-card::before {
   .overview-hero-card.is-cleared::after {
     animation: none;
     opacity: 0;
+  }
+
+  .media-chart-segment--video,
+  .media-chart-segment--photo {
+    animation: none;
   }
 }
 

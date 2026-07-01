@@ -49,6 +49,10 @@ export const VIEW_ROLES = {
   topics: ['admin', 'editor'],
   settings: ['admin'],
   admin: ['admin'],
+  'file-browser': ['admin'],
+  monitor: ['admin'],
+  services: ['admin'],
+  host: ['admin'],
 };
 
 /**

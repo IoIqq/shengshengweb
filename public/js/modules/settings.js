@@ -230,8 +230,7 @@ export async function restoreBackup() {
 
       const result = await requestJSON('/api/backup/restore', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tables: checkedTables, data: backup }),
+        body: { tables: checkedTables, data: backup },
       });
 
       Toast.success(`恢复成功，已恢复 ${checkedTables.length} 个数据表`);

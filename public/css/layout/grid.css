@@ -3,7 +3,7 @@
 
 /* 容器变量 */
 :root {
-  --container: min(1460px, calc(100vw - 52px));
+  --container: min(1120px, calc(100vw - 52px));
 }
 
 /* 工作区主容器 */
@@ -62,25 +62,25 @@
 /* 素材网格 */
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
 }
 
 /* 团队统计网格 */
 .team-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 /* 团队网格 */
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
 }
 
 /* 个人资料元数据网格 */

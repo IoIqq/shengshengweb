@@ -310,4 +310,4 @@ window.LoadingUI = {
   onPageVisible
 };
 
-console.log('✅ 加载动画模块已加载');
+

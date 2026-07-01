@@ -24,6 +24,7 @@ window.Toast = Toast;
 // ============================================================================
 
 // 捕获未处理的 Promise 错误
+let authReloading = false;
 window.addEventListener('unhandledrejection', (event) => {
   console.error('❌ 未处理的 Promise 错误:', event.reason);
 
@@ -34,11 +35,14 @@ window.addEventListener('unhandledrejection', (event) => {
   const message = event.reason?.message || '发生了一个错误';
   Toast.error(message);
 
-  // 如果是 401 错误，提示重新登录
-  if (event.reason?.status === 401) {
+  // 如果是 401 错误，提示重新登录（防重：多个并发 401 只弹一次）
+  if (event.reason?.status === 401 && !authReloading) {
+    authReloading = true;
     setTimeout(() => {
       if (confirm('登录已过期，是否重新登录？')) {
         window.location.reload();
+      } else {
+        authReloading = false;
       }
     }, 1000);
   }

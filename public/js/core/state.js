@@ -19,6 +19,7 @@ export const state = {
 
   // 审片相关
   reviewFilter: 'all',
+  reviewSearch: '',
   reviewSort: 'newest',
 
   // 设备相关
@@ -41,6 +42,9 @@ export const state = {
   teamSearch: '',
   teamSort: 'name',
   teamEditingId: null,
+
+  // 待办相关
+  todoEditingId: null,
 
   // 选题库相关
   topicItems: [],
@@ -90,6 +94,37 @@ export function resetState() {
   state.storageStatus = null;
   state.storageValidation = null;
   state.selectedMedia.clear();
+  // 清理各模块过滤/搜索/编辑状态，避免跨会话保留
+  state.mediaFilter = 'all';
+  state.mediaSearch = '';
+  state.mediaSort = 'newest';
+  state.reviewFilter = 'all';
+  state.reviewSearch = '';
+  state.reviewSort = 'newest';
+  state.deviceFilter = 'all';
+  state.deviceSearch = '';
+  state.deviceEditingId = null;
+  state.borrowFilter = 'all';
+  state.borrowSearch = '';
+  state.teamFilter = 'all';
+  state.teamSearch = '';
+  state.teamSort = 'name';
+  state.teamEditingId = null;
+  state.topicSearch = '';
+  state.topicFilter = 'all';
+  state.topicEditingId = null;
+  state.todoEditingId = null;
+  state.loginPending = false;
+  state.actionPending = false;
+  state.mediaViewMode = 'list';
+  state.deviceCatalog = [];
+  state.deviceItems = [];
+  state.borrowCatalog = [];
+  state.borrowItems = [];
+  state.topicItems = [];
+  state.teamCatalog = [];
+  state.teamItems = [];
+  state.profile = { displayName: '', signature: '', avatarUrl: '', navMode: 'auto' };
 }
 
 // 暴露到全局（调试用）

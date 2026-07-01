@@ -37,14 +37,14 @@ router.post('/', registrationLimiter, (req, res) => {
   if (!validateUsername(username)) {
     return res.status(400).json({ error: '账号需为 3-32 位字母、数字、下划线、点或连字符。' });
   }
-  if (userModel.usernameExists(username)) {
-    return res.status(400).json({ error: '用户名已存在。' });
-  }
-  if (registrationRequestModel.hasPendingRegistrationRequest(username)) {
-    return res.status(400).json({ error: '该账号已有待审核申请。' });
-  }
-
   try {
+    if (userModel.usernameExists(username)) {
+      return res.status(400).json({ error: '用户名已存在。' });
+    }
+    if (registrationRequestModel.hasPendingRegistrationRequest(username)) {
+      return res.status(400).json({ error: '该账号已有待审核申请。' });
+    }
+
     const request = registrationRequestModel.createRegistrationRequest({
       username,
       displayName,

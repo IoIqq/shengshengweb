@@ -68,6 +68,10 @@ export async function loadAdminModules() {
     storage,
     maintenance,
     systemAdmin,
+    fileBrowser,
+    monitor,
+    services,
+    host,
   ] = await Promise.all([
     import('../modules/settings.js'),
     import('../modules/users.js'),
@@ -75,8 +79,12 @@ export async function loadAdminModules() {
     import('../modules/storage.js'),
     import('../modules/maintenance.js'),
     import('../modules/system-admin.js'),
+    import('../modules/file-browser.js'),
+    import('../modules/monitor.js'),
+    import('../modules/services.js'),
+    import('../modules/host.js'),
   ]);
-  adminMods = { settings, users, audit, storage, maintenance, systemAdmin };
+  adminMods = { settings, users, audit, storage, maintenance, systemAdmin, fileBrowser, monitor, services, host };
   return adminMods;
 }
 

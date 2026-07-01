@@ -8,6 +8,7 @@ import { els } from '../core/dom.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { Dialog } from '../ui/dialog.js';
 import { setPending } from '../ui/feedback.js';
 
 /**
@@ -267,7 +268,8 @@ export async function createTodo(formData) {
     });
 
     // 添加到本地状态
-    if (state.bootstrap?.todos) {
+    if (state.bootstrap) {
+      if (!Array.isArray(state.bootstrap.todos)) state.bootstrap.todos = [];
       state.bootstrap.todos.push(result.todo || result);
     }
 
@@ -342,7 +344,14 @@ export async function toggleTodo(id) {
  * @param {string} id - 待办 ID
  */
 export async function deleteTodo(id) {
-  if (!confirm('确定要删除这个待办吗？')) {
+  const confirmed = await Dialog.confirm({
+    title: '删除待办',
+    message: '确定要删除这个待办吗？',
+    confirmText: '删除',
+    cancelText: '取消',
+    variant: 'danger',
+  });
+  if (!confirmed) {
     return;
   }
 

@@ -36,6 +36,10 @@ import {
   renderTopics,
   renderSettings,
   renderSystemPanel,
+  renderFileBrowser,
+  renderMonitor,
+  renderServices,
+  renderHost,
   renderBorrowDeviceSelect,
   syncDeviceView,
   syncBorrowView,
@@ -62,7 +66,10 @@ export function showShowcaseShell() {
   const workspaceShell = document.getElementById('workspace-shell');
   if (showcase) showcase.classList.remove('hidden');
   if (authShell) authShell.classList.add('hidden');
-  if (workspaceShell) workspaceShell.classList.add('hidden');
+  if (workspaceShell) {
+    workspaceShell.classList.add('hidden');
+    workspaceShell.classList.remove('is-ready');
+  }
 }
 
 function showAuthShell() {
@@ -101,6 +108,10 @@ function renderAll() {
   if (currentRole() === 'admin') {
     renderSettings();
     renderSystemPanel();
+    renderFileBrowser();
+    renderMonitor();
+    renderServices();
+    renderHost();
   }
   renderBorrowDeviceSelect();
 }
@@ -162,7 +173,6 @@ async function completeLogin(result, message) {
   // 应用本地外观偏好；index.html 的 head 内联脚本已先做一次反闪烁同步，
   // 这里再调一次主要是为了给 'auto' 模式装上 matchMedia 监听器，让会话期间能跟随系统切换
   applyTheme(loadPreferences()?.theme || 'auto');
-  renderAll();
   setActiveView(state.activeView);
 }
 

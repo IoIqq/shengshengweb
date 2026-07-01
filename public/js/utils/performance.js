@@ -20,7 +20,7 @@ export const performance = {
       return null;
     }
 
-    const nav = performance.getEntriesByType('navigation')[0];
+    const nav = window.performance.getEntriesByType('navigation')[0];
     if (!nav) return null;
 
     return {
@@ -52,7 +52,7 @@ export const performance = {
       return null;
     }
 
-    const paint = performance.getEntriesByType('paint');
+    const paint = window.performance.getEntriesByType('paint');
     const result = {};
 
     paint.forEach((p) => {
@@ -159,9 +159,9 @@ export const performance = {
    * @returns {object} { duration: 毫秒, result: 函数返回值 }
    */
   measure(name, fn) {
-    const start = performance.now();
+    const start = window.performance.now();
     const result = fn();
-    const duration = performance.now() - start;
+    const duration = window.performance.now() - start;
 
     console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
 
@@ -201,7 +201,7 @@ export const performance = {
       return [];
     }
 
-    const resources = performance.getEntriesByType('resource');
+    const resources = window.performance.getEntriesByType('resource');
     if (!type) return resources;
 
     return resources.filter((r) => r.initiatorType === type);

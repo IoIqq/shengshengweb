@@ -114,7 +114,10 @@ router.patch('/:id', requireAuth, requireEditor, (req, res) => {
     if (!existing) return res.status(404).json({ error: '选题不存在。' });
 
     const updates = {};
-    if (req.body.title !== undefined) updates.title = String(req.body.title).trim();
+    if (req.body.title !== undefined) {
+      updates.title = String(req.body.title).trim();
+      if (!updates.title) return res.status(400).json({ error: '标题不能为空。' });
+    }
     if (req.body.sourceUrl !== undefined) {
       const url = String(req.body.sourceUrl).trim();
       if (url && !isValidUrl(url)) return res.status(400).json({ error: '链接无效或包含不安全的地址。' });
@@ -128,9 +131,10 @@ router.patch('/:id', requireAuth, requireEditor, (req, res) => {
     if (req.body.description !== undefined) updates.description = String(req.body.description).trim();
     if (req.body.tags !== undefined) updates.tags = Array.isArray(req.body.tags) ? req.body.tags : [];
     if (req.body.status !== undefined) {
-      if (['idea', 'researching', 'selected', 'archived'].includes(req.body.status)) {
-        updates.status = req.body.status;
+      if (!['idea', 'researching', 'selected', 'archived'].includes(req.body.status)) {
+        return res.status(400).json({ error: '状态值不合法。' });
       }
+      updates.status = req.body.status;
     }
 
     if (Object.keys(updates).length === 0) {

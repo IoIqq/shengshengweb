@@ -76,11 +76,16 @@ export const storage = {
   },
 
   /**
-   * 清空所有数据
+   * 清空应用相关数据（只删除 shengsheng 前缀的 key，避免误伤同域名其他脚本）
    */
   clear() {
     try {
-      localStorage.clear();
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('shengsheng')) keys.push(k);
+      }
+      keys.forEach((k) => localStorage.removeItem(k));
     } catch (err) {
       console.warn('❌ localStorage 清空失败:', err);
     }
@@ -117,7 +122,7 @@ export const storage = {
     try {
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
-        if (!key) continue;
+        if (!key || !key.startsWith('shengsheng')) continue;
 
         try {
           const data = JSON.parse(localStorage.getItem(key));

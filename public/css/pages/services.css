@@ -1,0 +1,15 @@
+/* 服务管理 */
+.svc-note { font-size: 11px; color: var(--text-muted, #888); margin: 0 0 12px; padding: 8px 12px; background: var(--surface-2, rgba(0,0,0,0.03)); border-radius: 8px; border-left: 3px solid #d4a017; }
+.svc-search { padding: 6px 10px; border: 1px solid var(--border, rgba(0,0,0,0.15)); border-radius: 6px; font-size: 13px; min-width: 180px; background: var(--surface, #fff); color: var(--text, #333); }
+.svc-table-wrap { overflow-x: auto; border: 1px solid var(--border, rgba(0,0,0,0.06)); border-radius: 8px; }
+.svc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.svc-table thead { background: var(--surface-2, rgba(0,0,0,0.03)); }
+.svc-table th { padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.04em; color: var(--text-muted, #666); white-space: nowrap; }
+.svc-table td { padding: 6px 12px; border-top: 1px solid var(--border, rgba(0,0,0,0.04)); vertical-align: middle; }
+.svc-table tbody tr:hover { background: var(--surface-2, rgba(0,0,0,0.03)); }
+.svc-name { font-family: var(--font-mono, monospace); font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svc-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; }
+.svc-badge.is-running { background: rgba(39,174,96,0.15); color: #27ae60; }
+.svc-badge.is-stopped { background: rgba(192,57,43,0.12); color: #c0392b; }
+.svc-actions { display: flex; gap: 4px; white-space: nowrap; }
+.svc-btn { padding: 3px 10px; font-size: 11px; border-radius: 4px; }

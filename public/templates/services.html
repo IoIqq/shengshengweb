@@ -1,0 +1,31 @@
+<article class="workspace-panel reveal" data-panel="services" data-admin-only="true">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">系统管理</p>
+      <h2>服务管理</h2>
+    </div>
+    <div class="panel-head-actions">
+      <input class="svc-search" id="svc-search" type="search" placeholder="搜索服务名…" />
+      <button class="ghost-btn" id="svc-refresh-btn" type="button" title="刷新">⟳ 刷新</button>
+    </div>
+  </div>
+
+  <p class="svc-note" id="svc-note">提示：启停系统服务需要管理员权限运行本程序，否则操作会返回"拒绝访问"。</p>
+
+  <div class="svc-table-wrap">
+    <table class="svc-table">
+      <thead>
+        <tr>
+          <th>服务名称</th>
+          <th>显示名</th>
+          <th>状态</th>
+          <th>启动类型</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="svc-tbody">
+        <tr><td colspan="5" class="fb-empty">加载中…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>

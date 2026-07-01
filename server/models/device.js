@@ -50,7 +50,7 @@ function getDeviceList(filters = {}) {
   const clauses = [];
   const params = [];
   const searchClause = buildSearchClause(
-    ['name', 'category', 'asset_no', 'location', 'owner', 'note'],
+    ['name', 'category', 'asset_no', 'serial_no', 'location', 'owner', 'note'],
     filters.search || filters.q,
     params,
   );
@@ -92,6 +92,16 @@ function getDeviceById(id) {
 }
 
 /**
+ * 按名称精确匹配设备（忽略大小写、去首尾空格）。
+ * 用于飞书同步：成员在表格里填的是设备名而非 ID。
+ */
+function getDeviceByName(name) {
+  const trimmed = String(name || '').trim();
+  if (!trimmed) return null;
+  return get('SELECT * FROM devices WHERE LOWER(name) = LOWER(?) LIMIT 1', [trimmed]);
+}
+
+/**
  * 获取所有设备
  */
 function getAllDevices(filters = {}) {
@@ -106,6 +116,12 @@ function createDevice(data) {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   const id = data.id || `device-${timestamp}-${random}`;
+
+  const assetNoValue = data.asset_no || data.assetNo;
+  if (assetNoValue) {
+    const dup = get('SELECT id FROM devices WHERE asset_no = ? LIMIT 1', [assetNoValue]);
+    if (dup) throw new Error('该资产编号已存在。');
+  }
 
   const status = ['available', 'borrowed', 'maintenance'].includes(data.status)
     ? data.status
@@ -144,6 +160,11 @@ function createDevice(data) {
 function updateDevice(id, updates) {
   const existing = getDeviceById(id);
   if (!existing) return null;
+
+  if (updates.assetNo !== undefined && updates.assetNo !== existing.asset_no) {
+    const dup = get('SELECT id FROM devices WHERE asset_no = ? AND id != ? LIMIT 1', [updates.assetNo, id]);
+    if (dup) throw new Error('该资产编号已存在。');
+  }
 
   const now = nowIso();
   const name = updates.name !== undefined ? updates.name : existing.name;
@@ -216,6 +237,7 @@ function deleteDevice(id) {
 module.exports = {
   getDeviceList,
   getDeviceById,
+  getDeviceByName,
   getAllDevices,
   getDistinctValues,
   createDevice,

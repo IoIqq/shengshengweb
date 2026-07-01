@@ -37,6 +37,10 @@ export const VIEW_LABELS = {
   topics: '选题库',
   settings: '系统设置',
   admin: '系统管理',
+  'file-browser': '文件浏览',
+  monitor: '资源监控',
+  services: '服务管理',
+  host: '主机控制',
 };
 
 // 验证规则

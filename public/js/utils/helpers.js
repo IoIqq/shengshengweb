@@ -58,16 +58,20 @@ export function getInitials(name) {
 
 export function getRoleLabel(role) {
   if (role === 'admin') return '管理员';
-  if (role === 'member') return '成员';
-  return '访客';
+  if (role === 'editor') return '编辑者';
+  if (role === 'guest') return '访客';
+  return '成员';
 }
 
 // 防抖函数
-export function debounce(fn, delay, key = 'default') {
+let _debounceSeq = 0;
+export function debounce(fn, delay, key) {
   const timers = window._debounceTimers || (window._debounceTimers = {});
+  // 未指定 key 时，为每个 debounce 实例分配独立 key，避免互相取消
+  const slot = key || `_d${++_debounceSeq}`;
   return function (...args) {
-    clearTimeout(timers[key]);
-    timers[key] = setTimeout(() => fn.apply(this, args), delay);
+    clearTimeout(timers[slot]);
+    timers[slot] = setTimeout(() => fn.apply(this, args), delay);
   };
 }
 

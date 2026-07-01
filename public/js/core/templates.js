@@ -25,6 +25,10 @@ const PANELS = [
   'topics',
   'settings',
   'system-panel',
+  'file-browser',
+  'monitor',
+  'services',
+  'host',
 ];
 
 // 模板片段内存缓存：file -> html 字符串

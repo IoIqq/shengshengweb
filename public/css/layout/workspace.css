@@ -17,38 +17,46 @@
 .workspace-shell {
   min-height: 100vh;
   opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 320ms var(--motion-ease),
-    transform 320ms var(--motion-ease);
+  transition: opacity 320ms var(--motion-ease);
 }
 
 .workspace-shell.is-ready {
   opacity: 1;
-  transform: translateY(0);
 }
 
-/* 顶部悬浮导航窗 */
+/* App shell：topbar 仅横跨内容区（侧栏右侧），随 --side-nav-w 联动 */
+:root {
+  --side-nav-w: 172px;
+  --tb-gap: 24px;
+  --tb-left: calc(var(--side-nav-w) + var(--tb-gap));
+}
+
 .topbar {
-  position: sticky;
-  top: 18px;
+  position: fixed;
+  top: 12px;
+  left: var(--tb-left);
+  right: auto;
   z-index: 90;
-  width: min(1200px, calc(100vw - 32px));
-  margin: 18px auto 22px;
+  /* 限宽左对齐：贴侧栏右侧起，封顶 content-max，右侧留白。
+     用 100%（fixed 元素相对视口、不含滚动条）替代 100vw，杜绝横向溢出。 */
+  width: min(var(--content-max), calc(100% - var(--side-nav-w) - var(--tb-gap) * 2));
+  margin: 0;
   isolation: isolate;
   transform-origin: top left;
   will-change: width;
   transition:
     width 0.42s var(--motion-spring),
-    margin 0.42s var(--motion-spring),
+    left 0.42s var(--motion-spring),
     opacity 0.3s ease;
 }
 
 /* —— 收纳为左上角圆球 —— */
 .topbar.is-scrolled-down {
   width: 56px;
-  margin-left: 18px;
-  margin-right: auto;
+  left: calc(var(--side-nav-w) + 12px);
+  right: auto; /* 球态固定左上角，取消右锚定让 width:56px 生效 */
+  margin-left: 0;
+  margin-right: 0;
   margin-bottom: 0;
   cursor: pointer;
   overflow: hidden;
@@ -96,9 +104,11 @@
 /* 展开态：焦点 / 持久点开（从左上角向右展开） */
 .topbar.is-scrolled-down:focus-within,
 .topbar.is-scrolled-down.is-expanded {
-  width: min(1200px, calc(100vw - 32px)) !important;
-  margin-left: 18px !important;
-  margin-right: auto !important;
+  width: min(var(--content-max), calc(100% - var(--side-nav-w) - var(--tb-gap) * 2)) !important;
+  left: var(--tb-left) !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   pointer-events: auto !important; /* 展开时允许点击 */
 }
 
@@ -114,7 +124,7 @@
 .topbar.is-scrolled-down:focus-within .topbar-shell,
 .topbar.is-scrolled-down.is-expanded .topbar-shell {
   display: grid !important;
-  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
   padding: 8px !important;
   border-radius: 24px !important;
   min-height: unset !important;
@@ -174,7 +184,7 @@
 
 .topbar-shell {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 8px;
@@ -199,8 +209,8 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  min-height: 46px;
-  padding: 0 14px 0 10px;
+  min-height: 40px;
+  padding: 0 12px 0 8px;
   border-right: 1px solid var(--line);
 }
 
@@ -258,7 +268,7 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 9px;
-  font-weight: 720;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -270,14 +280,14 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   flex-wrap: nowrap;
   justify-content: center;
   min-width: 0;
   flex: 1 1 auto;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 0 4px;
+  padding: 0 8px;
 }
 
 .topnav::-webkit-scrollbar {
@@ -313,7 +323,7 @@
   border-radius: 11px;
   color: var(--text-muted);
   font-size: 12px;
-  font-weight: 720;
+  font-weight: 600;
   gap: 8px;
 }
 
@@ -535,7 +545,7 @@
 .profile-summary-card span {
   color: var(--text-soft);
   font-size: 11px;
-  font-weight: 720;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -784,6 +794,9 @@
   }
 }
 
+/* mobile-fab 桌面端默认隐藏（避免占用文档流把 workspace-row 顶下来） */
+.mobile-fab { display: none; }
+
 @media (max-width: 768px) {
   /* 移动端 topbar 在滚动时隐藏 */
   .topbar.is-scrolled-down {
@@ -900,4 +913,279 @@
   .mobile-nav-overlay {
     transition: none !important;
   }
+}
+
+/* ========== 侧栏导航（顶栏精简后，其余功能项收纳于此） ========== */
+.workspace-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+.workspace-row .workspace-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* 限宽左对齐：贴侧栏右侧起，封顶 content-max。宽屏下内容顶到上限后，
+     折叠侧栏腾出的空间不再吃进 → 宽度恒定、卡片不重排，只整体左移。
+     margin:0 不居中；右侧留白即 max-width 之外的剩余 flex 空间。 */
+  margin: 0;
+  width: auto;
+  max-width: var(--content-max, 1600px);
+  padding-inline: 0 24px;
+}
+
+.side-nav {
+  position: sticky;
+  top: 0;
+  width: 172px;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 8px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-right: 1px solid var(--line-soft);
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.side-nav::-webkit-scrollbar { width: 4px; }
+.side-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+.side-nav::-webkit-scrollbar-track { background: transparent; }
+
+.side-nav-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 4px 12px 10px;
+}
+
+/* 侧栏品牌头：图标+文字+折叠按钮，消除顶部空白带 */
+.side-nav-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 6px;
+}
+
+.side-nav-header .brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+  line-height: 1.25;
+}
+
+.side-nav-header .brand-text strong {
+  font-size: 13.5px;
+  font-weight: 740;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-nav-header .brand-text span {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.side-nav-header .side-nav-toggle {
+  margin: 0 0 0 auto;
+}
+
+/* 侧栏 nav-chip：图标+标签，左色条 active */
+.side-nav .nav-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: auto;
+  min-height: 36px;
+  min-width: 0;
+  width: 100%;
+  padding: 0 10px 0 8px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  justify-content: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.nav-chip-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-soft);
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.nav-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-nav .nav-chip:hover .nav-chip-icon { color: var(--text); }
+
+.side-nav .nav-chip.is-active {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-left: 2px solid var(--brand-strong);
+}
+
+.side-nav .nav-chip.is-active .nav-chip-icon { color: var(--brand-strong); }
+
+/* 窄屏隐藏侧栏（移动端走 tab bar + FAB 抽屉） */
+@media (max-width: 900px) {
+  :root { --side-nav-w: 0px; }
+  .workspace-row {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .side-nav {
+    display: none;
+  }
+}
+
+/* ========== 回到顶部悬浮按钮 ========== */
+.back-to-top-fab {
+  position: fixed;
+  right: 24px;
+  top: 96px;
+  z-index: 9998;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-soft);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition:
+    opacity 220ms var(--motion-ease),
+    transform 220ms var(--motion-spring),
+    background 200ms var(--motion-ease),
+    color 200ms var(--motion-ease),
+    border-color 200ms var(--motion-ease);
+}
+
+.back-to-top-fab.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-to-top-fab:hover {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-color: var(--brand-line);
+}
+
+.back-to-top-fab:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.back-to-top-fab svg {
+  transition: transform var(--motion-medium) var(--motion-spring);
+}
+
+.back-to-top-fab:hover svg {
+  transform: translateY(-2px);
+}
+
+/* ========== 侧栏可缩放 ========== */
+.side-nav {
+  transition: width 220ms var(--motion-ease);
+}
+
+.side-nav.is-collapsed {
+  width: 52px;
+}
+
+.side-nav.is-collapsed .side-nav-title,
+.side-nav.is-collapsed .nav-chip-label,
+.side-nav.is-collapsed .side-nav-header .brand-text,
+.side-nav.is-collapsed .side-nav-header .brand-icon {
+  display: none;
+}
+
+.side-nav.is-collapsed .nav-chip {
+  justify-content: center;
+  padding: 0;
+  border-left: 0;
+}
+
+.side-nav.is-collapsed .side-nav-header {
+  justify-content: center;
+  border-bottom: 0;
+  padding: 4px 0 6px;
+}
+
+.side-nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 0 4px auto;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.side-nav-toggle:hover {
+  background: var(--surface-soft);
+  color: var(--text-soft);
+}
+
+.side-nav-toggle svg {
+  transition: transform 220ms var(--motion-spring);
+}
+
+.side-nav.is-collapsed .side-nav-toggle {
+  margin: 0 auto 8px;
+}
+
+.side-nav.is-collapsed .side-nav-toggle svg {
+  transform: rotate(180deg);
+}
+
+.side-nav.is-collapsed .side-nav-toggle {
+  position: relative;
+}
+
+/* ========== 工作台内容距顶部缩进（topbar 40px + top 12px + gap 16px） ========== */
+.workspace-row .workspace-main {
+  padding-top: 74px;
+}
+
+/* 窄屏隐藏回到顶部和侧栏 toggle */
+@media (max-width: 900px) {
+  .back-to-top-fab { display: none; }
+  .side-nav-toggle { display: none; }
 }

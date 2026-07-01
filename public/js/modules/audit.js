@@ -5,10 +5,18 @@
 import { request } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { createSkeleton } from '../ui/loading.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 let currentPage = 1;
 let currentFilters = {};
 let isLoading = false;
+let auditEventsBound = false;
+
+export function resetAuditState() {
+  currentPage = 1;
+  currentFilters = {};
+  auditEventsBound = false;
+}
 
 /**
  * 初始化审计日志
@@ -55,7 +63,7 @@ function renderAuditLogList(logs) {
   if (!container) return;
 
   // 显示骨架屏
-  if (isLoading || !logs || logs.length === 0 && isLoading) {
+  if (isLoading || !logs || (logs.length === 0 && isLoading)) {
     container.innerHTML = createSkeleton('list', 5);
     return;
   }
@@ -108,30 +116,30 @@ function createAuditLogItem(log) {
 
   const detailsText = log.details
     ? Object.entries(log.details)
-        .map(([key, value]) => `${key}: ${value}`)
+        .map(([key, value]) => `${escapeHtml(String(key))}: ${escapeHtml(String(value))}`)
         .join(', ')
     : '';
 
   const actionIcon = actionIcons[log.action] || '';
-  const actionLabel = actionLabels[log.action] || log.action;
+  const actionLabel = actionLabels[log.action] || escapeHtml(log.action);
 
   return `
     <div class="audit-log-item" role="listitem">
       <div class="audit-time">${time}</div>
       <div class="audit-user">
-        <span class="user-badge ${log.role}">${log.username}</span>
+        <span class="user-badge ${escapeHtml(log.role || '')}">${escapeHtml(log.username || '')}</span>
       </div>
       <div class="audit-action">
-        <span class="action-badge ${log.action}">
+        <span class="action-badge ${escapeHtml(log.action || '')}">
           <span class="status-icon" aria-hidden="true">${actionIcon}</span>
           ${actionLabel}
         </span>
-        <span class="resource-type">${resourceTypeLabels[log.resource_type] || log.resource_type}</span>
+        <span class="resource-type">${escapeHtml(resourceTypeLabels[log.resource_type] || log.resource_type || '')}</span>
       </div>
       <div class="audit-details" title="${detailsText}">
         ${detailsText || '-'}
       </div>
-      <div class="audit-ip">${log.ip_address || '-'}</div>
+      <div class="audit-ip">${escapeHtml(log.ip_address || '-')}</div>
     </div>
   `;
 }
@@ -175,7 +183,7 @@ async function loadUserFilter() {
     if (!select) return;
 
     const options = users
-      .map((user) => `<option value="${user.id}">${user.username}</option>`)
+      .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(user.username)}</option>`)
       .join('');
 
     select.innerHTML = `<option value="">所有用户</option>${options}`;
@@ -188,6 +196,8 @@ async function loadUserFilter() {
  * 绑定审计日志事件
  */
 function bindAuditEvents() {
+  if (auditEventsBound) return;
+  auditEventsBound = true;
   const filterBtn = document.getElementById('audit-filter-btn');
   const resetBtn = document.getElementById('audit-reset-btn');
   const exportBtn = document.getElementById('export-logs-btn');
@@ -233,11 +243,11 @@ function applyFilters() {
  * 重置筛选
  */
 function resetFilters() {
-  document.getElementById('audit-user-filter').value = '';
-  document.getElementById('audit-action-filter').value = '';
-  document.getElementById('audit-resource-filter').value = '';
-  document.getElementById('audit-start-date').value = '';
-  document.getElementById('audit-end-date').value = '';
+  const ids = ['audit-user-filter', 'audit-action-filter', 'audit-resource-filter', 'audit-start-date', 'audit-end-date'];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  }
 
   loadAuditLogs(1, {});
 }

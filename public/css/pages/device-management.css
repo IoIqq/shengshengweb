@@ -47,18 +47,23 @@
   flex-wrap: wrap;
 }
 
-/* Device List */
+/* Device List —— 多列卡片网格：宽屏约 4 列，auto-fill 随屏宽自动降列 */
 .device-list,
 .borrow-list {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--spacing-grid-gap);
   margin-top: 14px;
   min-width: 0;
+  align-items: stretch; /* 同行卡片等高 */
 }
 
 .device-item,
 .borrow-item {
-  padding: 14px;
+  /* 等高对齐：卡片纵向 flex，信息区撑开、操作区沉底，同行不留空洞 */
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
   min-width: 0;
   transition:
     transform var(--motion-fast) var(--motion-ease),
@@ -101,15 +106,22 @@
   justify-content: center;
 }
 
+/* 借出卡等高：操作区沉底（无操作时靠内容自然撑开） */
+.borrow-item > .borrow-actions {
+  margin-top: auto;
+}
+
 /* Enhanced Device Card Layout */
 .device-card-layout {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
+  flex: 1; /* 撑满卡片，配合父级等高，让信息区/操作区沉底 */
+  min-width: 0;
 }
 
 .device-thumb {
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.03);
@@ -153,6 +165,20 @@
 .device-info {
   flex: 1;
   min-width: 0;
+  /* 纵向 flex：备注/操作沉底，同行等高时矮卡内部撑开而非留白 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 设备卡：备注前的弹性空隙把操作区推到底部 */
+.device-info .device-note-details {
+  margin-top: auto;
+}
+.device-info .device-actions {
+  margin-top: auto;
+}
+.device-info .device-note-details ~ .device-actions {
+  margin-top: 8px; /* 已有备注沉底时，操作紧跟其后即可 */
 }
 
 /* Device Note Details */

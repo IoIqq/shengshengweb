@@ -110,6 +110,12 @@ async function performViewTransition(view, token) {
       child.style.animation = '';
       child.style.animationDelay = `${index * 50}ms`;
     });
+    // 动画播完后清除内联 delay，避免再次切入时仍受旧值影响
+    setTimeout(() => {
+      nextPanel.querySelectorAll(':scope > *').forEach((child) => {
+        child.style.animationDelay = '';
+      });
+    }, nextPanel.querySelectorAll(':scope > *').length * 50 + 400);
 
     if (view !== 'settings') {
       closeProfilePopover();
@@ -184,6 +190,8 @@ export function setShellLoggedIn(authed) {
   if (els.authShell) els.authShell.classList.toggle('hidden', authed);
   if (els.workspaceShell) els.workspaceShell.classList.toggle('hidden', !authed);
   if (els.workspaceShell) els.workspaceShell.classList.toggle('is-ready', authed);
+  // workspace-shell 就绪后绑定侧栏导航
+  if (authed) initSideNav();
 }
 
 /**
@@ -248,6 +256,7 @@ export function initScrollHide() {
   if (!topbar) return;
 
   let isCollapsed = false;
+  let hasScrolled = false;
   let sentinel = null;
   let observer = null;
 
@@ -346,7 +355,7 @@ export function initScrollHide() {
       // 哨兵进入视口 → 展开
       if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
         doCollapse();
-      } else if (entry.isIntersecting) {
+      } else if (entry.isIntersecting && hasScrolled) {
         doExpand();
       }
     }, { threshold: 0, rootMargin: '0px' });
@@ -377,6 +386,17 @@ export function initScrollHide() {
 
   // 初次启动
   startObserving();
+  // 按当前 navMode 决定是否真的启用滚动收缩（locked → stopObserving 强制展开；
+  // auto → 保留 observer）。修正 navmode:changed 事件早于本函数注册而被错过、
+  // 导致 locked 模式 observer 仍在跑的问题。
+  applyMode(els.topnav?.dataset.navMode === 'locked' ? 'locked' : 'auto');
+
+  // 首次滚动后才允许 observer 自动展开
+  window.addEventListener('scroll', () => { hasScrolled = true; }, { once: true, passive: true });
+
+  // 加载即展开：topbar 初始保持完整展开态，由 IntersectionObserver 在向下滚动时
+  // 动态收缩成小球；不再一加载就先收成小球（避免"没有动态收缩"的观感）。
+  // navMode='locked' 时上方 applyMode 已 stopObserving，topbar 始终保持展开。
 
   // 窗口尺寸变化或字体加载完成后，标题位置可能位移 → 重定位 sentinel
   let placeRaf = 0;
@@ -542,4 +562,59 @@ export function initScrollHide() {
       if (hamburgerBtn) hamburgerBtn.click();
     });
   }
+
+  // ── 回到顶部悬浮按钮 ──
+  const backToTopFab = document.getElementById('back-to-top-fab');
+  if (backToTopFab) {
+    let scrollRaf = 0;
+    window.addEventListener('scroll', () => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
+        if (window.scrollY > 300) {
+          backToTopFab.hidden = false;
+          backToTopFab.classList.add('is-visible');
+        } else {
+          backToTopFab.classList.remove('is-visible');
+        }
+      });
+    }, { passive: true });
+    backToTopFab.addEventListener('click', () => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  }
+
+}
+
+// ── 侧栏导航：折叠/展开（独立初始化，workspace-shell 就绪后调用）──
+let sideNavBound = false;
+export function initSideNav() {
+  if (sideNavBound) return;
+  sideNavBound = true;
+
+  // 恢复折叠状态，并同步 --side-nav-w 让 topbar 贴齐内容区
+  const sn = document.getElementById('side-nav');
+  if (sn && localStorage.getItem('side-nav-collapsed') === '1') {
+    sn.classList.add('is-collapsed');
+  }
+  document.documentElement.style.setProperty(
+    '--side-nav-w',
+    sn?.classList.contains('is-collapsed') ? '52px' : '172px',
+  );
+
+  // 事件委托：仅 toggle 点击折叠/展开（点 nav-chip 只切视图，不再自动收缩）
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('#side-nav-toggle');
+    if (toggle) {
+      e.preventDefault();
+      const sn = document.getElementById('side-nav');
+      if (!sn) return;
+      const collapsed = sn.classList.toggle('is-collapsed');
+      localStorage.setItem('side-nav-collapsed', collapsed ? '1' : '0');
+      document.documentElement.style.setProperty('--side-nav-w', collapsed ? '52px' : '172px');
+      requestAnimationFrame(() => updateNavIndicator());
+      return;
+    }
+  });
 }

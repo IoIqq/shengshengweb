@@ -381,6 +381,7 @@ async function scanHashes(limit = 10) {
       setFileHash(row.id, `error:${error.code || 'failed'}`);
     }
   }
+  if (rows.length > 0) saveDatabase();
   return { hashed: rows.length, remaining: countUnhashed() };
 }
 

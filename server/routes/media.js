@@ -282,26 +282,29 @@ router.post('/:id/review', requireAuth, requirePermission('media:review'), (req,
   }
 
   let updated = null;
-  transaction(() => {
-    const row = get('SELECT * FROM media WHERE id = ? LIMIT 1', [id]);
-    if (!row) {
-      const error = new Error('素材不存在。');
-      error.statusCode = 404;
-      throw error;
-    }
+  try {
+    transaction(() => {
+      const row = get('SELECT * FROM media WHERE id = ? LIMIT 1', [id]);
+      if (!row) {
+        const error = new Error('素材不存在。');
+        error.statusCode = 404;
+        throw error;
+      }
 
-    const nextStatus = status === 'approved' ? '已通过' : '退回';
-    const nextNote = reviewNote || row.note;
-    run(
-      'UPDATE media SET review_state = ?, status = ?, note = ?, updated_at = ? WHERE id = ?',
-      [status, nextStatus, nextNote, nowIso(), id],
-    );
-    saveDatabase();
+      const nextStatus = status === 'approved' ? '已通过' : '退回';
+      const nextNote = reviewNote || row.note;
+      run(
+        'UPDATE media SET review_state = ?, status = ?, note = ?, updated_at = ? WHERE id = ?',
+        [status, nextStatus, nextNote, nowIso(), id],
+      );
 
-    updated = get('SELECT * FROM media WHERE id = ? LIMIT 1', [id]);
-    const detail = reviewNote ? `${row.title} 已${nextStatus}（备注：${reviewNote}）` : `${row.title} 已${nextStatus}`;
-    logActivity('素材审核', req.user?.username || 'unknown', detail);
-  });
+      updated = get('SELECT * FROM media WHERE id = ? LIMIT 1', [id]);
+      const detail = reviewNote ? `${row.title} 已${nextStatus}（备注：${reviewNote}）` : `${row.title} 已${nextStatus}`;
+      logActivity('素材审核', req.user?.username || 'unknown', detail);
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
 
   res.json({ ok: true, item: mediaRowToItem(updated) });
 });

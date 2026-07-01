@@ -18,7 +18,9 @@ export function initMobileNav() {
 
   function syncItems() {
     itemsBox.innerHTML = '';
-    topnav.querySelectorAll('.nav-chip').forEach((chip) => {
+    document.querySelectorAll('.nav-chip').forEach((chip) => {
+      if (chip.hidden || chip.classList.contains('hidden')) return;
+      if (chip.closest('.mobile-nav-drawer')) return;
       const clone = chip.cloneNode(true);
       clone.removeAttribute('id');
       clone.classList.remove('is-active');
@@ -102,7 +104,7 @@ function initTabBar(topnav, drawer) {
   tabButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
-      const targetChip = topnav.querySelector(`.nav-chip[data-view="${view}"]`);
+      const targetChip = document.querySelector(`.nav-chip[data-view="${view}"]:not(.hidden)`);
       if (targetChip) {
         targetChip.click();
         syncTabActiveState(view);
@@ -129,7 +131,7 @@ function initTabBar(topnav, drawer) {
 
   // 监听视图切换 → 同步 Tab 选中状态
   // 通过 MutationObserver 观察 topnav 中 .is-active 的变化
-  const navChips = topnav.querySelectorAll('.nav-chip');
+  const navChips = document.querySelectorAll('.nav-chip');
   const observer = new MutationObserver(() => {
     navChips.forEach((chip) => {
       if (chip.classList.contains('is-active')) {
@@ -143,7 +145,7 @@ function initTabBar(topnav, drawer) {
   });
 
   // 初始化时同步一次状态
-  const activeChip = topnav.querySelector('.nav-chip.is-active');
+  const activeChip = document.querySelector('.nav-chip.is-active');
   if (activeChip) {
     syncTabActiveState(activeChip.dataset.view);
   }

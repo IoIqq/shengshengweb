@@ -88,13 +88,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .panel-head h2 {
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--text);
-  font-size: clamp(26px, 2.6vw, 38px);
+  font-size: clamp(16px, 1.3vw, 20px);
   line-height: 1;
   letter-spacing: -0.055em;
   font-weight: 760;

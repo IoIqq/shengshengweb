@@ -7,6 +7,8 @@ let currentFilter = 'all';
 let lightboxList = []; // 当前可见项（按筛选过滤），lightbox 导航基于它
 let lightboxIndex = -1;
 let previouslyFocused = null;
+// 滚动渐显 observer：跨次加载前需 disconnect，避免持有已脱离 DOM 的旧卡片造成泄漏
+let revealObserver = null;
 
 // 占位 SVG（图片加载失败时与空状态同款图标）
 const FALLBACK_SVG = `<span class="img-fallback" aria-hidden="true">
@@ -22,6 +24,8 @@ export async function loadShowcase() {
   const empty = document.getElementById('showcase-empty');
   const countEl = document.getElementById('showcase-count');
 
+  if (!grid) return;
+
   try {
     const data = await request('/api/media/showcase');
     allItems = data?.items || [];
@@ -31,11 +35,11 @@ export async function loadShowcase() {
 
     if (!allItems.length) {
       grid.innerHTML = '';
-      empty.classList.remove('hidden');
+      if (empty) empty.classList.remove('hidden');
       bindBackToTop();
       return;
     }
-    empty.classList.add('hidden');
+    if (empty) empty.classList.add('hidden');
     renderShowcaseGallery(allItems, grid);
     bindLightbox();
     bindFilters();
@@ -180,6 +184,11 @@ function revealCards(grid) {
     cards.forEach((c) => c.classList.add('is-visible'));
     return;
   }
+  // 释放上一次的 observer，防止重复加载时旧 observer 持有已移除的卡片节点
+  if (revealObserver) {
+    revealObserver.disconnect();
+    revealObserver = null;
+  }
   const io = new IntersectionObserver(
     (entries, obs) => {
       entries.forEach((entry) => {
@@ -191,6 +200,7 @@ function revealCards(grid) {
     },
     { threshold: 0.12, rootMargin: '0px 0px -5% 0px' }
   );
+  revealObserver = io;
   cards.forEach((c) => io.observe(c));
 }
 
@@ -237,6 +247,10 @@ function bindLightbox() {
   if (!lightbox || lightbox.dataset.bound) return;
   lightbox.dataset.bound = '1';
 
+  // crossfade 定时器与关闭状态：防止关闭后定时器仍触发播放、连续切换时定时器堆叠
+  let pendingTimer = null;
+  let closed = false;
+
   function resetMedia() {
     if (lightboxVideo) {
       lightboxVideo.pause();
@@ -249,6 +263,10 @@ function bindLightbox() {
 
   function showAt(index) {
     if (index < 0 || index >= lightboxList.length) return;
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+    }
     lightboxIndex = index;
     const item = lightboxList[index];
     const isVideo = item.kind === 'video';
@@ -260,6 +278,7 @@ function bindLightbox() {
     if (stage) stage.classList.add('is-switching');
 
     const apply = () => {
+      if (closed) return;
       resetMedia();
       if (isVideo && lightboxVideo) {
         lightboxVideo.classList.remove('hidden');
@@ -289,7 +308,10 @@ function bindLightbox() {
       apply();
     } else {
       // 等待 CSS opacity 过渡的同步窗口
-      setTimeout(apply, 180);
+      pendingTimer = setTimeout(() => {
+        pendingTimer = null;
+        apply();
+      }, 180);
     }
 
     // 单件时隐藏前后箭头
@@ -304,6 +326,7 @@ function bindLightbox() {
     lightboxList = visibleCards.map((c) => allItems[Number(c.dataset.index)]);
     const startIndex = visibleCards.indexOf(card);
     previouslyFocused = document.activeElement;
+    closed = false;
     lightbox.classList.remove('hidden');
     showAt(startIndex < 0 ? 0 : startIndex);
     // 等图先就位再聚焦关闭按钮
@@ -311,6 +334,11 @@ function bindLightbox() {
   }
 
   function closeLightbox() {
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+    }
+    closed = true;
     lightbox.classList.add('hidden');
     resetMedia();
     lightboxIndex = -1;

@@ -110,6 +110,13 @@ export function startDayPhaseWatcher() {
   dayPhaseTimer = window.setInterval(applyDayPhase, 15 * 60 * 1000);
 }
 
+export function stopDayPhaseWatcher() {
+  if (dayPhaseTimer) {
+    window.clearInterval(dayPhaseTimer);
+    dayPhaseTimer = null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Hero「今日清零」能量条扫过
 // ─────────────────────────────────────────────────────────────────────────────

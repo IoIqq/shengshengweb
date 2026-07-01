@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 // 导入配置和工具
 const config = require('./config');
@@ -35,6 +36,12 @@ const topicLibraryRoutes = require('./routes/topic-library');
 const storageRoutes = require('./routes/storage');
 const registrationRequestRoutes = require('./routes/registration-requests');
 const systemRoutes = require('./routes/system');
+const filesRoutes = require('./routes/files');
+const monitorRoutes = require('./routes/monitor');
+const servicesRoutes = require('./routes/services');
+const hostRoutes = require('./routes/host');
+const dhcpRoutes = require('./routes/dhcp');
+const feishuSyncRoutes = require('./routes/feishu-sync');
 
 const STATIC_CACHEABLE_EXTENSIONS = new Set(['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf']);
 const UPLOAD_CACHEABLE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.mp4', '.webm', '.mov', '.m4v', '.ogg']);
@@ -120,14 +127,26 @@ async function initApp() {
     // 安全头
     app.use(
       helmet({
-        contentSecurityPolicy: false, // 前端已有CSP配置
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'blob:'],
+            mediaSrc: ["'self'", 'blob:'],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", 'data:'],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+          },
+        },
         crossOriginEmbedderPolicy: false,
       })
     );
 
-    // CORS
+    // CORS：明确指定允许的来源；PUBLIC_URL 未配置时禁止跨域（同源SPA不需要CORS）
     app.use(cors({
-      origin: config.PUBLIC_URL || true,
+      origin: config.PUBLIC_URL || false,
       credentials: true,
     }));
 
@@ -182,26 +201,39 @@ async function initApp() {
       .readFileSync(path.join(PUBLIC_DIR, 'service-worker.js'), 'utf8')
       .replace(/__ASSET_VERSION__/g, ASSET_VERSION);
     console.log(`✓ ASSET_VERSION = ${ASSET_VERSION}`);
+    const mainCssTemplate = fs
+      .readFileSync(path.join(PUBLIC_DIR, 'css/main.css'), 'utf8')
+      .replace(/__ASSET_VERSION__/g, ASSET_VERSION);
 
     app.get(['/', '/index.html'], (req, res) => {
-      // 开发模式：每次请求重新计算版本号，确保文件改动后立即生效
-      const currentVersion = refreshAssetVersion();
-      const currentTemplate = fs
-        .readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8')
-        .replace(/__ASSET_VERSION__/g, currentVersion);
+      const isProd = process.env.NODE_ENV === 'production';
+      const html = isProd
+        ? indexHtmlTemplate
+        : fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8')
+            .replace(/__ASSET_VERSION__/g, refreshAssetVersion());
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.type('html').send(currentTemplate);
+      res.type('html').send(html);
     });
 
     app.get('/service-worker.js', (req, res) => {
-      // 开发模式：每次请求重新计算版本号，确保 Service Worker 缓存更新
-      const currentVersion = refreshAssetVersion();
-      const currentTemplate = fs
-        .readFileSync(path.join(PUBLIC_DIR, 'service-worker.js'), 'utf8')
-        .replace(/__ASSET_VERSION__/g, currentVersion);
+      const isProd = process.env.NODE_ENV === 'production';
+      const js = isProd
+        ? serviceWorkerTemplate
+        : fs.readFileSync(path.join(PUBLIC_DIR, 'service-worker.js'), 'utf8')
+            .replace(/__ASSET_VERSION__/g, refreshAssetVersion());
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Service-Worker-Allowed', '/');
-      res.type('application/javascript').send(currentTemplate);
+      res.type('application/javascript').send(js);
+    });
+
+    app.get('/css/main.css', (req, res) => {
+      const isProd = process.env.NODE_ENV === 'production';
+      const css = isProd
+        ? mainCssTemplate
+        : fs.readFileSync(path.join(PUBLIC_DIR, 'css/main.css'), 'utf8')
+            .replace(/__ASSET_VERSION__/g, refreshAssetVersion());
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.type('text/css').send(css);
     });
 
     app.use(
@@ -237,6 +269,12 @@ async function initApp() {
     app.use('/api/storage', storageRoutes);
     app.use('/api/registration-requests', registrationRequestRoutes);
     app.use('/api', systemRoutes); // system路由包含多个端点，挂载到/api
+    app.use('/api/files', filesRoutes);
+    app.use('/api/monitor', monitorRoutes);
+    app.use('/api/services', servicesRoutes);
+    app.use('/api/host', hostRoutes);
+    app.use('/api/dhcp', dhcpRoutes);
+    app.use('/api/feishu-sync', feishuSyncRoutes);
 
     // 健康检查（已包含在systemRoutes中，这里保留作为备份）
     app.get('/api/health', (req, res) => {
@@ -264,30 +302,62 @@ async function initApp() {
     }
     config.PORT = listenPort;
 
+    // 检测 TLS 证书（server/certs/cert.pem + key.pem）
+    const certsDir = path.join(config.ROOT_DIR, 'server', 'certs');
+    let sslOptions = null;
+    try {
+      const certFile = path.join(certsDir, 'cert.pem');
+      const keyFile  = path.join(certsDir, 'key.pem');
+      if (fs.existsSync(certFile) && fs.existsSync(keyFile)) {
+        sslOptions = { cert: fs.readFileSync(certFile), key: fs.readFileSync(keyFile) };
+      }
+    } catch (e) {
+      console.warn('⚠️  TLS 证书读取失败，回退到 HTTP：', e.message);
+    }
+    if (!sslOptions) {
+      console.warn('⚠️  未找到 TLS 证书（server/certs/cert.pem + key.pem），以明文 HTTP 启动。');
+      console.warn('   生产环境建议运行 scripts/generate-cert.bat 生成自签名证书，或由反向代理处理 TLS。');
+    }
+
+    const scheme = sslOptions ? 'https' : 'http';
+
     // 实时探测当前网络的局域网地址（切换 Wi-Fi / 有线后会自动反映）
     const lanAddresses = getLanAddresses();
     const networkUrl = lanAddresses.length
-      ? `http://${lanAddresses[0].address}:${listenPort}`
+      ? `${scheme}://${lanAddresses[0].address}:${listenPort}`
       : '（未连接局域网）';
 
-    httpServer = app.listen(listenPort, config.HOST, () => {
+    // 飞书多维表格同步：启用则启动后台定时拉取（unref，不阻止退出）
+    if (config.FEISHU.enabled) {
+      const feishuSyncService = require('./services/feishu-sync');
+      const intervalMs = config.FEISHU.intervalSec * 1000;
+      setInterval(() => { feishuSyncService.runSync().catch((e) => console.error('[Feishu] 定时同步异常:', e?.message || e)); }, intervalMs).unref();
+      // 启动后稍延后跑一次，避免与 DB 初始化/端口探测抢资源
+      setTimeout(() => { feishuSyncService.runSync().catch(() => {}); }, 8000).unref();
+      console.log(`🔁  飞书同步已启用：每 ${config.FEISHU.intervalSec}s 拉取一次设备申请`);
+    } else if (process.env.FEISHU_SYNC_ENABLED && String(process.env.FEISHU_SYNC_ENABLED) !== '0') {
+      console.warn('⚠️  飞书同步已开启但配置不完整（缺 FEISHU_APP_ID/APP_SECRET/APP_TOKEN/TABLE_ID），已跳过。');
+    }
+
+    const onListening = () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║   🚀  ${config.SITE_TITLE}
 ║   ${config.SITE_SUBTITLE}
 ║
-║   📡  本地: http://localhost:${listenPort}
+║   📡  本地: ${scheme}://localhost:${listenPort}
 ║   🌐  网络: ${networkUrl}
 ║
 ║   📁  数据库: ${path.relative(process.cwd(), config.DB_PATH)}
 ║   📤  上传: ${path.relative(process.cwd(), config.UPLOAD_DIR)}
 ║   ⚙️   环境: ${process.env.NODE_ENV || 'development'}
+║   🔒  TLS:  ${sslOptions ? '已启用（自签名/自定义证书）' : '未启用（HTTP 明文）'}
 ╚═══════════════════════════════════════════════════════════╝`);
 
       if (lanAddresses.length > 1) {
         console.log('\n   其他可用网络地址（换网络时可试）：');
         for (const ip of lanAddresses.slice(1)) {
-          console.log(`     • http://${ip.address}:${listenPort}  [${ip.name}]`);
+          console.log(`     • ${scheme}://${ip.address}:${listenPort}  [${ip.name}]`);
         }
       }
       console.log('\n   📱 手机访问 / 二维码：运行  npm run network\n');
@@ -298,9 +368,14 @@ async function initApp() {
         platform: process.platform,
         host: config.HOST,
         port: listenPort,
+        tls: !!sslOptions,
         lanAddresses: lanAddresses.map((ip) => ip.address),
       });
-    });
+    };
+
+    httpServer = sslOptions
+      ? https.createServer(sslOptions, app).listen(listenPort, config.HOST, onListening)
+      : app.listen(listenPort, config.HOST, onListening);
 
   } catch (error) {
     console.error('❌ 服务器启动失败:', error);

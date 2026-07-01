@@ -25,8 +25,11 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: '请输入用户名和密码。' });
   }
-  if (password.length < 6 || password.length > 100) {
-    return res.status(400).json({ error: '密码长度需为 6-100 个字符。' });
+  if (password.length < 8 || password.length > 100) {
+    return res.status(400).json({ error: '密码长度需为 8-100 个字符。' });
+  }
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    return res.status(400).json({ error: '密码需包含大写字母、小写字母和数字。' });
   }
   if (!['admin', 'editor', 'guest'].includes(role)) {
     return res.status(400).json({ error: '用户角色不合法。' });
@@ -70,6 +73,7 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
  */
 router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) return res.status(400).json({ error: '用户 ID 无效。' });
   const updates = {};
 
   if (req.body.displayName !== undefined) {
@@ -87,8 +91,11 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   }
   if (req.body.password !== undefined) {
     const password = String(req.body.password);
-    if (password.length < 6 || password.length > 100) {
-      return res.status(400).json({ error: '密码长度需为 6-100 个字符。' });
+    if (password.length < 8 || password.length > 100) {
+      return res.status(400).json({ error: '密码长度需为 8-100 个字符。' });
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: '密码需包含大写字母、小写字母和数字。' });
     }
     updates.password = password;
   }
@@ -139,6 +146,7 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
  */
 router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) return res.status(400).json({ error: '用户 ID 无效。' });
 
   // 不能删除自己
   if (userId === req.user.id) {
@@ -186,6 +194,7 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
  */
 router.patch('/:id/status', requireAuth, requireAdmin, (req, res) => {
   const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) return res.status(400).json({ error: '用户 ID 无效。' });
   const { status } = req.body;
 
   if (!['active', 'disabled'].includes(status)) {
@@ -234,6 +243,22 @@ router.patch('/:id/status', requireAuth, requireAdmin, (req, res) => {
     console.error('更新用户状态失败:', error);
     res.status(500).json({ error: '更新用户状态失败。' });
   }
+});
+
+/**
+ * 踢出用户所有会话（管理员）
+ */
+router.delete('/:id/sessions', requireAuth, requireAdmin, (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) return res.status(400).json({ error: '用户 ID 无效。' });
+  if (!userModel.getUserById(userId)) return res.status(404).json({ error: '用户不存在。' });
+  sessionModel.deleteUserSessions(userId);
+  auditModel.createAuditLog({
+    userId: req.user.id, username: req.user.username, role: req.user.role,
+    action: 'revoke_sessions', resourceType: 'user', resourceId: String(userId),
+    ipAddress: req.ip, userAgent: req.get('user-agent'),
+  });
+  res.json({ ok: true });
 });
 
 module.exports = router;

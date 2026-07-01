@@ -198,7 +198,7 @@
 
 /* 素材网格：稳重的扫读栅格 */
 .workspace-panel[data-panel='media'] .media-grid {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 255px), 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -917,7 +917,7 @@
 
 .dedup-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: var(--spacing-3, 12px);
 }
 .dedup-card {

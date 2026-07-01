@@ -83,7 +83,7 @@ export function renderTopics() {
             ${item.description ? `<p class="media-note">${escapeHtml(item.description)}</p>` : ''}
             ${(item.tags || []).length ? `<div class="tag-row">${item.tags.map((t) => `<span class="tag-chip">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
             <div class="media-actions">
-              <a class="ghost-btn media-action-btn" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="打开 ${escapeHtml(item.title)} 原链接">打开原链接</a>
+              <a class="ghost-btn media-action-btn" href="${/^https?:/i.test(item.sourceUrl || '') ? escapeHtml(item.sourceUrl) : '#'}" target="_blank" rel="noopener noreferrer" aria-label="打开 ${escapeHtml(item.title)} 原链接">打开原链接</a>
               ${isEditor() ? `<button class="ghost-btn media-action-btn" data-topic-edit="${escapeHtml(item.id)}" type="button" aria-label="编辑 ${escapeHtml(item.title)}">编辑</button><button class="ghost-btn media-action-btn media-action-btn--danger" data-topic-delete="${escapeHtml(item.id)}" type="button" aria-label="删除 ${escapeHtml(item.title)}">删除</button>` : ''}
             </div>
           </div>
@@ -98,7 +98,8 @@ export function renderTopicPreview(id) {
   if (!el) return;
   const embed = el.dataset.embed;
   if (!embed) return;
-  el.querySelector('iframe')?.setAttribute('src', `https:${embed}`);
+  const src = embed.startsWith('http') ? embed : `https:${embed}`;
+  el.querySelector('iframe')?.setAttribute('src', src);
 }
 
 export async function addTopic(formData) {
@@ -197,7 +198,6 @@ export function bindTopicsEvents() {
       btn.classList.add('is-active');
       state.topicFilter = btn.dataset.topicFilter;
       els.topicsFilters.querySelectorAll('[data-topic-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      state.topicFilter = btn.dataset.topicFilter;
       renderTopics();
     });
   }

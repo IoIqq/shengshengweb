@@ -234,6 +234,38 @@ function createTables() {
       user_agent TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS dhcp_config (
+      id INTEGER PRIMARY KEY,
+      pool_start TEXT NOT NULL DEFAULT '',
+      pool_end TEXT NOT NULL DEFAULT '',
+      netmask TEXT NOT NULL DEFAULT '255.255.255.0',
+      gateway TEXT NOT NULL DEFAULT '',
+      dns_primary TEXT NOT NULL DEFAULT '',
+      dns_secondary TEXT NOT NULL DEFAULT '',
+      lease_hours INTEGER NOT NULL DEFAULT 24,
+      server_ip TEXT NOT NULL DEFAULT '',
+      enabled INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS dhcp_reservations (
+      mac TEXT PRIMARY KEY,
+      ip TEXT NOT NULL,
+      hostname TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL
+    );
+
+    -- 飞书多维表格 ↔ NAS 设备申请同步状态
+    -- record_id 为飞书行 ID，作去重键；status: synced(已导入)/error(匹配失败)/backed(已回写)
+    CREATE TABLE IF NOT EXISTS feishu_sync_state (
+      record_id TEXT PRIMARY KEY,
+      borrow_request_id TEXT,
+      status TEXT NOT NULL DEFAULT 'synced',
+      error TEXT NOT NULL DEFAULT '',
+      synced_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   migrateSchema();
@@ -272,6 +304,10 @@ const SCHEMA_MIGRATIONS = [
   ['users', 'created_by', 'INTEGER DEFAULT NULL'],
   ['users', 'phone', "TEXT DEFAULT ''"],
   ['users', 'bio', "TEXT DEFAULT ''"],
+  ['users', 'nav_mode', "TEXT DEFAULT 'auto'"],
+  // sessions 扩展
+  ['sessions', 'ip_address', "TEXT DEFAULT ''"],
+  ['sessions', 'user_agent', "TEXT DEFAULT ''"],
   // topic_library 扩展
   ['topic_library', 'description', "TEXT DEFAULT ''"],
   ['topic_library', 'tags_json', "TEXT DEFAULT '[]'"],
@@ -288,6 +324,9 @@ const SCHEMA_MIGRATIONS = [
   ['media', 'file_hash', 'TEXT'],
   ['media', 'transfer_state', "TEXT NOT NULL DEFAULT 'ready'"],
   ['media', 'original_filename', "TEXT DEFAULT ''"],
+  // borrow_requests 扩展
+  ['borrow_requests', 'reject_reason', "TEXT DEFAULT ''"],
+  ['borrow_requests', 'created_by', "TEXT DEFAULT ''"],
 ];
 
 const SCHEMA_INDEXES = [

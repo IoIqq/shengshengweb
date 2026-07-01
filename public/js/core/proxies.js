@@ -14,6 +14,7 @@ const m = () => getModules();
 export const renderDashboard = (...args) => m()?.dashboard?.renderDashboard?.(...args);
 export const renderActivity = (...args) => m()?.dashboard?.renderActivity?.(...args);
 export const initActivityFilters = (...args) => m()?.dashboard?.initActivityFilters?.(...args);
+export const resetDashboardState = (...args) => m()?.dashboard?.resetDashboardState?.(...args);
 
 // media
 export const renderMedia = (...args) => m()?.media?.renderMedia?.(...args);
@@ -79,6 +80,7 @@ export const createBorrowRequest = (...args) => m()?.borrow?.createBorrowRequest
 export const approveBorrowRequest = (...args) => m()?.borrow?.approveBorrowRequest?.(...args);
 export const returnBorrowRequest = (...args) => m()?.borrow?.returnBorrowRequest?.(...args);
 export const deleteBorrowRequest = (...args) => m()?.borrow?.deleteBorrowRequest?.(...args);
+export const cancelBorrowRequest = (...args) => m()?.borrow?.cancelBorrowRequest?.(...args);
 export const syncBorrowView = (...args) => m()?.borrow?.syncBorrowView?.(...args);
 export const refreshBorrowRequests = (...args) => m()?.borrow?.refreshBorrowRequests?.(...args);
 export const renderBorrowDeviceSelect = (...args) => m()?.borrow?.renderBorrowDeviceSelect?.(...args);
@@ -94,6 +96,7 @@ export const initUsers = (...args) => m()?.users?.initUsers?.(...args);
 export const loadUsers = (...args) => m()?.users?.loadUsers?.(...args);
 export const initAuditLogs = (...args) => m()?.audit?.initAuditLogs?.(...args);
 export const loadAuditLogs = (...args) => m()?.audit?.loadAuditLogs?.(...args);
+export const resetAuditState = (...args) => m()?.audit?.resetAuditState?.(...args);
 export const loadStorageStatus = (...args) => m()?.storage?.loadStorageStatus?.(...args);
 export const bindStorageEvents = (...args) => m()?.storage?.bindStorageEvents?.(...args);
 export const initWishWall = (...args) => m()?.wishWall?.initWishWall?.(...args);
@@ -106,6 +109,24 @@ export const loadNetworkInfo = (...args) => m()?.systemAdmin?.loadNetworkInfo?.(
 export const restartService = (...args) => m()?.systemAdmin?.restartService?.(...args);
 export const loadLogFileList = (...args) => m()?.systemAdmin?.loadLogFileList?.(...args);
 export const searchLogs = (...args) => m()?.systemAdmin?.searchLogs?.(...args);
+export const loadFeishuSyncStatus = (...args) => m()?.systemAdmin?.loadFeishuSyncStatus?.(...args);
+export const runFeishuSync = (...args) => m()?.systemAdmin?.runFeishuSync?.(...args);
+
+// fileBrowser
+export const renderFileBrowser = (...args) => m()?.fileBrowser?.renderFileBrowser?.(...args);
+export const bindFileBrowserEvents = (...args) => m()?.fileBrowser?.bindFileBrowserEvents?.(...args);
+
+// monitor
+export const renderMonitor = (...args) => m()?.monitor?.renderMonitor?.(...args);
+export const bindMonitorEvents = (...args) => m()?.monitor?.bindMonitorEvents?.(...args);
+
+// services
+export const renderServices = (...args) => m()?.services?.renderServices?.(...args);
+export const bindServicesEvents = (...args) => m()?.services?.bindServicesEvents?.(...args);
+
+// host
+export const renderHost = (...args) => m()?.host?.renderHost?.(...args);
+export const bindHostEvents = (...args) => m()?.host?.bindHostEvents?.(...args);
 
 // preferences
 export const initPreferencesPanel = (...args) => m()?.preferences?.initPreferencesPanel?.(...args);

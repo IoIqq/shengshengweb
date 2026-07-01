@@ -1,7 +1,7 @@
 <article class="workspace-panel active" data-panel="overview" aria-labelledby="overview-title">
   <div class="overview-title-text">
     <p class="eyebrow">Today / Production desk</p>
-    <h1 id="overview-title">2026 / 06 / 14 · 工作台值班</h1>
+    <h1 id="overview-title">工作台值班</h1>
   </div>
   <div class="overview-date-badge" id="overview-date-badge" role="status" aria-live="polite" aria-label="当前日期和时间"></div>
 
@@ -10,7 +10,7 @@
       <p class="eyebrow" id="role-pill">管理员工作台</p>
       <h2 class="overview-hero-title" id="role-title">把今天的素材、审片和交付放在同一张桌面上。</h2>
       <p class="overview-hero-lede" id="role-description">先看总览，再进入素材审核、借出审批、设备管理和系统配置。</p>
-      <p class="overview-hero-message" id="home-hero-message">这里显示管理员配置的首页说明。</p>
+      <p class="overview-hero-message" id="home-hero-message"></p>
       <ul class="hero-stats" id="dashboard-stats" aria-label="工作台概览统计"></ul>
       <div class="overview-hero-actions" aria-label="概览主要操作">
         <button class="primary-btn" data-jump="media" type="button">查看素材库</button>
@@ -33,6 +33,14 @@
           <span class="overview-panel-meta">Media</span>
         </div>
         <div id="media-chart-container" aria-label="素材分类统计"></div>
+      </section>
+
+      <section class="overview-panel" id="overview-storage-panel" aria-labelledby="overview-storage-title">
+        <div class="overview-panel-head">
+          <h3 id="overview-storage-title">存储空间</h3>
+          <span class="overview-panel-meta">Storage</span>
+        </div>
+        <div id="storage-chart-container" aria-label="素材盘容量占用"></div>
       </section>
 
       <section class="overview-panel" id="overview-shortcuts-panel" aria-labelledby="overview-shortcuts-title">

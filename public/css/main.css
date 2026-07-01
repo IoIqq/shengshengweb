@@ -3,45 +3,49 @@
 /* 原单体文件: 7,923行 → 27个专业模块 */
 
 /* ========== 基础层 ========== */
-@import './base/reset.css';
-@import './base/variables.css';
-@import './base/typography.css';
-@import './base/animations.css';
+@import './base/reset.css?v=__ASSET_VERSION__';
+@import './base/variables.css?v=__ASSET_VERSION__';
+@import './base/typography.css?v=__ASSET_VERSION__';
+@import './base/animations.css?v=__ASSET_VERSION__';
 
 /* ========== 布局层 ========== */
-@import './layout/grid.css';
-@import './layout/workspace.css';
-@import './layout/panels.css';
-@import './layout/navigation.css';
+@import './layout/grid.css?v=__ASSET_VERSION__';
+@import './layout/workspace.css?v=__ASSET_VERSION__';
+@import './layout/panels.css?v=__ASSET_VERSION__';
+@import './layout/navigation.css?v=__ASSET_VERSION__';
 
 /* ========== 组件层 ========== */
-@import './components/buttons.css';
-@import './components/forms.css';
-@import './components/cards.css';
-@import './components/modals.css';
-@import './components/media.css';
-@import './components/tables.css';
-@import './components/badges.css';
-@import './components/loading.css';
-@import './components/tooltips.css';
+@import './components/buttons.css?v=__ASSET_VERSION__';
+@import './components/forms.css?v=__ASSET_VERSION__';
+@import './components/cards.css?v=__ASSET_VERSION__';
+@import './components/modals.css?v=__ASSET_VERSION__';
+@import './components/media.css?v=__ASSET_VERSION__';
+@import './components/tables.css?v=__ASSET_VERSION__';
+@import './components/badges.css?v=__ASSET_VERSION__';
+@import './components/loading.css?v=__ASSET_VERSION__';
+@import './components/tooltips.css?v=__ASSET_VERSION__';
 
 /* ========== 页面特定 ========== */
-@import './pages/showcase.css';
-@import './pages/login.css';
-@import './pages/overview.css';
-@import './pages/media-library.css';
-@import './pages/device-management.css';
-@import './pages/storage-management.css';
-@import './pages/team.css';
-@import './pages/topics.css';
-@import './pages/system-admin.css';
-@import './pages/settings.css';
+@import './pages/showcase.css?v=__ASSET_VERSION__';
+@import './pages/login.css?v=__ASSET_VERSION__';
+@import './pages/overview.css?v=__ASSET_VERSION__';
+@import './pages/media-library.css?v=__ASSET_VERSION__';
+@import './pages/device-management.css?v=__ASSET_VERSION__';
+@import './pages/storage-management.css?v=__ASSET_VERSION__';
+@import './pages/team.css?v=__ASSET_VERSION__';
+@import './pages/topics.css?v=__ASSET_VERSION__';
+@import './pages/system-admin.css?v=__ASSET_VERSION__';
+@import './pages/settings.css?v=__ASSET_VERSION__';
+@import './pages/file-browser.css?v=__ASSET_VERSION__';
+@import './pages/monitor.css?v=__ASSET_VERSION__';
+@import './pages/services.css?v=__ASSET_VERSION__';
+@import './pages/host.css?v=__ASSET_VERSION__';
 
 /* ========== 响应式 ========== */
-@import './responsive/tablet.css';
-@import './responsive/mobile.css';
-@import './responsive/touch.css';
+@import './responsive/tablet.css?v=__ASSET_VERSION__';
+@import './responsive/mobile.css?v=__ASSET_VERSION__';
+@import './responsive/touch.css?v=__ASSET_VERSION__';
 
 /* ========== 工具类 ========== */
-@import './utilities/helpers.css';
-@import './utilities/dark-mode.css';
+@import './utilities/helpers.css?v=__ASSET_VERSION__';
+@import './utilities/dark-mode.css?v=__ASSET_VERSION__';

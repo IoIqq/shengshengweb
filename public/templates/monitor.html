@@ -1,0 +1,53 @@
+<article class="workspace-panel reveal" data-panel="monitor" data-admin-only="true">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">系统管理</p>
+      <h2>资源监控</h2>
+    </div>
+    <button class="ghost-btn" id="mon-refresh-btn" type="button" title="刷新">⟳ 刷新</button>
+  </div>
+
+  <!-- 实时仪表 -->
+  <section class="mon-gauges" id="mon-gauges">
+    <div class="mon-gauge-card">
+      <p class="mon-gauge-label">CPU 使用率</p>
+      <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-cpu-fill"></div></div>
+      <p class="mon-gauge-value" id="mon-cpu-value">-- %</p>
+      <p class="mon-gauge-sub" id="mon-cpu-sub">-- 核心</p>
+    </div>
+    <div class="mon-gauge-card">
+      <p class="mon-gauge-label">内存使用率</p>
+      <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-mem-fill"></div></div>
+      <p class="mon-gauge-value" id="mon-mem-value">-- %</p>
+      <p class="mon-gauge-sub" id="mon-mem-sub">-- / --</p>
+    </div>
+  </section>
+
+  <!-- 历史曲线 -->
+  <section class="mon-charts">
+    <div class="mon-chart-card">
+      <p class="mon-chart-title">CPU 使用率（近 1 小时）</p>
+      <canvas id="mon-cpu-chart" width="800" height="180"></canvas>
+    </div>
+    <div class="mon-chart-card">
+      <p class="mon-chart-title">内存使用率（近 1 小时）</p>
+      <canvas id="mon-mem-chart" width="800" height="180"></canvas>
+    </div>
+  </section>
+
+  <!-- 系统信息 -->
+  <section class="mon-sysinfo" id="mon-sysinfo">
+    <p>主机: --　|　运行时间: --　|　平台: --</p>
+  </section>
+
+  <!-- 磁盘详情 -->
+  <section class="mon-section">
+    <p class="mon-section-title">物理磁盘</p>
+    <div class="mon-disk-grid" id="mon-disks"><p class="fb-empty">加载中…</p></div>
+  </section>
+
+  <section class="mon-section">
+    <p class="mon-section-title">盘符容量</p>
+    <div class="mon-volume-grid" id="mon-volumes"><p class="fb-empty">加载中…</p></div>
+  </section>
+</article>

@@ -193,7 +193,7 @@ export async function loadTeamContribution() {
     team.map((item) => requestJSON(`/api/team/${encodeURIComponent(item.id)}/contribution`)),
   );
   results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
+    if (result.status === 'fulfilled' && result.value) {
       team[index].contribution = {
         count: result.value.count || 0,
         recent: result.value.recent || [],
@@ -254,7 +254,6 @@ export async function createTeamMember(formData) {
     loadTeamContribution();
   } catch (error) {
     Toast.error(error.message || '添加失败');
-    throw error;
   } finally {
     setPending(false);
   }
@@ -286,7 +285,6 @@ export async function updateTeamMember(id, updates) {
     return result;
   } catch (error) {
     Toast.error(error.message || '更新失败');
-    throw error;
   } finally {
     setPending(false);
   }
@@ -318,7 +316,6 @@ export async function deleteTeamMember(id) {
     renderTeam();
   } catch (error) {
     Toast.error(error.message || '删除失败');
-    throw error;
   } finally {
     setPending(false);
   }
@@ -352,7 +349,6 @@ export async function moveTeamMember(id, direction) {
   } catch (error) {
     [team[index], team[newIndex]] = [team[newIndex], team[index]];
     Toast.error(error.message || '调整失败');
-    throw error;
   } finally {
     setPending(false);
   }

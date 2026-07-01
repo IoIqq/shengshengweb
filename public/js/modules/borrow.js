@@ -8,6 +8,7 @@ import { els } from '../core/dom.js';
 import { escapeHtml, formatDatetime, isAdminUser, addLocalActivity } from '../utils/helpers.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { Dialog } from '../ui/dialog.js';
 import { setPending } from '../ui/feedback.js';
 import { deviceStatusLabel, getDeviceSourceItems } from './device.js';
 
@@ -36,6 +37,7 @@ export function getBorrowStats() {
     approved: items.filter((item) => item.status === 'approved' && item.returnStatus !== 'returned').length,
     rejected: items.filter((item) => item.status === 'rejected').length,
     returned: items.filter((item) => item.returnStatus === 'returned').length,
+    cancelled: items.filter((item) => item.status === 'cancelled').length,
     overdue: overdue.length,
     overdueList: overdue,
   };
@@ -140,7 +142,9 @@ export function renderBorrowRequests() {
                     : overdue
                       ? `逾期未还${overdueDetail}`
                       : '借出中'
-                  : '已拒绝';
+                  : item.status === 'cancelled'
+                    ? '已撤销'
+                    : '已拒绝';
           const statusTone =
               item.status === 'pending'
                 ? 'warning'
@@ -159,7 +163,9 @@ export function renderBorrowRequests() {
               : item.status === 'approved' && item.returnStatus !== 'returned'
                 ? `<button class="primary-btn" data-borrow-return="${escapeHtml(item.id)}" type="button" aria-label="确认${escapeHtml(actionLabel)}已归还">确认归还</button>`
                 : ''
-            : '';
+            : item.status === 'pending'
+              ? `<button class="ghost-btn" data-borrow-cancel="${escapeHtml(item.id)}" type="button" aria-label="撤销${escapeHtml(actionLabel)}">撤销申请</button>`
+              : '';
           const deleteAction = isAdminUser()
             ? `<button class="ghost-btn" data-borrow-delete="${escapeHtml(item.id)}" type="button" aria-label="删除${escapeHtml(actionLabel)}记录">删除</button>`
             : '';
@@ -179,6 +185,7 @@ export function renderBorrowRequests() {
                   ${item.approvedBy ? `<span>审批人：${escapeHtml(item.approvedBy)}</span>` : ''}
                 </div>
                 ${item.note ? `<small class="borrow-note">备注：${escapeHtml(item.note)}</small>` : ''}
+                ${item.rejectReason ? `<small class="borrow-note" data-tone="danger">拒绝原因：${escapeHtml(item.rejectReason)}</small>` : ''}
                 ${(adminActions || deleteAction) ? `<div class="borrow-actions">${adminActions}${deleteAction}</div>` : ''}
               </article>
             `;
@@ -251,6 +258,10 @@ export async function createBorrowRequest(formData) {
     Toast.warning('请填写申请人、设备、借用目的和时间');
     return;
   }
+  if (new Date(borrowAt) >= new Date(expectedReturnAt)) {
+    Toast.warning('预计归还时间必须晚于借出时间');
+    return;
+  }
 
   try {
     setPending(true);
@@ -284,11 +295,22 @@ export async function createBorrowRequest(formData) {
  * @param {string} status - 状态 (approved, rejected)
  */
 export async function approveBorrowRequest(id, status) {
+  let rejectReason = '';
+  if (status === 'rejected') {
+    rejectReason = (await Dialog.prompt({
+      title: '拒绝借出申请',
+      message: '请输入拒绝原因（可选）：',
+      placeholder: '请输入拒绝原因',
+      confirmText: '确认拒绝',
+      cancelText: '跳过',
+    })) ?? '';
+  }
+
   try {
     setPending(true);
     const result = await requestJSON(`/api/borrow-requests/${id}`, {
       method: 'PATCH',
-      body: { status },
+      body: { status, ...(status === 'rejected' && { rejectReason }) },
     });
 
     // 更新本地状态
@@ -345,11 +367,52 @@ export async function returnBorrowRequest(id) {
 }
 
 /**
+ * 撤销借用申请（申请人自行撤销待审申请）
+ * @param {string} id - 申请 ID
+ */
+export async function cancelBorrowRequest(id) {
+  const confirmed = await Dialog.confirm({
+    title: '撤销申请',
+    message: '确定要撤销这条借用申请吗？',
+    confirmText: '撤销',
+    cancelText: '取消',
+    variant: 'warning',
+  });
+  if (!confirmed) return;
+
+  try {
+    setPending(true);
+    const result = await requestJSON(`/api/borrow-requests/${id}/cancel`, { method: 'POST' });
+
+    if (state.borrowCatalog) {
+      const req = state.borrowCatalog.find((r) => r.id === id);
+      if (req) Object.assign(req, result.item || { status: 'cancelled' });
+    }
+
+    Toast.success('申请已撤销');
+    addLocalActivity('借用申请撤销', '撤销了一条借用申请');
+    syncBorrowView();
+  } catch (error) {
+    Toast.error(error.message || '撤销失败');
+    throw error;
+  } finally {
+    setPending(false);
+  }
+}
+
+/**
  * 删除借出申请
  * @param {string} id - 申请 ID
  */
 export async function deleteBorrowRequest(id) {
-  if (!confirm('确定要删除这条借出申请吗？')) {
+  const confirmed = await Dialog.confirm({
+    title: '删除借出记录',
+    message: '确定要删除这条借出申请吗？',
+    confirmText: '删除',
+    cancelText: '取消',
+    variant: 'danger',
+  });
+  if (!confirmed) {
     return;
   }
 

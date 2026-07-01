@@ -20,6 +20,8 @@ function borrowRequestRowToItem(row) {
     approvedBy: row.approved_by,
     approvedAt: row.approved_at,
     returnedAt: row.returned_at,
+    rejectReason: row.reject_reason || '',
+    createdBy: row.created_by || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -126,8 +128,8 @@ function createBorrowRequest(data) {
 
   run(
     `INSERT INTO borrow_requests
-      (id, applicant, device_id, purpose, borrow_at, expected_return_at, note, status, return_status, approved_by, approved_at, returned_at, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, applicant, device_id, purpose, borrow_at, expected_return_at, note, status, return_status, approved_by, approved_at, returned_at, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       data.applicant,
@@ -141,6 +143,7 @@ function createBorrowRequest(data) {
       '',
       '',
       '',
+      data.created_by || data.createdBy || '',
       now,
       now,
     ],
@@ -272,8 +275,8 @@ function updateBorrowRequest(id, updates, approvedBy) {
       deviceModel.updateDeviceStatus(existing.device_id, 'borrowed');
     } else if (updates.status === 'rejected') {
       run(
-        'UPDATE borrow_requests SET status = ?, approved_by = ?, approved_at = ?, updated_at = ? WHERE id = ?',
-        [updates.status, approvedBy || 'admin', now, now, id],
+        'UPDATE borrow_requests SET status = ?, approved_by = ?, approved_at = ?, reject_reason = ?, updated_at = ? WHERE id = ?',
+        [updates.status, approvedBy || 'admin', now, updates.rejectReason || '', now, id],
       );
     } else if (updates.returnStatus === 'returned') {
       run(
@@ -321,20 +324,36 @@ function getOverdueBorrows() {
 function getBorrowStats() {
   const rows = all('SELECT status, return_status, expected_return_at FROM borrow_requests');
   const now = new Date();
-  let total = 0, pending = 0, approved = 0, rejected = 0, returned = 0, overdue = 0;
+  let total = 0, pending = 0, approved = 0, rejected = 0, returned = 0, overdue = 0, cancelled = 0;
 
   rows.forEach((row) => {
     total++;
     if (row.status === 'pending') pending++;
     if (row.status === 'approved') approved++;
     if (row.status === 'rejected') rejected++;
+    if (row.status === 'cancelled') cancelled++;
     if (row.return_status === 'returned') returned++;
     if (row.status === 'approved' && row.return_status !== 'returned' && new Date(row.expected_return_at) < now) {
       overdue++;
     }
   });
 
-  return { total, pending, approved, rejected, returned, overdue };
+  return { total, pending, approved, rejected, returned, overdue, cancelled };
+}
+
+/**
+ * 撤销借用申请（申请人自行撤销待审申请）
+ */
+function cancelBorrowRequest(id, createdBy) {
+  const existing = getBorrowRequestById(id);
+  if (!existing) throw new Error('借出申请不存在。');
+  if (existing.created_by !== createdBy) throw new Error('无权撤销他人的申请。');
+  if (existing.status !== 'pending') throw new Error('只有待审申请才能撤销。');
+
+  const now = nowIso();
+  run('UPDATE borrow_requests SET status = ?, updated_at = ? WHERE id = ?', ['cancelled', now, id]);
+  saveDatabase();
+  return getBorrowRequestById(id);
 }
 
 module.exports = {
@@ -345,6 +364,7 @@ module.exports = {
   approveBorrowRequest,
   returnBorrowRequest,
   updateBorrowRequest,
+  cancelBorrowRequest,
   borrowRequestRowToItem,
   getOverdueBorrows,
   getBorrowStats,

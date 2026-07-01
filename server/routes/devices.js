@@ -107,6 +107,11 @@ function parsePrice(value) {
   return num;
 }
 
+function isValidDateOrEmpty(value) {
+  if (!value) return true;
+  return !Number.isNaN(Date.parse(value));
+}
+
 // POST /api/devices - Create device
 router.post('/', requireAuth, requireAdmin, (req, res) => {
   try {
@@ -134,6 +139,13 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
     const owner = String(body.owner || '').trim();
     const note = String(body.note || '').trim();
 
+    if (!isValidDateOrEmpty(purchaseDate)) {
+      return res.status(400).json({ error: '采购日期格式无效。' });
+    }
+    if (!isValidDateOrEmpty(warrantyUntil)) {
+      return res.status(400).json({ error: '保修到期日期格式无效。' });
+    }
+
     const device = deviceModel.createDevice({
       name,
       category,
@@ -154,6 +166,9 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
 
     res.json({ ok: true, item: deviceModel.deviceRowToItem(device) });
   } catch (error) {
+    if (error.message.includes('资产编号已存在')) {
+      return res.status(409).json({ error: error.message });
+    }
     res.status(500).json({ error: '创建设备失败。' });
   }
 });
@@ -185,6 +200,13 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
       updates.price = price;
     }
 
+    if (updates.purchaseDate !== undefined && !isValidDateOrEmpty(updates.purchaseDate)) {
+      return res.status(400).json({ error: '采购日期格式无效。' });
+    }
+    if (updates.warrantyUntil !== undefined && !isValidDateOrEmpty(updates.warrantyUntil)) {
+      return res.status(400).json({ error: '保修到期日期格式无效。' });
+    }
+
     const updated = deviceModel.updateDevice(id, updates);
 
     if (!updated) {
@@ -193,6 +215,9 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
 
     res.json({ ok: true, item: deviceModel.deviceRowToItem(updated) });
   } catch (error) {
+    if (error.message.includes('资产编号已存在')) {
+      return res.status(409).json({ error: error.message });
+    }
     res.status(500).json({ error: '更新设备失败。' });
   }
 });

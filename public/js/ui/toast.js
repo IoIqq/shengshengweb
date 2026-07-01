@@ -111,6 +111,11 @@ export const Toast = {
     return this.show({ message, title, tone: 'info' });
   },
 
+  clear() {
+    this.queue.forEach((t) => { if (t.isConnected) t.remove(); });
+    this.queue = [];
+  },
+
   escapeHtml(value) {
     return String(value || '')
       .replaceAll('&', '&amp;')

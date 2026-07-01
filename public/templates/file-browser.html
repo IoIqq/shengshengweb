@@ -1,0 +1,39 @@
+<article class="workspace-panel reveal" data-panel="file-browser" data-admin-only="true">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">系统管理</p>
+      <h2>文件浏览</h2>
+    </div>
+    <div class="panel-head-actions">
+      <button class="ghost-btn" id="fb-refresh-btn" type="button" title="刷新">⟳ 刷新</button>
+      <button class="ghost-btn" id="fb-mkdir-btn" type="button">＋ 新建文件夹</button>
+      <label class="primary-btn fb-upload-label" tabindex="0">
+        <span>⬆ 上传</span>
+        <input id="fb-upload-input" type="file" multiple hidden />
+      </label>
+    </div>
+  </div>
+
+  <div class="fb-layout">
+    <!-- 盘符侧栏 -->
+    <aside class="fb-sidebar" id="fb-sidebar" aria-label="盘符快捷访问"></aside>
+
+    <div class="fb-main">
+      <!-- 面包屑 -->
+      <nav class="fb-breadcrumb" id="fb-breadcrumb" aria-label="路径导航"></nav>
+
+      <!-- 拖拽提示 -->
+      <div class="fb-drop-zone" id="fb-drop-zone" hidden>
+        <p>松开以上传文件到当前文件夹</p>
+      </div>
+
+      <!-- 文件列表 -->
+      <div class="fb-list" id="fb-list" role="list" aria-live="polite">
+        <p class="fb-empty">正在加载…</p>
+      </div>
+
+      <!-- 状态栏 -->
+      <div class="fb-statusbar" id="fb-statusbar"></div>
+    </div>
+  </div>
+</article>

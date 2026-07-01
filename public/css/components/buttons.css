@@ -293,81 +293,167 @@ a:focus-visible {
   color: var(--danger);
 }
 
-/* Wish FAB (Floating Action Button) */
-.wish-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 80;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border-radius: 50%;
+/* Wish Easter Dot — 导航栏品牌区隐藏入口，长按 1.2s 触发留言墙 */
+.wish-easter-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  padding: 12px; /* 扩大不可见点击区，视觉大小不变 */
   border: none;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px) saturate(180%);
-  box-shadow:
-    0 0 0 1px rgba(23, 24, 26, 0.06),
-    0 8px 24px rgba(23, 24, 26, 0.12),
-    0 16px 48px rgba(138, 145, 138, 0.08);
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
+  border-radius: 50%;
+  background: transparent;
+  cursor: default;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transform: scale(0.8) translateY(20px);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  animation: fab-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s forwards;
+  align-self: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
-@keyframes fab-enter {
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+/* 当 wish-easter-dot 是 Logo 按钮时（侧栏品牌区），覆盖小圆点尺寸 */
+.side-nav-header .wish-easter-dot {
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin-left: 0;
+  border-radius: 12px;
+  cursor: default;
+  transition: transform 160ms var(--motion-ease), filter 160ms var(--motion-ease);
 }
 
-.wish-fab::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
+.side-nav-header .wish-easter-dot:focus-visible {
+  outline: none;
+}
+
+/* Logo 彩蛋反馈状态 */
+.side-nav-header .wish-easter-dot.is-tapped {
+  animation: logo-tap 0.28s var(--motion-ease) forwards;
+}
+
+.side-nav-header .wish-easter-dot.is-charging {
+  filter: brightness(1.25) drop-shadow(0 0 4px rgba(138, 145, 138, 0.5));
+}
+
+.side-nav-header .wish-easter-dot.is-burst {
+  animation: logo-burst 0.36s var(--motion-ease) forwards;
+}
+
+@keyframes logo-tap {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.86); }
+  100% { transform: scale(1); }
+}
+
+@keyframes logo-burst {
+  0%   { transform: scale(0.9);  filter: brightness(1); }
+  40%  { transform: scale(1.18); filter: brightness(1.5) drop-shadow(0 0 6px rgba(106, 112, 106, 0.7)); }
+  100% { transform: scale(1);   filter: brightness(1); }
+}
+
+.wish-easter-core {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(138, 145, 138, 0.15), transparent 70%);
+  background: var(--line-strong);
+  opacity: 0.45;
+  transition: opacity 240ms var(--motion-ease), transform 240ms var(--motion-ease);
+}
+
+.wish-easter-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--brand);
   opacity: 0;
-  animation: fab-pulse 2s ease-in-out 2s infinite;
+  transform: scale(0.6);
+  transition: opacity 200ms var(--motion-ease), transform 200ms var(--motion-ease);
+  pointer-events: none;
 }
 
-@keyframes fab-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.3;
-  }
-}
-
-.wish-fab:hover {
-  transform: scale(1.08) rotate(3deg);
-  box-shadow:
-    0 0 0 1px rgba(23, 24, 26, 0.08),
-    0 12px 32px rgba(23, 24, 26, 0.16),
-    0 24px 64px rgba(138, 145, 138, 0.12);
-}
-
-.wish-fab:active {
-  transform: scale(0.95);
-  transition-duration: 0.1s;
-}
-
-.wish-fab svg {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.wish-fab:hover svg {
+.wish-easter-dot:hover .wish-easter-core {
+  opacity: 0.7;
   transform: scale(1.1);
+}
+
+.wish-easter-dot:focus-visible {
+  outline: none;
+}
+
+.wish-easter-dot:focus-visible .wish-easter-ring {
+  opacity: 0.5;
+  transform: scale(1);
+}
+
+/* 蓄力中：圆点变亮 + 环圈扩散（连点≥3次触发） */
+.wish-easter-dot.is-charging .wish-easter-core {
+  opacity: 1;
+  background: var(--brand-strong);
+}
+
+.wish-easter-dot.is-charging .wish-easter-ring {
+  opacity: 0.85;
+  border-color: var(--brand-strong);
+  animation: wish-charge-ring 1.2s var(--motion-ease) forwards;
+}
+
+@keyframes wish-charge-shake {
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  20% { transform: translate(-0.6px, 0.4px) scale(1.15); }
+  40% { transform: translate(0.6px, -0.5px) scale(1.18); }
+  60% { transform: translate(-0.5px, -0.4px) scale(1.2); }
+  80% { transform: translate(0.5px, 0.5px) scale(1.16); }
+}
+
+@keyframes wish-charge-ring {
+  0% { transform: scale(0.6); opacity: 0.3; }
+  100% { transform: scale(1.9); opacity: 0.9; }
+}
+
+/* 每次点击反馈 */
+.wish-easter-dot.is-tapped .wish-easter-core {
+  animation: wish-tap-pulse 0.28s var(--motion-ease) forwards;
+}
+
+@keyframes wish-tap-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.7); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 0.45; }
+}
+
+/* 第5次触发迸发 */
+.wish-easter-dot.is-burst .wish-easter-core {
+  animation: wish-burst-core 0.36s var(--motion-ease) forwards;
+}
+
+.wish-easter-dot.is-burst .wish-easter-ring {
+  animation: wish-burst-ring 0.36s var(--motion-ease) forwards;
+}
+
+@keyframes wish-burst-core {
+  0% { transform: scale(1.2); }
+  40% { transform: scale(1.8); background: var(--brand-strong); }
+  100% { transform: scale(1); opacity: 0.45; background: var(--line-strong); }
+}
+
+@keyframes wish-burst-ring {
+  0% { transform: scale(1.9); opacity: 0.9; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wish-easter-dot.is-charging .wish-easter-ring,
+  .wish-easter-dot.is-burst .wish-easter-core,
+  .wish-easter-dot.is-burst .wish-easter-ring {
+    animation: none;
+  }
+  .wish-easter-dot.is-charging .wish-easter-ring {
+    opacity: 0.85;
+    transform: scale(1.4);
+    transition: transform 1.2s linear, opacity 1.2s linear;
+  }
 }
 
 /* Button Loading State */
@@ -441,11 +527,13 @@ button.is-success .btn-check polyline {
 }
 
 @media (max-width: 640px) {
-  .wish-fab {
-    bottom: 20px;
-    right: 20px;
-    width: 52px;
-    height: 52px;
+  .wish-easter-dot {
+    width: 18px;
+    height: 18px;
+  }
+  .wish-easter-core {
+    width: 7px;
+    height: 7px;
   }
 }
 

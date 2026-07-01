@@ -139,10 +139,42 @@ function getAllActivity() {
 /**
  * 获取仪表板数据
  */
+/**
+ * 获取素材盘容量占用（仅返回数字，不暴露任何路径，供所有角色的工作台环形图使用）
+ */
+function getStorageUsage() {
+  const result = {
+    capacityAvailable: false,
+    totalBytes: 0,
+    usedBytes: 0,
+    freeBytes: 0,
+    usedPercent: 0,
+  };
+  try {
+    if (typeof fs.statfsSync !== 'function') return result;
+    const root = path.parse(path.resolve(config.UPLOAD_DIR)).root || config.UPLOAD_DIR;
+    const stats = fs.statfsSync(root);
+    const blockSize = Number(stats.bsize || stats.frsize || 0);
+    const totalBytes = Number(stats.blocks || 0) * blockSize;
+    const freeBytes = Number(stats.bavail || stats.bfree || 0) * blockSize;
+    if (totalBytes > 0) {
+      result.totalBytes = totalBytes;
+      result.freeBytes = freeBytes;
+      result.usedBytes = Math.max(0, totalBytes - freeBytes);
+      result.usedPercent = Math.round((result.usedBytes / totalBytes) * 1000) / 10;
+      result.capacityAvailable = true;
+    }
+  } catch (error) {
+    // 容量读取失败时保持 capacityAvailable: false，前端显示占位
+  }
+  return result;
+}
+
 function getDashboard() {
   const deviceCount = get('SELECT COUNT(*) AS count FROM devices').count;
   const borrowOpenCount = get("SELECT COUNT(*) AS count FROM borrow_requests WHERE status = 'pending'").count;
   return {
+    storage: getStorageUsage(),
     counts: {
       all: get('SELECT COUNT(*) AS count FROM media').count,
       pending: get("SELECT COUNT(*) AS count FROM media WHERE review_state = 'pending'").count,
@@ -283,20 +315,23 @@ function buildFullBackup() {
       todos: todoCount,
       activity: activityCount,
     },
-    exportVersion: 3,
+    exportVersion: 4,
     data: {
-      settings: getSettings(),
-      team: teamModel.getAllTeam(),
-      media: mediaModel.getAllMedia().map(m => mediaModel.mediaRowToItem(m)),
-      todos: todoModel.getAllTodos(),
-      activity: getAllActivity(),
-      devices: deviceModel.getAllDevices(),
-      borrowRequests: borrowModel.getAllBorrowRequests(),
-      wishes: all('SELECT * FROM wishes ORDER BY datetime(created_at) DESC').map(wishRowToItem),
-      users: all('SELECT * FROM users ORDER BY id ASC'),
-      sessions: all('SELECT * FROM sessions ORDER BY created_at DESC'),
-      auditLogs: all('SELECT * FROM audit_logs ORDER BY created_at DESC'),
-      registrationRequests: all('SELECT * FROM registration_requests ORDER BY created_at DESC'),
+      // 导出原始行（snake_case 列名），恢复时按实际 schema 列回填，
+      // 避免 camelCase 字段名与表结构不一致导致恢复失败。
+      settings: all('SELECT * FROM settings'),
+      team: all('SELECT * FROM team'),
+      media: all('SELECT * FROM media'),
+      todos: all('SELECT * FROM todos'),
+      activity: all('SELECT * FROM activity'),
+      devices: all('SELECT * FROM devices'),
+      borrowRequests: all('SELECT * FROM borrow_requests'),
+      wishes: all('SELECT * FROM wishes'),
+      users: all('SELECT * FROM users'),
+      sessions: all('SELECT * FROM sessions'),
+      auditLogs: all('SELECT * FROM audit_logs'),
+      registrationRequests: all('SELECT * FROM registration_requests'),
+      topicLibrary: all('SELECT * FROM topic_library'),
     },
   };
 }
@@ -363,6 +398,55 @@ router.get('/backup/database', requireAuth, requireAdmin, (req, res) => {
 });
 
 // POST /api/backup/restore - Restore data from JSON backup
+/**
+ * 恢复表映射：前端勾选值 -> { 表名, 备份 JSON 中的数据键 }
+ * 注意 topics 勾选值对应实际表名 topic_library。
+ */
+const RESTORE_TABLE_MAP = {
+  todos: { table: 'todos', dataKey: 'todos' },
+  devices: { table: 'devices', dataKey: 'devices' },
+  borrow_requests: { table: 'borrow_requests', dataKey: 'borrowRequests' },
+  team: { table: 'team', dataKey: 'team' },
+  users: { table: 'users', dataKey: 'users' },
+  settings: { table: 'settings', dataKey: 'settings' },
+  audit_logs: { table: 'audit_logs', dataKey: 'auditLogs' },
+  activity: { table: 'activity', dataKey: 'activity' },
+  sessions: { table: 'sessions', dataKey: 'sessions' },
+  registration_requests: { table: 'registration_requests', dataKey: 'registrationRequests' },
+  wishes: { table: 'wishes', dataKey: 'wishes' },
+  media: { table: 'media', dataKey: 'media' },
+  topics: { table: 'topic_library', dataKey: 'topicLibrary' },
+};
+
+/**
+ * 读取某张表的实际列名（PRAGMA table_info）
+ */
+function getTableColumns(tableName) {
+  return all(`PRAGMA table_info(${tableName})`).map((r) => r.name);
+}
+
+/**
+ * 通用表恢复：先清空再按行回填。仅写入同时存在于行数据与当前 schema 的列，
+ * 避免备份字段名/顺序与表结构不一致导致整批失败。每张表独立事务，单表失败不影响其它表。
+ */
+function restoreRows(tableName, rows) {
+  const schemaCols = new Set(getTableColumns(tableName));
+  return transaction(() => {
+    run(`DELETE FROM ${tableName}`);
+    if (!rows.length) return 0;
+    let inserted = 0;
+    for (const row of rows) {
+      const cols = Array.from(schemaCols).filter((c) => Object.prototype.hasOwnProperty.call(row, c));
+      if (cols.length === 0) continue;
+      const colSql = cols.map((c) => `"${c}"`).join(', ');
+      const placeholders = cols.map(() => '?').join(', ');
+      run(`INSERT INTO ${tableName} (${colSql}) VALUES (${placeholders})`, cols.map((c) => row[c]));
+      inserted += 1;
+    }
+    return inserted;
+  });
+}
+
 router.post('/backup/restore', requireAuth, requireAdmin, (req, res) => {
   try {
     const { tables, data } = req.body || {};
@@ -375,200 +459,39 @@ router.post('/backup/restore', requireAuth, requireAdmin, (req, res) => {
       return res.status(400).json({ error: '备份数据无效。' });
     }
 
-    const allowedTables = new Set([
-      'todos', 'devices', 'borrow_requests', 'team',
-      'users', 'settings', 'audit_logs', 'activity',
-      'sessions', 'registration_requests', 'wishes',
-      'media', 'topics',
-    ]);
-
-    const invalid = tables.filter(t => !allowedTables.has(t));
+    const invalid = tables.filter((t) => !RESTORE_TABLE_MAP[t]);
     if (invalid.length > 0) {
       return res.status(400).json({ error: `不支持的表: ${invalid.join(', ')}` });
     }
 
     const restored = [];
+    const failed = [];
 
-    transaction(() => {
-      for (const table of tables) {
-        switch (table) {
-          case 'todos': {
-            run('DELETE FROM todos');
-            const items = data.todos || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO todos (id, title, done, sort_order, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [item.id, item.title, item.done ? 1 : 0, item.sort_order || 0, item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`todos(${items.length})`);
-            break;
-          }
-          case 'devices': {
-            run('DELETE FROM devices');
-            const items = data.devices || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO devices (id, name, category, status, location, note, image_url, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.name, item.category, item.status, item.location || '', item.note || '', item.image_url || '', item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`devices(${items.length})`);
-            break;
-          }
-          case 'borrow_requests': {
-            run('DELETE FROM borrow_requests');
-            const items = data.borrowRequests || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO borrow_requests (id, user_id, device_id, purpose, status, note, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.user_id || null, item.device_id, item.purpose || '', item.status, item.note || '', item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`borrow_requests(${items.length})`);
-            break;
-          }
-          case 'team': {
-            run('DELETE FROM team');
-            const items = data.team || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO team (id, name, role, avatar_url, bio, sort_order, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.name, item.role || '', item.avatar_url || '', item.bio || '', item.sort_order || 0, item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`team(${items.length})`);
-            break;
-          }
-          case 'users': {
-            run('DELETE FROM users');
-            const items = data.users || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO users (id, username, password_hash, salt, display_name, role, status, last_login_at, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.username, item.password_hash, item.salt, item.display_name || '', item.role, item.status || 'active', item.last_login_at || null, item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`users(${items.length})`);
-            break;
-          }
-          case 'settings': {
-            run('DELETE FROM settings');
-            const settings = data.settings || {};
-            for (const [key, value] of Object.entries(settings)) {
-              const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
-              run(
-                `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-                [key, strVal],
-              );
-            }
-            restored.push(`settings(${Object.keys(settings).length})`);
-            break;
-          }
-          case 'audit_logs': {
-            run('DELETE FROM audit_logs');
-            const items = data.auditLogs || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO audit_logs (id, user_id, username, role, action, resource_type, resource_id, details, ip_address, user_agent, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.user_id || null, item.username || '', item.role || '', item.action, item.resource_type || '', item.resource_id || null, typeof item.details === 'object' ? JSON.stringify(item.details) : (item.details || ''), item.ip_address || '', item.user_agent || '', item.created_at || nowIso()],
-              );
-            }
-            restored.push(`audit_logs(${items.length})`);
-            break;
-          }
-          case 'activity': {
-            run('DELETE FROM activity');
-            const items = data.activity || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO activity (id, title, meta, detail, created_at)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [item.id, item.title, item.meta || '', item.detail || '', item.created_at || nowIso()],
-              );
-            }
-            restored.push(`activity(${items.length})`);
-            break;
-          }
-          case 'sessions': {
-            run('DELETE FROM sessions');
-            const items = data.sessions || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO sessions (id, user_id, token, expires_at, created_at)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [item.id, item.user_id, item.token, item.expires_at, item.created_at || nowIso()],
-              );
-            }
-            restored.push(`sessions(${items.length})`);
-            break;
-          }
-          case 'registration_requests': {
-            run('DELETE FROM registration_requests');
-            const items = data.registrationRequests || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO registration_requests (id, username, display_name, reason, status, review_note, reviewed_by, reviewed_at, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.username, item.display_name || '', item.reason || '', item.status, item.review_note || '', item.reviewed_by || null, item.reviewed_at || null, item.created_at || nowIso()],
-              );
-            }
-            restored.push(`registration_requests(${items.length})`);
-            break;
-          }
-          case 'wishes': {
-            run('DELETE FROM wishes');
-            const items = data.wishes || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO wishes (id, content, author, mood, anonymous, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [item.id, item.content, item.author || '', item.mood || '', item.anonymous ? 1 : 0, item.created_at || nowIso()],
-              );
-            }
-            restored.push(`wishes(${items.length})`);
-            break;
-          }
-          case 'media': {
-            run('DELETE FROM media');
-            const items = data.media || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO media (id, title, kind, path, thumbnail, size_bytes, duration, review_state, review_note, uploader_id, uploaded_by, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [item.id, item.title || '', item.kind, item.path, item.thumbnail || '', item.size_bytes || 0, item.duration || null, item.review_state || 'pending', item.review_note || '', item.uploader_id || null, item.uploaded_by || '', item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`media(${items.length})`);
-            break;
-          }
-          case 'topics': {
-            run('DELETE FROM topics');
-            const items = data.topics || [];
-            for (const item of items) {
-              run(
-                `INSERT INTO topics (id, title, description, sort_order, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [item.id, item.title || '', item.description || '', item.sort_order || 0, item.created_at || nowIso(), item.updated_at || nowIso()],
-              );
-            }
-            restored.push(`topics(${items.length})`);
-            break;
-          }
-        }
+    for (const key of tables) {
+      const entry = RESTORE_TABLE_MAP[key];
+      const rows = Array.isArray(data[entry.dataKey]) ? data[entry.dataKey] : [];
+      try {
+        const count = restoreRows(entry.table, rows);
+        restored.push(`${key}(${count})`);
+      } catch (e) {
+        failed.push({ table: key, error: e.message || String(e) });
       }
-    });
+    }
 
     saveDatabase();
-    logActivity('数据恢复', `管理员恢复备份`, `已恢复表: ${restored.join(', ')}`);
+    logActivity(
+      '数据恢复',
+      '管理员恢复备份',
+      failed.length
+        ? `已恢复: ${restored.join(', ')}；失败: ${failed.map((f) => f.table).join(', ')}`
+        : `已恢复表: ${restored.join(', ')}`,
+    );
 
-    res.json({ ok: true, restored });
+    if (restored.length === 0) {
+      return res.status(500).json({ error: `恢复失败: ${failed.map((f) => f.error).join('; ')}` });
+    }
+
+    res.json({ ok: true, restored, failed });
   } catch (error) {
     console.error('恢复备份失败:', error);
     res.status(500).json({ error: '恢复备份失败: ' + (error.message || '未知错误') });
@@ -986,6 +909,32 @@ router.get('/backup/snapshots', requireAuth, requireAdmin, (req, res) => {
     res.json({ items });
   } catch (error) {
     res.status(500).json({ error: '列出备份快照失败。' });
+  }
+});
+
+// GET /api/backup/snapshots/:name/download — 下载指定快照文件（管理员）
+router.get('/backup/snapshots/:name/download', requireAuth, requireAdmin, (req, res) => {
+  const name = req.params.name;
+  if (!/^snapshot-.+.json$/.test(name)) return res.status(400).json({ error: '无效的快照文件名。' });
+  const fullPath = path.join(BACKUPS_DIR, name);
+  if (!fs.existsSync(fullPath)) return res.status(404).json({ error: '快照文件不存在。' });
+  res.setHeader('Content-Disposition', 'attachment; filename="' + name + '"');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.sendFile(fullPath);
+});
+
+// DELETE /api/backup/snapshots/:name — 删除指定快照文件（管理员）
+router.delete('/backup/snapshots/:name', requireAuth, requireAdmin, (req, res) => {
+  const name = req.params.name;
+  if (!/^snapshot-.+.json$/.test(name)) return res.status(400).json({ error: '无效的快照文件名。' });
+  const fullPath = path.join(BACKUPS_DIR, name);
+  if (!fs.existsSync(fullPath)) return res.status(404).json({ error: '快照文件不存在。' });
+  try {
+    fs.unlinkSync(fullPath);
+    logActivity('删除快照', '管理员操作', name);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: '删除快照失败。' });
   }
 });
 

@@ -39,6 +39,8 @@ export async function loadUsers() {
     isLoading = false;
     console.error('加载用户列表失败：', error);
     Toast.error(error.message || '加载用户列表失败');
+    const container = document.getElementById('user-list');
+    if (container) container.innerHTML = `<p class="empty-state">加载失败：${escapeHtml(error.message || '请稍后重试')}</p>`;
   }
 }
 
@@ -55,6 +57,8 @@ async function loadRegistrationRequests() {
     isRegistrationLoading = false;
     console.error('加载注册申请失败：', error);
     Toast.error(error.message || '加载注册申请失败');
+    const container = document.getElementById('registration-request-list');
+    if (container) container.innerHTML = `<p class="empty-state">加载失败：${escapeHtml(error.message || '请稍后重试')}</p>`;
   }
 }
 
@@ -118,7 +122,7 @@ function renderUserList(users) {
   if (!container) return;
 
   // 显示骨架屏
-  if (isLoading || !users || users.length === 0 && isLoading) {
+  if (isLoading || !users || (users.length === 0 && isLoading)) {
     container.innerHTML = createSkeleton('list', 5);
     return;
   }
@@ -154,7 +158,7 @@ function renderUserList(users) {
   // 绑定用户卡片事件
   container.querySelectorAll('.user-card').forEach((card) => {
     const userId = card.dataset.userId;
-    const user = users.find((u) => u.id === parseInt(userId));
+    const user = users.find((u) => String(u.id) === String(userId));
     if (!user) return;
 
     card.querySelector('[data-action="edit"]')?.addEventListener('click', () => {
@@ -163,6 +167,10 @@ function renderUserList(users) {
 
     card.querySelector('[data-action="toggle-status"]')?.addEventListener('click', () => {
       toggleUserStatus(user);
+    });
+
+    card.querySelector('[data-action="kick-sessions"]')?.addEventListener('click', () => {
+      kickUserSessions(user);
     });
 
     card.querySelector('[data-action="delete"]')?.addEventListener('click', () => {
@@ -237,6 +245,7 @@ function createUserCard(user) {
         <button class="ghost-btn" data-action="toggle-status" type="button" aria-label="${user.status === 'active' ? '禁用' : '启用'}用户 ${username}">
           ${user.status === 'active' ? '禁用' : '启用'}
         </button>
+        <button class="ghost-btn" data-action="kick-sessions" type="button" aria-label="强制下线用户 ${username}">强制下线</button>
         <button class="ghost-btn danger" data-action="delete" type="button" aria-label="删除用户 ${username}">删除</button>
       </div>
     </div>
@@ -398,27 +407,21 @@ function showRegistrationApprovalDialog(registrationRequest) {
   });
 }
 
-async function rejectRegistrationRequest(request) {
-  const rejectReason = window.prompt(`请输入拒绝 ${request.username} 的原因：`, '申请信息不完整');
-  if (rejectReason === null) return;
-  const reason = rejectReason.trim();
-  if (!reason) {
-    Toast.warning('请填写拒绝原因');
-    return;
-  }
-
-  const confirmed = await Dialog.confirm({
+async function rejectRegistrationRequest(registrationReq) {
+  const reason = await Dialog.prompt({
     title: '拒绝注册申请',
-    message: `确定要拒绝 ${request.username} 的注册申请吗？`,
-    confirmText: '拒绝',
+    message: `请输入拒绝 ${registrationReq.username} 的原因：`,
+    defaultValue: '申请信息不完整',
+    placeholder: '请输入拒绝原因',
+    confirmText: '确认拒绝',
     cancelText: '取消',
-    variant: 'danger',
+    required: true,
   });
 
-  if (!confirmed) return;
+  if (reason === null) return;
 
   try {
-    await request(`/api/registration-requests/${request.id}`, {
+    await request(`/api/registration-requests/${registrationReq.id}`, {
       method: 'PATCH',
       body: JSON.stringify({
         action: 'reject',
@@ -481,6 +484,26 @@ async function toggleUserStatus(user) {
     loadUsers();
   } catch (error) {
     console.error('操作失败：', error);
+    Toast.error(error.message || '操作失败');
+  }
+}
+
+/**
+ * 强制下线：清除该用户所有登录 session
+ */
+async function kickUserSessions(user) {
+  const confirmed = await Dialog.confirm({
+    title: '强制下线',
+    message: `确定要强制下线用户 ${user.username} 吗？其所有登录会话将立即失效。`,
+    confirmText: '强制下线',
+    cancelText: '取消',
+    variant: 'warning',
+  });
+  if (!confirmed) return;
+  try {
+    await request(`/api/users/${user.id}/sessions`, { method: 'DELETE' });
+    Toast.success(`用户 ${user.username} 已被强制下线`);
+  } catch (error) {
     Toast.error(error.message || '操作失败');
   }
 }

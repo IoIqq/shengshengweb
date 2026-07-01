@@ -101,7 +101,12 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
     if (body.groups !== undefined) updates.groups = normalizeGroups(body.groups);
     if (body.bio !== undefined) updates.bio = String(body.bio || '').trim();
     if (body.partyJoinAt !== undefined) updates.partyJoinAt = String(body.partyJoinAt || '').trim();
-    if (body.status !== undefined) updates.status = body.status;
+    if (body.status !== undefined) {
+      if (!['active', 'leave', 'inactive'].includes(body.status)) {
+        return res.status(400).json({ error: '状态值不合法。' });
+      }
+      updates.status = body.status;
+    }
     if (body.joinedAt !== undefined) updates.joinedAt = String(body.joinedAt || '').trim();
 
     const updated = teamModel.updateTeamMember(id, updates);

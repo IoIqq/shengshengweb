@@ -10,7 +10,7 @@
 // 重要：每次 navigation/profile 等核心模块改动后必须改版本号，触发旧缓存清理。
 // 占位符 __ASSET_VERSION__ 在构建/部署时被替换；本字段同时叠加一个手动 fallback 标记
 // 用于无构建脚本环境（开发态）也能产生新缓存命名。
-const CACHE_NAME = 'shengsheng-__ASSET_VERSION__-2026-06-17a';
+const CACHE_NAME = 'shengsheng-__ASSET_VERSION__-2026-06-27a';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -34,6 +34,10 @@ const STATIC_ASSETS = [
   '/js/ui/mobile-nav.js',
   '/js/ui/toast.js',
   '/js/modules/wish-wall.js',
+  '/js/modules/file-browser.js',
+  '/js/modules/monitor.js',
+  '/js/modules/services.js',
+  '/js/modules/host.js',
   '/js/utils/api.js',
   '/js/utils/helpers.js',
   '/templates/overview.html',
@@ -45,6 +49,10 @@ const STATIC_ASSETS = [
   '/templates/team.html',
   '/templates/topics.html',
   '/templates/settings.html',
+  '/templates/file-browser.html',
+  '/templates/monitor.html',
+  '/templates/services.html',
+  '/templates/host.html',
 ];
 
 // 安装事件 - 预缓存静态资源
@@ -93,9 +101,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML 文件：Stale While Revalidate（返回缓存，后台更新）
-  if (request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(staleWhileRevalidate(request));
+  // HTML 导航请求：Network First（网络优先，断网才降级到缓存）
+  // 说明：HTML 里内联了带版本号的资源引用。若用 SWR 先返回旧 HTML，
+  // 旧 HTML 可能引用已删除/改名的资源导致白屏“打不开”。改为网络优先，
+  // 保证联网时始终拿到最新 HTML，离线时才回退缓存。
+  if (
+    request.mode === 'navigate' ||
+    request.headers.get('accept')?.includes('text/html')
+  ) {
+    event.respondWith(networkFirst(request));
     return;
   }
 

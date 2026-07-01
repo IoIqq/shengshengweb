@@ -9,6 +9,7 @@ import { escapeHtml, formatDatetime, safeText, currentRole } from '../utils/help
 import { todoDayKey, classifyTodoByDate, formatDueLabel } from './todo.js';
 import { isOverdue } from './borrow.js';
 import { runDashboardCountUpOnce, triggerHeroCleared } from '../ui/animations.js';
+import { roleWorkspaceLabel } from '../core/router.js';
 
 function canUseShortcut(shortcut) {
   const role = currentRole();
@@ -33,6 +34,15 @@ export function renderDashboard() {
       ? state.borrowCatalog.filter((item) => item.status === 'pending').length
       : dashboardCounts.borrowOpen ?? 0,
   };
+
+  // 更新标题日期 & 角色标签（fix: 曾硬编码在 HTML 里）
+  const titleEl = document.getElementById('overview-title');
+  if (titleEl) {
+    const n = new Date();
+    titleEl.textContent = `${n.getFullYear()} / ${String(n.getMonth() + 1).padStart(2, '0')} / ${String(n.getDate()).padStart(2, '0')} · 工作台值班`;
+  }
+  const rolePill = document.getElementById('role-pill');
+  if (rolePill) rolePill.textContent = roleWorkspaceLabel(currentRole());
 
   // 更新日期时间徽章
   const dateBadge = document.getElementById('overview-date-badge');
@@ -217,6 +227,9 @@ export function renderDashboard() {
   // 环形数据图
   renderMediaChart();
 
+  // 存储空间环形图
+  renderStorageChart();
+
   // 最近动态
   renderActivity();
 
@@ -270,7 +283,7 @@ export function renderMediaChart() {
   const media = state.bootstrap?.media || [];
   const videoCount = media.filter((m) => m.kind === 'video').length;
   const photoCount = media.filter((m) => m.kind === 'photo').length;
-  const total = videoCount + photoCount;
+  const total = media.length; // 与 hero 统计数字一致；弧长按真实占比绘制
 
   if (total === 0) {
     chartEl.innerHTML = '<div class="media-chart-empty">暂无素材数据</div>';
@@ -297,6 +310,7 @@ export function renderMediaChart() {
           <circle class="media-chart-track" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}" />
           <circle class="media-chart-segment media-chart-segment--video" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}"
                   stroke-dasharray="${videoDash} ${circumference}" stroke-dashoffset="${videoOffset}"
+                  style="--arc-start:${circumference}"
                   transform="rotate(-90 ${center} ${center})" stroke-linecap="round" />
           <circle class="media-chart-segment media-chart-segment--photo" cx="${center}" cy="${center}" r="${radius}" fill="none" stroke-width="${strokeWidth}"
                   stroke-dasharray="${photoDash} ${circumference}" stroke-dashoffset="${photoOffset}"
@@ -315,10 +329,61 @@ export function renderMediaChart() {
   `;
 }
 
+function formatStorageBytes(value) {
+  const bytes = Number(value || 0);
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 GB';
+  const gb = bytes / (1024 ** 3);
+  if (gb >= 1024) return `${(gb / 1024).toFixed(1)} TB`;
+  if (gb >= 10) return `${Math.round(gb)} GB`;
+  return `${gb.toFixed(1)} GB`;
+}
+
+/**
+ * 渲染存储空间容量条（素材盘已用 vs 剩余，横向进度条）
+ */
+export function renderStorageChart() {
+  const chartEl = document.getElementById('storage-chart-container');
+  if (!chartEl) return;
+
+  const storage = state.bootstrap?.dashboard?.storage || {};
+  if (storage.capacityAvailable == null || !storage.totalBytes) {
+    chartEl.innerHTML = '<div class="media-chart-empty">暂无存储容量数据</div>';
+    return;
+  }
+
+  const usedPercent = Math.min(100, Math.max(0, Number(storage.usedPercent || 0)));
+  const tone = usedPercent >= 90 ? 'danger' : (usedPercent >= 75 ? 'warning' : 'normal');
+
+  chartEl.innerHTML = `
+    <div class="storage-bar-body" data-tone="${tone}">
+      <div class="storage-bar-head">
+        <strong class="storage-bar-pct">${usedPercent}%</strong>
+        <span>已用</span>
+      </div>
+      <div class="storage-bar-track" role="progressbar" aria-valuenow="${usedPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="素材盘已用 ${usedPercent}%">
+        <div class="storage-bar-fill" style="width:${usedPercent}%"></div>
+      </div>
+      <ul class="media-chart-legend">
+        <li><span class="legend-dot legend-dot--used" aria-hidden="true"></span><span>已用</span><strong>${formatStorageBytes(storage.usedBytes)}</strong></li>
+        <li><span class="legend-dot legend-dot--free" aria-hidden="true"></span><span>剩余</span><strong>${formatStorageBytes(storage.freeBytes)}</strong></li>
+      </ul>
+      <p class="storage-chart-total">素材盘总容量 ${formatStorageBytes(storage.totalBytes)}</p>
+    </div>
+  `;
+}
+
 // 活动日志分页状态
 const ACTIVITY_PER_PAGE = 5;
 let activityPage = 1;
 let activityFilter = 'all';
+let activityEventsBound = false;
+
+/** 登出时重置活动日志分页/筛选状态 */
+export function resetDashboardState() {
+  activityPage = 1;
+  activityFilter = 'all';
+  // 注意：activityEventsBound 不重置——DOM 持久，监听器只需绑一次
+}
 
 function getActivityType(item) {
   const title = (item.title || '').toLowerCase();
@@ -392,8 +457,8 @@ export function renderActivity() {
       requestAnimationFrame(() => {
         els.activityList.style.transition = 'opacity 0.18s ease';
         els.activityList.style.opacity = '1';
+        els.activityList.setAttribute('aria-busy', 'false');
       });
-      els.activityList.setAttribute('aria-busy', 'false');
     });
   }
 
@@ -426,6 +491,8 @@ function updateActivityPagination(totalCount, totalPages) {
  * 初始化活动日志交互（筛选 + 翻页）
  */
 export function initActivityFilters() {
+  if (activityEventsBound) return;
+  activityEventsBound = true;
   const filterRow = document.getElementById('activity-filters');
   if (filterRow) {
     filterRow.addEventListener('click', (e) => {

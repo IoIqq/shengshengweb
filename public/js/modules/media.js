@@ -9,6 +9,7 @@ import { sortMedia, sortReview } from '../core/config.js';
 import { escapeHtml, formatDatetime, safeText, currentRole, isAdminUser, addLocalActivity } from '../utils/helpers.js';
 import { requestJSON, readCookie } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { Dialog } from '../ui/dialog.js';
 import { showFeedback, setPending } from '../ui/feedback.js';
 
 // 上传队列
@@ -36,7 +37,7 @@ async function loadUploadTargetOptions() {
   if (folderSel) {
     const opts = [];
     for (const y of uploadTargetCache.folders) {
-      for (const ev of y.events) {
+      for (const ev of (y.events || [])) {
         const rel = `media/${y.year}/${ev}`;
         opts.push(`<option value="${escapeHtml(rel)}">${y.year} / ${escapeHtml(ev)}</option>`);
       }
@@ -347,7 +348,14 @@ export async function reviewMedia(id, status, note = '') {
  * @param {string} id - 素材 ID
  */
 export async function deleteMedia(id) {
-  if (!confirm('确定要删除这个素材吗？此操作不可恢复。')) {
+  const confirmed = await Dialog.confirm({
+    title: '删除素材',
+    message: '确定要删除这个素材吗？此操作不可恢复。',
+    confirmText: '删除',
+    cancelText: '取消',
+    variant: 'danger',
+  });
+  if (!confirmed) {
     return;
   }
 
@@ -387,7 +395,14 @@ export async function batchReviewMedia(status) {
   }
 
   const action = status === 'approved' ? '通过' : '退回';
-  if (!confirm(`确定要批量${action} ${ids.length} 个素材吗？`)) {
+  const confirmed = await Dialog.confirm({
+    title: `批量${action}`,
+    message: `确定要批量${action} ${ids.length} 个素材吗？`,
+    confirmText: action,
+    cancelText: '取消',
+    variant: status === 'approved' ? 'info' : 'warning',
+  });
+  if (!confirmed) {
     return;
   }
 
@@ -764,12 +779,15 @@ export function initUploadDialog() {
     if (e.target === overlay) closeUploadDialog();
   });
 
-  // ESC 关闭
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !overlay.hidden && overlay.classList.contains('is-open')) {
-      closeUploadDialog();
-    }
-  });
+  // ESC 关闭（用具名函数避免面板重挂时重复注册）
+  if (!overlay._uploadEscHandler) {
+    overlay._uploadEscHandler = (e) => {
+      if (e.key === 'Escape' && !overlay.hidden && overlay.classList.contains('is-open')) {
+        closeUploadDialog();
+      }
+    };
+    document.addEventListener('keydown', overlay._uploadEscHandler);
+  }
 }
 
 /* ======== 视图切换（列表 / 大图标） ======== */
@@ -891,7 +909,7 @@ export async function renderDedupGroups() {
         <div class="dedup-group${isOpen ? ' is-open' : ''}" data-dedup-group="${gi}">
           <button class="dedup-group-head" type="button" data-dedup-toggle="${gi}" aria-expanded="${isOpen}">
             <svg class="dedup-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-            <strong>${g.count} 个重复</strong>
+            <strong>${escapeHtml(String(g.count))} 个重复</strong>
             <small>哈希 ${escapeHtml(String(g.hash).slice(0, 12))}…</small>
           </button>
           <div class="dedup-group-body"${isOpen ? '' : ' hidden'}>
@@ -937,9 +955,12 @@ export function initDedup() {
   document.getElementById('dedup-dialog-close')?.addEventListener('click', closeDedupDialog);
   document.getElementById('dedup-scan-btn')?.addEventListener('click', runDedupScan);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDedupDialog(); });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !overlay.hidden && overlay.classList.contains('is-open')) closeDedupDialog();
-  });
+  if (!overlay._dedupEscHandler) {
+    overlay._dedupEscHandler = (e) => {
+      if (e.key === 'Escape' && !overlay.hidden && overlay.classList.contains('is-open')) closeDedupDialog();
+    };
+    document.addEventListener('keydown', overlay._dedupEscHandler);
+  }
 
   const groupsEl = document.getElementById('dedup-groups');
   groupsEl?.addEventListener('click', async (e) => {
@@ -953,7 +974,14 @@ export function initDedup() {
       return;
     }
     if (delBtn) {
-      if (!confirm('确定删除该重复素材？文件也会被清理。')) return;
+      const confirmed = await Dialog.confirm({
+        title: '删除重复素材',
+        message: '确定删除该重复素材？文件也会被清理。',
+        confirmText: '删除',
+        cancelText: '取消',
+        variant: 'danger',
+      });
+      if (!confirmed) return;
       try {
         setPending(true);
         await requestJSON(`/api/media/${delBtn.dataset.dedupDelete}`, { method: 'DELETE' });

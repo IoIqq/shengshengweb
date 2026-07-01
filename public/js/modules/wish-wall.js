@@ -1,16 +1,23 @@
 import { state } from '../core/state.js';
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
+import { Dialog } from '../ui/dialog.js';
 import { escapeHtml } from '../utils/helpers.js';
 
 let initialized = false;
 let modal = null;
 let lastFocused = null;
 
+// 连点彩蛋
+let clickCount = 0;
+let clickResetTimer = null;
+const STREAK_TARGET = 5;
+const STREAK_RESET_MS = 800;
+
 export function initWishWall() {
   if (initialized) return;
 
-  const wishFab = document.getElementById('wish-fab');
+  const easterDot = document.getElementById('wish-easter-dot');
   modal = document.getElementById('wish-modal');
   const closeBtn = document.getElementById('wish-modal-close');
   const overlay = document.getElementById('wish-modal-overlay');
@@ -18,12 +25,11 @@ export function initWishWall() {
   const charCount = document.getElementById('wish-char-count');
   const textarea = form?.querySelector('textarea[name="content"]');
 
-  if (!wishFab || !modal) return;
+  if (!easterDot || !modal) return;
 
   initialized = true;
-  syncFabWithWorkspace(wishFab);
 
-  wishFab.addEventListener('click', openWishModal);
+  bindClickStreak(easterDot);
   closeBtn?.addEventListener('click', closeWishModal);
   overlay?.addEventListener('click', closeWishModal);
   form?.addEventListener('submit', handleSubmit);
@@ -38,24 +44,49 @@ export function initWishWall() {
   window.addEventListener('shengsheng:session', () => {
     if (!modal?.hidden) loadWishes();
   });
-
-  loadWishes();
 }
 
-function syncFabWithWorkspace(wishFab) {
-  const workspaceShell = document.getElementById('workspace-shell');
-  if (!workspaceShell) return;
+/**
+ * 连点彩蛋：快速点击圆点 5 次触发留言墙（类似 Android 开发者模式）
+ * 支持鼠标、触摸、键盘 Enter/Space
+ */
+function bindClickStreak(dot) {
+  const onActivate = () => {
+    clickCount += 1;
+    if (clickResetTimer) window.clearTimeout(clickResetTimer);
 
-  const syncFabVisibility = () => {
-    const isWorkspaceVisible = !workspaceShell.classList.contains('hidden');
-    wishFab.hidden = !isWorkspaceVisible;
-    if (!isWorkspaceVisible && modal && !modal.hidden) closeWishModal();
+    dot.classList.remove('is-tapped');
+    // 触发 reflow 以重新播放动画
+    void dot.offsetWidth;
+    dot.classList.add('is-tapped');
+
+    if (clickCount >= STREAK_TARGET) {
+      clickCount = 0;
+      window.clearTimeout(clickResetTimer);
+      dot.classList.remove('is-tapped', 'is-charging');
+      dot.classList.add('is-burst');
+      window.setTimeout(() => dot.classList.remove('is-burst'), 360);
+      openWishModal();
+      return;
+    }
+
+    if (clickCount >= 3) dot.classList.add('is-charging');
+
+    clickResetTimer = window.setTimeout(() => {
+      clickCount = 0;
+      dot.classList.remove('is-tapped', 'is-charging');
+    }, STREAK_RESET_MS);
   };
 
-  syncFabVisibility();
-  const observer = new MutationObserver(syncFabVisibility);
-  observer.observe(workspaceShell, { attributes: true, attributeFilter: ['class'] });
+  dot.addEventListener('click', onActivate);
+  dot.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onActivate();
+    }
+  });
 }
+
 
 function openWishModal() {
   if (!modal) return;
@@ -148,7 +179,15 @@ async function handleWishActions(event) {
   if (!deleteButton) return;
 
   const id = deleteButton.dataset.wishDelete;
-  if (!id || !confirm('确定要删除这条留言吗？')) return;
+  if (!id) return;
+  const confirmed = await Dialog.confirm({
+    title: '删除留言',
+    message: '确定要删除这条留言吗？',
+    confirmText: '删除',
+    cancelText: '取消',
+    variant: 'danger',
+  });
+  if (!confirmed) return;
 
   try {
     await requestJSON(`/api/wishes/${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -164,7 +203,9 @@ function isWishAdmin() {
 }
 
 function formatTime(timestamp) {
+  if (!timestamp) return '未知时间';
   const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return '未知时间';
   const now = new Date();
   const diff = now - date;
 

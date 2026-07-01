@@ -19,14 +19,21 @@ server/uploads/avatars/*
 !server/uploads/inbox/.gitkeep
 !server/uploads/avatars/.gitkeep
 
+# TLS certificates (never commit private keys)
+server/certs/
+
 # Local backups / temp files
 app.js.bak
 .tmp-motion-check.png
+cookies.txt
+.mobile-access.html
 c
 
 # Logs
 logs/
 *.log
+.srv.log
+.restart-log.txt
 npm-debug.log*
 pm2-*.log
 

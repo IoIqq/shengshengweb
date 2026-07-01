@@ -51,10 +51,8 @@ function updateTodo(id, updates) {
   if (updates.done !== undefined) {
     fields.push('done = ?');
     values.push(updates.done ? 1 : 0);
-    if (updates.done) {
-      fields.push('completed_at = ?');
-      values.push(now);
-    }
+    fields.push('completed_at = ?');
+    values.push(updates.done ? now : null);
   }
   if (updates.due_date !== undefined) {
     fields.push('due_date = ?');

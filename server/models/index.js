@@ -13,6 +13,7 @@ const profile = require('./profile');
 const topicLibrary = require('./topic-library');
 const settings = require('./settings');
 const registrationRequest = require('./registration-request');
+const feishuSync = require('./feishu-sync');
 
 module.exports = {
   database,
@@ -29,4 +30,5 @@ module.exports = {
   topicLibrary,
   settings,
   registrationRequest,
+  feishuSync,
 };

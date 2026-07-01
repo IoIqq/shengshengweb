@@ -27,11 +27,17 @@ export function readCookie(name) {
  * @returns {Promise}
  */
 function fetchWithTimeout(path, options, timeout) {
+  const controller = new AbortController();
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error('请求超时，请检查网络连接'));
+    }, timeout);
+  });
   return Promise.race([
-    fetch(path, options),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('请求超时，请检查网络连接')), timeout)
-    )
+    fetch(path, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer)),
+    timeoutPromise,
   ]);
 }
 
@@ -118,13 +124,13 @@ export async function request(path, options = {}) {
 
       // 发送请求（带超时）
       const response = await fetchWithTimeout(path, {
-        credentials: 'same-origin',
+        ...options,
+        credentials: options.credentials || 'same-origin',
         headers: {
           'Content-Type': 'application/json',
           ...csrfHeaders,
           ...(options.headers || {}),
         },
-        ...options,
       }, timeout);
 
       // 解析响应

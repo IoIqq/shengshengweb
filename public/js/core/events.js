@@ -15,7 +15,7 @@ import * as log from '../utils/log.js';
 import { setActiveView } from '../ui/navigation.js';
 import { openMediaPreview } from '../ui/media-preview.js';
 import { setPending, showFeedback } from '../ui/feedback.js';
-import { flashSuccess } from '../ui/animations.js';
+import { flashSuccess, resetDashboardCountUpFlag } from '../ui/animations.js';
 import { loadShowcase } from '../modules/showcase.js';
 import {
   canAccessView,
@@ -29,6 +29,7 @@ import { bindProfileEvents } from './profile.js';
 import {
   renderActivity,
   initActivityFilters,
+  resetDashboardState,
   initUploadDialog,
   initDedup,
   initMediaViewSwitcher,
@@ -62,6 +63,7 @@ import {
   approveBorrowRequest,
   returnBorrowRequest,
   deleteBorrowRequest,
+  cancelBorrowRequest,
   saveEditTeamMember,
   createTeamMember,
   cancelEditTeamMember,
@@ -85,20 +87,23 @@ import {
   restartService,
   loadLogFileList,
   searchLogs,
+  loadFeishuSyncStatus,
+  runFeishuSync,
   initPreferencesPanel,
   initMaintenancePanel,
+  resetAuditState,
+  bindFileBrowserEvents,
+  bindMonitorEvents,
+  bindServicesEvents,
+  bindHostEvents,
 } from './proxies.js';
 
 /**
  * 绑定所有工作台事件（登录成功后调用）
- * 幂等：重复调用时跳过，防止登出→再登录产生重复监听器。
+ * 幂等：DOM 是持久的（mountPanels 只挂载一次），监听器也只需绑定一次，
+ * 登出时不重置该标志，避免再登录时给同一批 DOM 元素叠加重复监听器。
  */
 let eventsBound = false;
-
-/** 重置绑定标志（登出时调用，确保重新登录后能重新绑定） */
-export function resetEventsBound() {
-  eventsBound = false;
-}
 
 export function bindAllEvents() {
   if (eventsBound) {
@@ -121,6 +126,10 @@ export function bindAllEvents() {
   bindSettingsTabs();
   bindStorageEvents();
   bindSystemAdminEvents();
+  bindFileBrowserEvents();
+  bindMonitorEvents();
+  bindServicesEvents();
+  bindHostEvents();
   initWishWall();
 }
 
@@ -128,32 +137,26 @@ export function bindAllEvents() {
 function bindGlobalEvents() {
   // 使用事件委托处理所有 [data-jump] 按钮
   document.addEventListener('click', (e) => {
-    const jumpBtn = e.target.closest('[data-jump]');
-    if (jumpBtn) {
-      e.preventDefault();
-      const view = jumpBtn.dataset.jump;
-      if (view && canAccessView(view)) {
-        setActiveView(view);
-        log.log('🔗 跳转到视图:', view);
+      const jumpBtn = e.target.closest('[data-jump]');
+      if (jumpBtn) {
+        e.preventDefault();
+        const view = jumpBtn.dataset.jump;
+        if (view && canAccessView(view)) {
+          setActiveView(view);
+          log.log('🔗 跳转到视图:', view);
+        }
       }
-    }
 
-    // 处理 .link-btn 链接按钮
-    const linkBtn = e.target.closest('.link-btn[data-jump]');
-    if (linkBtn) {
-      e.preventDefault();
-      const view = linkBtn.dataset.jump;
-      if (view && canAccessView(view)) {
-        setActiveView(view);
+      // 处理快捷操作按钮
+      const shortcutBtn = e.target.closest('[data-shortcut]');
+      if (shortcutBtn) {
+        e.preventDefault();
+        handleShortcut(shortcutBtn.dataset.shortcut);
       }
-    }
+    });
 
-    // 处理快捷操作按钮
-    const shortcutBtn = e.target.closest('[data-shortcut]');
-    if (shortcutBtn) {
-      e.preventDefault();
-      handleShortcut(shortcutBtn.dataset.shortcut);
-    }
+  document.addEventListener('activity-updated', () => {
+    renderActivity();
   });
 
   // 上传按钮
@@ -164,10 +167,6 @@ function bindGlobalEvents() {
   }
 
   // 同步按钮 — 已禁用（点击不再触发视图切换）
-
-  document.addEventListener('activity-updated', () => {
-    renderActivity();
-  });
 }
 
 // 处理快捷操作
@@ -255,13 +254,19 @@ function bindNavigation() {
       try {
         await requestJSON('/api/logout', { method: 'POST' });
         Toast.success('已退出登录');
+        Toast.clear();
         resetState();
-        eventsBound = false;
+        resetDashboardState();
+        resetDashboardCountUpFlag();
+        resetAuditState();
         showShowcaseShell();
         loadShowcase();
       } catch (error) {
         if (error.status === 403 && String(error.message || '').includes('CSRF')) {
           resetState();
+          resetDashboardState();
+          resetDashboardCountUpFlag();
+          resetAuditState();
           showShowcaseShell();
           Toast.warning('登录状态已失效，请重新登录');
           return;
@@ -519,8 +524,12 @@ function bindDeviceEvents() {
       const btn = e.target.closest('[data-filter]');
       if (!btn) return;
 
-      $$('[data-filter]', els.deviceFilters).forEach(b => b.classList.remove('is-active'));
+      $$('[data-filter]', els.deviceFilters).forEach(b => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
       state.deviceFilter = btn.dataset.filter;
       syncDeviceView();
     });
@@ -648,7 +657,8 @@ function bindBorrowEvents() {
       const rejectBtn = e.target.closest('[data-borrow-reject]');
       const returnBtn = e.target.closest('[data-borrow-return]');
       const deleteBtn = e.target.closest('[data-borrow-delete]');
-      const actionBtn = approveBtn || rejectBtn || returnBtn || deleteBtn;
+      const cancelBtn = e.target.closest('[data-borrow-cancel]');
+      const actionBtn = approveBtn || rejectBtn || returnBtn || deleteBtn || cancelBtn;
       if (!actionBtn) return;
 
       actionBtn.disabled = true;
@@ -666,6 +676,9 @@ function bindBorrowEvents() {
         } else if (deleteBtn) {
           const id = deleteBtn.dataset.borrowDelete;
           await deleteBorrowRequest(id);
+        } else if (cancelBtn) {
+          const id = cancelBtn.dataset.borrowCancel;
+          await cancelBorrowRequest(id);
         }
       } finally {
         if (actionBtn.isConnected) {
@@ -732,8 +745,12 @@ function bindTeamEvents() {
       const btn = e.target.closest('[data-filter]');
       if (!btn) return;
 
-      $$('[data-filter]', els.teamFilters).forEach(b => b.classList.remove('is-active'));
+      $$('[data-filter]', els.teamFilters).forEach(b => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
       state.teamFilter = btn.dataset.filter;
       renderTeam();
     });
@@ -944,6 +961,16 @@ function bindSystemAdminEvents() {
   const restartBtn = document.getElementById('sys-restart-btn');
   if (restartBtn) {
     restartBtn.addEventListener('click', () => restartService());
+  }
+
+  // 飞书同步
+  const feishuRunBtn = document.getElementById('sys-feishu-run-btn');
+  if (feishuRunBtn) {
+    feishuRunBtn.addEventListener('click', () => runFeishuSync());
+  }
+  const feishuRefreshBtn = document.getElementById('sys-feishu-refresh-btn');
+  if (feishuRefreshBtn) {
+    feishuRefreshBtn.addEventListener('click', () => loadFeishuSyncStatus());
   }
 }
 

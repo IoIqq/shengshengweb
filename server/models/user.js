@@ -7,7 +7,7 @@ const { nowIso } = require('../utils');
 const USER_FULL_COLUMNS =
   'id, username, password_hash, salt, role, status, display_name, signature, avatar_url, phone, bio, last_login_at, created_at, updated_at, created_by';
 const USER_PUBLIC_COLUMNS =
-  'id, username, role, display_name, signature, avatar_url, status, last_login_at, created_at, updated_at';
+  'id, username, role, display_name, signature, avatar_url, status, last_login_at, nav_mode, created_at, updated_at';
 
 // ============================================================================
 // 密码哈希
@@ -261,6 +261,10 @@ function updateUserProfile(userId, updates) {
   if (updates.bio !== undefined) {
     fields.push('bio = ?');
     values.push(updates.bio);
+  }
+  if (updates.nav_mode !== undefined) {
+    fields.push('nav_mode = ?');
+    values.push(updates.nav_mode);
   }
 
   if (fields.length === 0) {

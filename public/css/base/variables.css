@@ -94,13 +94,13 @@
   --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   /* 圆角 */
-  --radius-hero: 26px;
-  --radius-xl: 24px;
-  --radius-lg: 22px;
-  --radius-md: 16px;
-  --radius-control: 14px;
-  --radius-sm: 12px;
-  --radius-chip: 11px;
+  --radius-hero: 18px;
+  --radius-xl: 16px;
+  --radius-lg: 14px;
+  --radius-md: 12px;
+  --radius-control: 10px;
+  --radius-sm: 8px;
+  --radius-chip: 8px;
 
   /* 8px 基础网格间距系统 */
   --spacing-xs: 4px;
@@ -111,12 +111,13 @@
   --spacing-2xl: 32px;
 
   /* 流体间距 */
-  --spacing-panel: clamp(18px, 2.3vw, 32px);
-  --spacing-card-gap: clamp(12px, 1.6vw, 18px);
-  --spacing-grid-gap: clamp(14px, 2vw, 22px);
+  --spacing-panel: clamp(12px, 1.2vw, 18px);
+  --spacing-card-gap: clamp(6px, 0.9vw, 12px);
+  --spacing-grid-gap: clamp(8px, 1.1vw, 14px);
   --spacing-form-gap: clamp(8px, 1vw, 12px);
 
   /* 布局 */
+  --content-max: 1600px;
   --touch-target-min: 44px;
   --focus-ring: 0 0 0 3px rgba(138, 145, 138, 0.24);
   --focus-ring-strong: 0 0 0 4px rgba(138, 145, 138, 0.30);
@@ -137,9 +138,12 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 兜底裁剪：杜绝任何元素撑出横向滚动条。用 clip 不用 hidden，
+     clip 不创建滚动容器，不会破坏 .side-nav 的 position: sticky。 */
+  overflow-x: clip;
 }
 
 body {
@@ -149,9 +153,10 @@ body {
     radial-gradient(circle at 92% -4%, rgba(247, 247, 246, 0.95), transparent 32vw),
     linear-gradient(135deg, #ffffff 0%, #fdfdfd 56%, #f8f8f7 100%);
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100vh;
   letter-spacing: -0.014em;
+  overflow-x: clip;
 }
 
 /* ========== 通用样式 ========== */

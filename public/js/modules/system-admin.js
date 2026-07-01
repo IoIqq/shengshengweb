@@ -8,6 +8,7 @@
 import { requestJSON } from '../utils/api.js';
 import { Toast } from '../ui/toast.js';
 import { escapeHtml } from '../utils/helpers.js';
+import { Dialog } from '../ui/dialog.js';
 
 /**
  * 格式化秒数为可读时间
@@ -42,6 +43,7 @@ function formatBytes(bytes) {
 export async function renderSystemPanel() {
   await refreshSystemInfo();
   await loadNetworkInfo();
+  await loadFeishuSyncStatus();
 }
 
 /**
@@ -88,15 +90,15 @@ export async function refreshSystemInfo() {
     }
 
     // 数据库
-    setText('sys-db-path', info.database.path);
-    setText('sys-db-size', formatBytes(info.database.sizeBytes));
+    setText('sys-db-path', info.database?.path || '-');
+    setText('sys-db-size', formatBytes(info.database?.sizeBytes));
     const dbExistsEl = document.getElementById('sys-db-exists');
     if (dbExistsEl) {
-      dbExistsEl.innerHTML = info.database.exists
+      dbExistsEl.innerHTML = info.database?.exists
         ? '<span class="sys-badge sys-badge-ok">正常</span>'
         : '<span class="sys-badge sys-badge-err">不存在</span>';
     }
-    setText('sys-upload-count', String(info.uploadDir.fileCount));
+    setText('sys-upload-count', String(info.uploadDir?.fileCount ?? 0));
 
     // 堆内存
     setText('sys-mem-heap', `${info.memory.heapUsed} / ${info.memory.heapTotal} MB`);
@@ -117,12 +119,16 @@ export async function loadNetworkInfo() {
     // LAN 地址列表
     const listEl = document.getElementById('sys-lan-list');
     if (listEl) {
-      if (net.lanAddresses.length === 0) {
+      if (!net.lanAddresses || net.lanAddresses.length === 0) {
         listEl.innerHTML = '<li class="sys-lan-placeholder">未检测到局域网地址</li>';
       } else {
-        listEl.innerHTML = net.lanAddresses.map((a) =>
-          `<li><span class="sys-lan-iface">${a.name}</span> <code>${a.address}:${net.port}</code> <button class="btn btn-xs btn-outline sys-copy-btn" data-copy="${a.address}:${net.port}" title="复制地址">📋</button></li>`
-        ).join('');
+        listEl.innerHTML = net.lanAddresses.map((a) => {
+          const name = escapeHtml(a.name || '');
+          const addr = escapeHtml(a.address || '');
+          const port = escapeHtml(String(net.port));
+          const copyVal = escapeHtml(`${a.address || ''}:${net.port}`);
+          return `<li><span class="sys-lan-iface">${name}</span> <code>${addr}:${port}</code> <button class="btn btn-xs btn-outline sys-copy-btn" data-copy="${copyVal}" title="复制地址">📋</button></li>`;
+        }).join('');
         // 绑定复制按钮
         listEl.querySelectorAll('.sys-copy-btn').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -152,6 +158,86 @@ export async function loadNetworkInfo() {
   } catch (error) {
     console.error('获取网络信息失败:', error);
     Toast.error('获取网络信息失败');
+  }
+}
+
+/**
+ * 加载飞书同步状态并渲染卡片
+ */
+export async function loadFeishuSyncStatus() {
+  try {
+    const st = await requestJSON('/api/feishu-sync/status');
+
+    const badge = document.getElementById('sys-feishu-badge');
+    if (badge) {
+      const enabled = !!st.enabled;
+      badge.textContent = enabled ? '已启用' : '未启用';
+      badge.dataset.state = enabled ? 'ok' : 'idle';
+    }
+
+    const runBtn = document.getElementById('sys-feishu-run-btn');
+    if (runBtn) runBtn.disabled = !st.enabled;
+
+    const msg = document.getElementById('sys-feishu-msg');
+    if (msg) {
+      const last = st.lastSyncAt ? new Date(st.lastSyncAt).toLocaleString('zh-CN') : '从未同步';
+      msg.textContent = `${last} · ${st.message || ''}`;
+    }
+
+    const statsEl = document.getElementById('sys-feishu-stats');
+    if (statsEl) {
+      const s = st.stats || {};
+      const items = [
+        ['已导入待回写', s.synced ?? 0],
+        ['已回写审批', s.backed ?? 0],
+        ['匹配异常', s.errored ?? 0],
+      ];
+      statsEl.innerHTML = items.map(([k, v]) => `<li><span class="sys-feishu-stat-k">${escapeHtml(k)}</span><span class="sys-feishu-stat-v">${v}</span></li>`).join('');
+      statsEl.hidden = false;
+    }
+
+    // 有异常则拉取异常列表
+    const hint = document.getElementById('sys-feishu-errors-hint');
+    const list = document.getElementById('sys-feishu-errors');
+    if (hint && list) {
+      if ((st.stats?.errored ?? 0) > 0) {
+        hint.hidden = false;
+        list.hidden = false;
+        try {
+          const data = await requestJSON('/api/feishu-sync/errors');
+          list.innerHTML = (data.errors || []).map((e) =>
+            `<li><code>${escapeHtml(e.recordId || '')}</code> <span class="sys-feishu-err">${escapeHtml(e.error || '')}</span></li>`,
+          ).join('') || '<li class="sys-feishu-placeholder">无</li>';
+        } catch (_) {
+          list.innerHTML = '<li class="sys-feishu-placeholder">异常列表加载失败</li>';
+        }
+      } else {
+        hint.hidden = true;
+        list.hidden = true;
+      }
+    }
+  } catch (error) {
+    const msg = document.getElementById('sys-feishu-msg');
+    if (msg) msg.textContent = '飞书同步状态加载失败（可能未配置）';
+    const runBtn = document.getElementById('sys-feishu-run-btn');
+    if (runBtn) runBtn.disabled = true;
+  }
+}
+
+/**
+ * 手动触发一次飞书同步
+ */
+export async function runFeishuSync() {
+  const btn = document.getElementById('sys-feishu-run-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 同步中...'; }
+  try {
+    const result = await requestJSON('/api/feishu-sync/run', { method: 'POST', retry: false });
+    Toast.success(result.message || '同步完成');
+    await loadFeishuSyncStatus();
+  } catch (error) {
+    Toast.error(error.message || '同步失败');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📥 立即同步'; }
   }
 }
 
@@ -303,7 +389,13 @@ export async function restartService() {
     return;
   }
 
-  const confirmed = confirm('确认要重启服务吗？\n\n重启期间服务将短暂不可用（约 3-5 秒）。');
+  const confirmed = await Dialog.confirm({
+    title: '重启服务',
+    message: '重启期间服务将短暂不可用（约 3-5 秒）。',
+    confirmText: '确认重启',
+    cancelText: '取消',
+    variant: 'danger',
+  });
   if (!confirmed) return;
 
   try {

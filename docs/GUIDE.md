@@ -187,10 +187,14 @@ npm run maintenance              # 日志清理 + 数据维护
 | DELETE | `/api/wishes/:id` | 管理员 |
 | GET | `/api/health` | 公开 |
 
+> `GET /api/bootstrap` 的 `dashboard.storage` 字段返回素材盘容量占用（`totalBytes / usedBytes / freeBytes / usedPercent / capacityAvailable`），仅含数字、不暴露路径，供所有角色的工作台「存储空间」环形图使用。
+
+> 留言墙入口为隐藏彩蛋：工作台导航栏品牌区的小圆点（`#wish-easter-dot`），长按 1.2 秒（带丝滑抖动蓄力动效）后弹出留言抽屉。
+
 ## 文档维护
 
 - 架构/部署/API 变化 → 更新本文
 - 强制开发规范变化 → 更新 `CODE_STANDARDS.md`
 - 不在多个文档重复维护同一事实
 
-**最后更新**：2026-06-13（精简：去除与 README_PROJECT 重复的快速开始，压缩 API 表）
+**最后更新**：2026-06-22（新增 dashboard.storage 容量字段与留言墙长按彩蛋入口）

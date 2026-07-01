@@ -126,9 +126,23 @@
         <button class="btn btn-sm btn-outline" id="sys-log-search-btn" type="button" hidden>🔍 搜索</button>
       </div>
     </section>
-  </div>
 
-  <!-- CLI 提示 -->
+    <!-- 飞书多维表格同步 -->
+    <section class="system-card" id="sys-card-feishu" aria-labelledby="sys-feishu-title">
+      <div class="system-card-head">
+        <h3 id="sys-feishu-title">🔁 飞书同步</h3>
+        <span class="sys-badge" id="sys-feishu-badge" data-state="idle">未启用</span>
+      </div>
+      <p class="sys-feishu-msg" id="sys-feishu-msg">加载中...</p>
+      <ul class="sys-feishu-stats" id="sys-feishu-stats" hidden></ul>
+      <p class="sys-feishu-errors-hint" id="sys-feishu-errors-hint" hidden>匹配失败的行（成员在表格里填的设备名对不上 NAS 设备，修正后下次自动重试）：</p>
+      <ul class="sys-feishu-errors" id="sys-feishu-errors" hidden></ul>
+      <div class="sys-card-actions">
+        <button class="btn btn-sm" id="sys-feishu-run-btn" type="button" disabled>📥 立即同步</button>
+        <button class="btn btn-sm btn-outline" id="sys-feishu-refresh-btn" type="button">⟳ 刷新</button>
+      </div>
+    </section>
+  </div>
   <div class="sys-cli-hint">
     <p>💡 <strong>CLI 操作提示：</strong>启动/停止服务、防火墙放行、PM2 管理、首次安装等操作，请双击项目 <code>scripts</code> 目录下的 <code>启动.bat</code> 统一完成。</p>
   </div>

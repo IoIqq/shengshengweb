@@ -51,6 +51,7 @@ async function transferOne(record, stagingAbs) {
   }
   // 传输成功后删暂存
   try { await fsp.unlink(stagingAbs); } catch (_) { /* ignore */ }
+  // 返回实际落地路径（可能因冲突重命名而与 targetAbs 不同）
   return finalAbs;
 }
 
@@ -76,8 +77,8 @@ function copyStream(src, dest) {
     const rs = fs.createReadStream(src);
     const ws = fs.createWriteStream(dest);
     rs.pipe(ws);
-    rs.on('error', reject);
-    ws.on('error', reject);
+    rs.on('error', (err) => { ws.destroy(); reject(err); });
+    ws.on('error', (err) => { rs.destroy(); reject(err); });
     ws.on('finish', resolve);
   });
 }
@@ -107,7 +108,19 @@ function enqueueTransfer({ jobId, records }) {
           }
           throw new Error('staging file missing');
         }
-        await transferOne(rec, stagingAbs);
+        const finalAbs = await transferOne(rec, stagingAbs);
+        // 若实际落地路径因冲突重命名而不同，同步更新 DB 中的 source_path 和 url
+        const expectedAbs = path.resolve(config.UPLOAD_DIR, rec.source_path);
+        if (finalAbs !== expectedAbs) {
+          const { run } = require('./database');
+          const newSourcePath = path.relative(config.UPLOAD_DIR, finalAbs).replace(/\\/g, '/');
+          run('UPDATE media SET source_path = ?, url = ?, updated_at = ? WHERE id = ?', [
+            newSourcePath,
+            `/uploads/${encodeURI(newSourcePath)}`,
+            new Date().toISOString(),
+            rec.id,
+          ]);
+        }
         setTransferState(rec.id, 'ready');
         progress.done++;
       } catch (error) {

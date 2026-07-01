@@ -47,7 +47,7 @@
 
 /* Topic Card */
 .workspace-panel[data-panel="topics"] .media-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 305px), 1fr));
   gap: clamp(16px, 2vw, 22px);
 }
 

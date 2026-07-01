@@ -102,6 +102,25 @@ const config = {
   // 自动扫描配置
   AUTO_SCAN_SECONDS: Number(process.env.INBOX_AUTO_SCAN_SECONDS || 60),
 
+  // 飞书多维表格同步配置（设备申请双向同步）
+  // 缺关键项时 enabled=false，启动时 warn；不阻断服务器启动
+  FEISHU: (function resolveFeishu() {
+    const env = process.env;
+    const appId = env.FEISHU_APP_ID || '';
+    const appSecret = env.FEISHU_APP_SECRET || '';
+    const appToken = env.FEISHU_APP_TOKEN || '';
+    const tableId = env.FEISHU_TABLE_ID || '';
+    const enabled = String(env.FEISHU_SYNC_ENABLED || '0') !== '0' && !!(appId && appSecret && appToken && tableId);
+    return {
+      appId,
+      appSecret,
+      appToken,
+      tableId,
+      enabled,
+      intervalSec: Math.max(60, Number(env.FEISHU_SYNC_INTERVAL_SEC || 300)),
+    };
+  })(),
+
   // 站点配置
   SITE_TITLE: process.env.SITE_TITLE || '思想工作台',
   SITE_SUBTITLE: process.env.SITE_SUBTITLE || '可落盘的排障与协作中心',

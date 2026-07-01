@@ -411,7 +411,7 @@
 /* ========== 维护标签 ========== */
 .maintenance-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }
@@ -509,6 +509,12 @@
   display: block;
   margin-top: 2px;
   color: var(--text-muted);
+}
+
+.maintenance-snap-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .danger-btn {

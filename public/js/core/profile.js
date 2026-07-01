@@ -46,6 +46,7 @@ export function bindProfileEvents() {
       openProfilePopover();
       syncProfileUI();
       loadProfileSummary();
+      loadSessions();
     });
   }
 
@@ -92,9 +93,15 @@ export function bindProfileEvents() {
 
   // 头像上传
   if (els.profileAvatarInput) {
+    let avatarUploading = false;
     els.profileAvatarInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+      // 上传中忽略新的 change，避免并发上传互相覆盖预览
+      if (avatarUploading) {
+        e.target.value = '';
+        return;
+      }
       // 上传前校验
       const err = validateAvatarFile(file);
       if (err) {
@@ -102,9 +109,34 @@ export function bindProfileEvents() {
         e.target.value = '';
         return;
       }
-      await uploadAvatar(file);
-      // 上传完成无论成功失败都清 input.value，方便用户重选同名文件
-      e.target.value = '';
+      avatarUploading = true;
+      els.profileAvatarInput.disabled = true;
+      try {
+        await uploadAvatar(file);
+      } finally {
+        avatarUploading = false;
+        els.profileAvatarInput.disabled = false;
+        // 上传完成无论成功失败都清 input.value，方便用户重选同名文件
+        e.target.value = '';
+      }
+    });
+  }
+
+  // 删除头像
+  const avatarDeleteBtn = document.getElementById('profile-avatar-delete-btn');
+  if (avatarDeleteBtn) {
+    avatarDeleteBtn.addEventListener('click', async () => {
+      if (!confirm('确定要删除当前头像吗？')) return;
+      await deleteAvatar();
+    });
+  }
+
+  // 退出其他所有设备
+  const logoutOthersBtn = document.getElementById('profile-logout-others-btn');
+  if (logoutOthersBtn) {
+    logoutOthersBtn.addEventListener('click', async () => {
+      if (!confirm('将退出除当前设备外的所有登录会话，确定继续？')) return;
+      await logoutOtherSessions();
     });
   }
 
@@ -299,6 +331,12 @@ function syncProfileUI() {
     roleBadge.textContent = roleLabels[user.role] || '成员';
   }
 
+  // 删除头像按钮：仅当存在头像时显示
+  const avatarDeleteBtn = document.getElementById('profile-avatar-delete-btn');
+  if (avatarDeleteBtn) {
+    avatarDeleteBtn.hidden = !user.avatarUrl;
+  }
+
   // 状态点：根据 user.online 切三态；后端无字段则隐藏
   const dot = document.getElementById('profile-status-dot');
   if (dot) {
@@ -360,8 +398,12 @@ async function changePassword() {
     return;
   }
 
-  if (newPassword.length < 6) {
-    setProfilePwdHint('新密码至少 6 个字符', 'error');
+  if (newPassword.length < 8) {
+    setProfilePwdHint('新密码至少 8 个字符', 'error');
+    return;
+  }
+  if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    setProfilePwdHint('密码需包含大写字母、小写字母和数字', 'error');
     return;
   }
 
@@ -384,7 +426,8 @@ async function changePassword() {
     if (els.profilePwdConfirm) els.profilePwdConfirm.value = '';
 
     setProfilePwdHint('');
-    setProfileFeedback('密码已修改', 'success');
+    setProfileFeedback('密码已修改，其他设备已退出', 'success');
+    loadSessions();
   } catch (error) {
     setProfilePwdHint(error.message || '修改失败', 'error');
   } finally {
@@ -457,6 +500,122 @@ async function uploadAvatar(file) {
       // 延迟一点释放，避免预览闪烁
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     }
+  }
+}
+
+/**
+ * 加载并渲染当前用户的有效会话列表
+ */
+async function loadSessions() {
+  const list = document.getElementById('profile-sessions-list');
+  const logoutOthersBtn = document.getElementById('profile-logout-others-btn');
+  if (!list) return;
+
+  list.innerHTML = '<p class="profile-sessions-empty">加载中…</p>';
+  if (logoutOthersBtn) logoutOthersBtn.hidden = true;
+
+  try {
+    const { sessions = [] } = await requestJSON('/api/profile/sessions');
+    if (sessions.length === 0) {
+      list.innerHTML = '<p class="profile-sessions-empty">暂无在线设备</p>';
+      return;
+    }
+    list.innerHTML = sessions.map(renderSessionItem).join('');
+    const hasOthers = sessions.some((s) => !s.isCurrent);
+    if (logoutOthersBtn) logoutOthersBtn.hidden = !hasOthers;
+  } catch (error) {
+    list.innerHTML = `<p class="profile-sessions-empty">获取失败：${error.message || ''}</p>`;
+  }
+}
+
+/**
+ * 解析 user-agent 为简短的设备/浏览器描述
+ */
+function parseUserAgent(ua) {
+  if (!ua) return '未知设备';
+  let browser = '浏览器';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/Chrome\//.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua)) browser = 'Safari';
+  let os = '未知系统';
+  if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/iPhone|iPad/.test(ua)) os = 'iOS';
+  else if (/Mac OS/.test(ua)) os = 'macOS';
+  else if (/Linux/.test(ua)) os = 'Linux';
+  return `${browser} · ${os}`;
+}
+
+function renderSessionItem(s) {
+  const created = s.createdAt ? new Date(s.createdAt).toLocaleString('zh-CN') : '—';
+  const device = parseUserAgent(s.userAgent);
+  const ip = s.ipAddress || '—';
+  const badge = s.isCurrent
+    ? '<span class="session-badge session-badge-current">当前设备</span>'
+    : '';
+  return `
+    <div class="session-item${s.isCurrent ? ' is-current' : ''}">
+      <div class="session-item-main">
+        <span class="session-device">${device}</span>
+        <span class="session-meta">${ip} · ${created}</span>
+      </div>
+      ${badge}
+    </div>`;
+}
+
+/**
+ * 退出其他所有设备
+ */
+async function logoutOtherSessions() {
+  const btn = document.getElementById('profile-logout-others-btn');
+  try {
+    setPending(true);
+    setButtonLoading(btn, true);
+    await requestJSON('/api/profile/sessions/others', { method: 'DELETE' });
+    setProfileFeedback('已退出其他所有设备', 'success');
+    await loadSessions();
+  } catch (error) {
+    setProfileFeedback(error.message || '操作失败', 'error');
+  } finally {
+    setPending(false);
+    setButtonLoading(btn, false);
+  }
+}
+
+/**
+ * 删除头像
+ */
+async function deleteAvatar() {
+  try {
+    setPending(true);
+    const csrfToken = readCookie('ss_csrf');
+    const response = await fetch('/api/profile/avatar', {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}) },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '删除失败');
+
+    const previewImg = els.profileAvatarImage;
+    const previewInitials = document.getElementById('profile-avatar-initials');
+    if (previewImg) {
+      previewImg.removeAttribute('src');
+      previewImg.hidden = true;
+    }
+    if (previewInitials) previewInitials.style.opacity = '';
+    if (state.session?.user) state.session.user.avatarUrl = '';
+    const avatarDeleteBtn = document.getElementById('profile-avatar-delete-btn');
+    if (avatarDeleteBtn) avatarDeleteBtn.hidden = true;
+
+    setProfileFeedback('头像已删除', 'success');
+    updateUserDisplay();
+    syncProfileUI();
+  } catch (error) {
+    setProfileFeedback(error.message || '删除头像失败', 'error');
+  } finally {
+    setPending(false);
   }
 }
 

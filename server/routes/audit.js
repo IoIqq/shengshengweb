@@ -13,7 +13,7 @@ function nowLocalDateKey() {
 
 function buildAuditFilters(query) {
   return {
-    userId: query.user_id ? parseInt(query.user_id, 10) : null,
+    userId: query.user_id ? (isNaN(parseInt(query.user_id, 10)) ? null : parseInt(query.user_id, 10)) : null,
     action: query.action ? String(query.action).trim() : null,
     resourceType: query.resource_type ? String(query.resource_type).trim() : null,
     startDate: query.start_date ? `${String(query.start_date).trim()}T00:00:00.000Z` : null,

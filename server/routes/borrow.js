@@ -4,6 +4,8 @@ const { borrow: borrowModel } = require('../models');
 const { run, saveDatabase } = require('../models/database');
 const { requireAuth, requirePermission, requireAdmin } = require('../middleware/auth');
 const { nowIso } = require('../utils');
+// 飞书同步回写（尽力而为，失败仅 log，不影响审核）
+const feishuSync = require('../services/feishu-sync');
 
 // Rate limiter for borrow requests
 const rateLimit = require('express-rate-limit');
@@ -87,6 +89,9 @@ router.post('/', borrowLimiter, requireAuth, requirePermission('borrow:create'),
     if (!applicant || !deviceId || !purpose || !borrowAt || !expectedReturnAt) {
       return res.status(400).json({ error: '请把借出申请信息填写完整。' });
     }
+    if (new Date(borrowAt) >= new Date(expectedReturnAt)) {
+      return res.status(400).json({ error: '预计归还时间必须晚于借出时间。' });
+    }
 
     const request = borrowModel.createBorrowRequest({
       applicant,
@@ -95,6 +100,7 @@ router.post('/', borrowLimiter, requireAuth, requirePermission('borrow:create'),
       borrow_at: borrowAt,
       expected_return_at: expectedReturnAt,
       note,
+      created_by: req.user?.username || '',
     });
 
     const item = borrowModel.borrowRequestRowToItem(request);
@@ -121,6 +127,9 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
     if (body.returnStatus !== undefined) {
       updates.returnStatus = String(body.returnStatus || '').trim();
     }
+    if (body.rejectReason !== undefined) {
+      updates.rejectReason = String(body.rejectReason || '').trim();
+    }
 
     const approvedBy = req.user?.username || 'admin';
     const updated = borrowModel.updateBorrowRequest(id, updates, approvedBy);
@@ -132,6 +141,13 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
       logBorrowActivity('借用审核', approvedBy, `${item.applicant} 的 ${item.deviceName || item.deviceId} 借用申请已拒绝`);
     } else if (updates.returnStatus === 'returned') {
       logBorrowActivity('设备归还', approvedBy, `${item.applicant} 已归还 ${item.deviceName || item.deviceId}`);
+    }
+
+    // 飞书回写：把审批状态写回对应飞书行（异步、尽力而为，不阻断审核响应）
+    if (updates.status === 'approved' || updates.status === 'rejected') {
+      feishuSync.writeBackApproval(id, updates.status, approvedBy).catch((e) =>
+        console.error('[Feishu] 回写失败:', e?.message || e),
+      );
     }
 
     res.json({ ok: true, item });
@@ -146,6 +162,22 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   }
 });
 
+// POST /api/borrow-requests/:id/cancel - Applicant cancels own pending request
+router.post('/:id/cancel', requireAuth, requirePermission('borrow:create'), (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    const applicant = req.user?.username || '';
+    const updated = borrowModel.cancelBorrowRequest(id, applicant);
+    const item = borrowModel.borrowRequestRowToItem(updated);
+    logBorrowActivity('借用申请撤销', applicant, `${item.applicant} 撤销了 ${item.deviceName || item.deviceId} 的借用申请`);
+    res.json({ ok: true, item });
+  } catch (error) {
+    if (error.message.includes('不存在')) return res.status(404).json({ error: error.message });
+    if (error.message.includes('无权') || error.message.includes('待审')) return res.status(409).json({ error: error.message });
+    res.status(500).json({ error: '撤销失败。' });
+  }
+});
+
 // DELETE /api/borrow-requests/:id - Delete borrow request
 router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   try {
@@ -153,6 +185,11 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
     const existing = borrowModel.getBorrowRequestById(id);
     if (!existing) {
       return res.status(404).json({ error: '借出申请不存在。' });
+    }
+    // 如果正在借出中，删除前先归还设备状态
+    if (existing.status === 'approved' && existing.return_status !== 'returned') {
+      const deviceModel = require('../models/device');
+      deviceModel.updateDeviceStatus(existing.device_id, 'available');
     }
     const { run: dbRun, saveDatabase } = require('../models/database');
     dbRun('DELETE FROM borrow_requests WHERE id = ?', [id]);

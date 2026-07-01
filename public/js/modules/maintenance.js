@@ -41,8 +41,15 @@ async function loadSnapshots() {
           <strong>${escapeHtml(snap.name)}</strong>
           <small>${formatBytes(snap.size)} · ${formatTime(snap.createdAt)}</small>
         </div>
+        <div class="maintenance-snap-actions">
+          <a class="ghost-btn" href="/api/backup/snapshots/${encodeURIComponent(snap.name)}/download" download="${escapeHtml(snap.name)}">下载</a>
+          <button class="ghost-btn danger" type="button" data-snap-delete="${escapeHtml(snap.name)}">删除</button>
+        </div>
       </div>
     `).join('');
+    list.querySelectorAll('[data-snap-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => deleteSnapshot(btn.dataset.snapDelete));
+    });
   } catch (error) {
     list.innerHTML = `<p class="empty-state">读取失败：${escapeHtml(error.message || '')}</p>`;
   }
@@ -121,6 +128,17 @@ async function onWipe() {
     Toast.error(error.message || '清空失败');
   } finally {
     setPending(false);
+  }
+}
+
+async function deleteSnapshot(name) {
+  if (!confirmIfNeeded(`确定删除快照「${name}」？此操作不可撤销。`)) return;
+  try {
+    await requestJSON(`/api/backup/snapshots/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    Toast.success('快照已删除');
+    loadSnapshots();
+  } catch (e) {
+    Toast.error(e.message || '删除失败');
   }
 }
 

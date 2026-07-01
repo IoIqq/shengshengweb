@@ -5,6 +5,8 @@
 
 import { Toast } from './toast.js';
 
+let _did = 0;
+
 export const Dialog = {
   /**
    * 显示确认对话框
@@ -24,21 +26,22 @@ export const Dialog = {
     variant = 'info'
   }) {
     return new Promise((resolve) => {
+      const _id = ++_did;
       // 创建对话框 DOM
       const dialog = document.createElement('div');
       dialog.className = 'dialog-overlay';
       dialog.setAttribute('role', 'dialog');
       dialog.setAttribute('aria-modal', 'true');
-      dialog.setAttribute('aria-labelledby', 'dialog-title');
-      dialog.setAttribute('aria-describedby', 'dialog-message');
+      dialog.setAttribute('aria-labelledby', `dialog-title-${_id}`);
+      dialog.setAttribute('aria-describedby', `dialog-message-${_id}`);
 
       dialog.innerHTML = `
         <div class="dialog-container">
           <div class="dialog-header">
-            <h3 id="dialog-title" class="dialog-title">${this._escapeHtml(title)}</h3>
+            <h3 id="dialog-title-${_id}" class="dialog-title">${this._escapeHtml(title)}</h3>
           </div>
           <div class="dialog-body">
-            <p id="dialog-message" class="dialog-message">${this._escapeHtml(message)}</p>
+            <p id="dialog-message-${_id}" class="dialog-message">${this._escapeHtml(message)}</p>
           </div>
           <div class="dialog-footer">
             <button type="button" class="dialog-btn dialog-btn-cancel">${this._escapeHtml(cancelText)}</button>
@@ -64,7 +67,11 @@ export const Dialog = {
       }, 100);
 
       // 关闭对话框的函数
+      let closed = false;
       const close = (result) => {
+        if (closed) return;
+        closed = true;
+        document.removeEventListener('keydown', handleEsc);
         dialog.classList.add('dialog-closing');
         setTimeout(() => {
           dialog.remove();
@@ -98,7 +105,6 @@ export const Dialog = {
         if (e.key === 'Escape') {
           e.preventDefault();
           close(false);
-          document.removeEventListener('keydown', handleEsc);
         }
       };
       document.addEventListener('keydown', handleEsc);
@@ -137,6 +143,119 @@ export const Dialog = {
   },
 
   /**
+   * 显示文本输入对话框（替换原生 prompt）
+   * @param {Object} options
+   * @param {string} options.title - 标题
+   * @param {string} [options.message=''] - 提示消息
+   * @param {string} [options.defaultValue=''] - 默认值
+   * @param {string} [options.placeholder=''] - 占位符
+   * @param {string} [options.confirmText='确定'] - 确认按钮文本
+   * @param {string} [options.cancelText='取消'] - 取消按钮文本
+   * @param {boolean} [options.required=false] - 是否必填（为空时不允许提交）
+   * @returns {Promise<string|null>} - 确认返回 trim 后的文本，取消返回 null
+   */
+  prompt({
+    title = '请输入',
+    message = '',
+    defaultValue = '',
+    placeholder = '',
+    confirmText = '确定',
+    cancelText = '取消',
+    required = false,
+  }) {
+    return new Promise((resolve) => {
+      const _id = ++_did;
+      const dialog = document.createElement('div');
+      dialog.className = 'dialog-overlay';
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.setAttribute('aria-labelledby', `dialog-title-${_id}`);
+
+      const messageId = message ? `dialog-message-${_id}` : '';
+      dialog.innerHTML = `
+        <div class="dialog-container">
+          <div class="dialog-header">
+            <h3 id="dialog-title-${_id}" class="dialog-title">${this._escapeHtml(title)}</h3>
+          </div>
+          <div class="dialog-body">
+            ${message ? `<p id="${messageId}" class="dialog-message">${this._escapeHtml(message)}</p>` : ''}
+            <input type="text" class="dialog-input" value="${this._escapeHtml(defaultValue)}" placeholder="${this._escapeHtml(placeholder)}" autocomplete="off" />
+          </div>
+          <div class="dialog-footer">
+            <button type="button" class="dialog-btn dialog-btn-cancel">${this._escapeHtml(cancelText)}</button>
+            <button type="button" class="dialog-btn dialog-btn-confirm">${this._escapeHtml(confirmText)}</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(dialog);
+
+      const previousFocusElement = document.activeElement;
+      const confirmBtn = dialog.querySelector('.dialog-btn-confirm');
+      const cancelBtn = dialog.querySelector('.dialog-btn-cancel');
+      const input = dialog.querySelector('.dialog-input');
+
+      // 自动聚焦输入框并选中文本
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 100);
+
+      let closed = false;
+      const close = (result) => {
+        if (closed) return;
+        closed = true;
+        document.removeEventListener('keydown', handleEsc);
+        dialog.classList.add('dialog-closing');
+        setTimeout(() => {
+          dialog.remove();
+          if (previousFocusElement && previousFocusElement.focus) {
+            previousFocusElement.focus();
+          }
+          resolve(result);
+        }, 200);
+      };
+
+      const submit = () => {
+        const value = input.value.trim();
+        if (required && !value) {
+          Toast.warning('请填写内容');
+          return;
+        }
+        close(value);
+      };
+
+      confirmBtn.addEventListener('click', submit);
+      cancelBtn.addEventListener('click', () => close(null));
+
+      // Enter 提交
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submit();
+        }
+      });
+
+      // 点击遮罩关闭（取消）
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) close(null);
+      });
+
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          close(null);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+
+      requestAnimationFrame(() => {
+        dialog.classList.add('dialog-active');
+      });
+    });
+  },
+
+  /**
    * 显示带表单的模态对话框（抽取自各模块重复的弹窗样板）。
    * 负责：创建遮罩外壳、插入 body、关闭按钮/取消按钮/遮罩点击/Esc 关闭、
    * Tab 焦点捕获、初始聚焦、提交处理与失败 Toast。调用方只提供表单内容与提交逻辑。
@@ -152,7 +271,7 @@ export const Dialog = {
    * @param {boolean} [options.autoClose=true] - onSubmit 成功后是否自动关闭
    */
   form({ title, formId, bodyHtml, submitText = '保存', onSubmit, autoClose = true }) {
-    const titleId = `dialog-form-title-${Date.now()}`;
+    const titleId = `dialog-form-title-${++_did}`;
     const previousFocusElement = document.activeElement;
 
     const dialog = document.createElement('div');
@@ -183,7 +302,10 @@ export const Dialog = {
     const cancelBtn = dialog.querySelector('[data-action="cancel"]');
     const firstField = form.querySelector('input:not([readonly]), select, textarea, button');
 
+    let closed = false;
     const close = () => {
+      if (closed) return;
+      closed = true;
       dialog.remove();
       if (previousFocusElement && typeof previousFocusElement.focus === 'function') {
         previousFocusElement.focus();
@@ -223,13 +345,17 @@ export const Dialog = {
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = form.querySelector('[type="submit"]') || dialog.querySelector('button[type="submit"]');
       const data = Object.fromEntries(new FormData(form));
+      if (submitBtn) submitBtn.disabled = true;
       try {
         await onSubmit(data, { close, form });
         if (autoClose) close();
       } catch (error) {
         console.error('操作失败：', error);
         Toast.error(error.message || '操作失败');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
 
@@ -238,10 +364,14 @@ export const Dialog = {
 
   /**
    * 转义 HTML，防止 XSS
+   * 注意：本文件多处将其用于属性上下文（value="..." / aria-label="..."），
+   * 因此除 & < > 外还必须转义引号，否则含 " 的值可截断属性注入新属性。
    */
   _escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    div.textContent = String(text ?? '');
+    return div.innerHTML
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 };
